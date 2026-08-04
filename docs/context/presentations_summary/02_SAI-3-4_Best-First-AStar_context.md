@@ -1,0 +1,2305 @@
+# Best-First Search and A* — Complete Context
+
+**Source deck:** `SAI-3-4.pptx`
+**Number of slides:** 109
+**Role in the project:** Foundation deck: OPEN/CLOSED, UCS, heuristic functions, A*, admissibility, consistency, duplicate handling, complexity, and linear-space variants.
+
+## How to use this file with Cursor
+
+This is a source-faithful, slide-by-slide context document. It preserves the terminology, equations, algorithm names, examples, experimental claims, and references appearing in the presentation. Use it as course context rather than as a replacement for checking visual diagrams in the original deck.
+
+> Extraction note: text was recovered from the PowerPoint objects and, where useful, from a rendered PDF. Diagram geometry, arrows, colors, animations, and some image-only mathematical symbols cannot always be represented perfectly in Markdown. When a slide is primarily visual, the nearby text and labels are retained, but the original slide remains authoritative.
+
+## Slide index
+
+- Slide 1: Chapter 3
+- Slide 2: Best First Search
+- Slide 3: Best First Search
+- Slide 4: Best First Search
+- Slide 5: Best First Search
+- Slide 6: Example of Best First Search
+- Slide 7: Uniform Cost Search
+- Slide 8: Example of Uniform Cost Search
+- Slide 9: Example of Uniform Cost Search
+- Slide 10: Example of Uniform Cost Search
+- Slide 11: Example of Uniform Cost Search
+- Slide 12: Example of Uniform Cost Search
+- Slide 13: Example of Uniform Cost Search
+- Slide 14: Example of Uniform Cost Search
+- Slide 15: Example of Uniform Cost Search
+- Slide 16: Example of Uniform Cost Search
+- Slide 17: Uniform Cost Search
+- Slide 18: Uniform Cost Search - Termination
+- Slide 19: Uniform Cost Search - — Solution Quality
+- Slide 20: Uniform Cost Search - — Time Complexity
+- Slide 21: Uniform Cost Search - — Space Complexity
+- Slide 22: Complexity of Dijkstra’s Algorithm
+- Slide 23: Combinatorial Explosion
+- Slide 24: [Table]
+- Slide 25: Heuristic Evaluation Functions
+- Slide 26: Properties of Heuristic Functions
+- Slide 27: Example of Heuristic Functions
+- Slide 28: Manhattan Distance
+- Slide 29: Traveling Salesman Problem
+- Slide 30: Pure Heuristic Search
+- Slide 31: Pure Heuristic Search
+- Slide 32: Properties of Pure heuristic Search
+- Slide 33: A* Algorithm
+- Slide 34: A* - Terminating Conditions
+- Slide 35: Best-first search: Cost functions
+- Slide 36: A*
+- Slide 37: Slide 37
+- Slide 38: A* - Solution Quality
+- Slide 39: A*
+- Slide 40: A* algorithm
+- Slide 41: A* מול חיפוש לרוחב
+- Slide 42: A* מול חיפוש לרוחב
+- Slide 43: Time Complexity of A*
+- Slide 44: Special Cases
+- Slide 45: Tie Breaking
+- Slide 46: Tie Breaking
+- Slide 47: Tie Breaking
+- Slide 48: Conditions for Node Expansion by A*
+- Slide 49: Conditions for Node Expansion by A*
+- Slide 50: Time optimality of A*
+- Slide 51: Intuition for the optimality of A*
+- Slide 52: Space complexity of A*
+- Slide 53: Admissible, Consistent and Monotonic Heuristics
+- Slide 54: Consistent heuristic
+- Slide 55: Admissible, Consistent and Monotonic Heuristics
+- Slide 56: Consistency implies admissibility — To see this, we replace m with a goal node G. — Proof: h(n)  c(n,m)+h(m) — h(n)  c(n,G) + h(G) — h(G) = 0 — h(n)  c(n,G) (the shortest path) — h(n)  h*(n) —  — Admissibility does not imply consistency.Consistency is a stronger property.
+- Slide 57: Given an admissible but inconsistent function h (which is rare), we can easily construct a monotonic f function that is still admissible: — whenever the f(n’) value of a child node n’ is less than the f(n) value of its parent node n, we set the f(n’) value of the child to the f(n) value of the parent —  — if the heuristic function h(n) is admissible, the the new cost function f(n) will also be admissible, as follows. If h(n) is a lower bound on the cost of reaching the goal , then f(n) = g(n) +h(n) is a lower bound on total cost of reaching the goal from the initial state via the current path. Therefore, the total cost of reaching the goal via every child of node n must be at least as large as the minimum cost though the parent.
+- Slide 58: Slide 58
+- Slide 59: Linear Space Heuristic Searches
+- Slide 60: Iterative Deepening A* (IDA*)
+- Slide 61: If a goal node is reached with a price lower then the goal it is returned. — Else if a whole iteration has ended without reaching the goal, then another iteration is begun with a greater cost threshold.  — The new cost threshold is set to the minimum cost of al nodes that were pruned on the previous iteration. — The cost Threshold for the first Iteration is set to the cost of the initial state.
+- Slide 62: IDA* - Example
+- Slide 63: This is the Second Iteration of IDA*. — The cost threshold was 5 and every node with the cost 5 or less was expanded.
+- Slide 64: Termination
+- Slide 65: Solution Optimality
+- Slide 66: Space Complexity
+- Slide 67: Time Complexity
+- Slide 68: The previous iterations — The number of nodes generated by an iteration of IDA* with the cost threshold x is :  —  — If N(x) grows exponentially with x, with branching factor b then : —  — This means that in each iteration the number of nodes developed also grows exponentially with the branching factor b.
+- Slide 69: Time Complexity
+- Slide 70: IDA* - Conclusion
+- Slide 71: limitations of IDA*
+- Slide 72: The problem space for IDA* must be a tree because : — if a certain node can be reached via multiple paths it will be represented by more than 1 node in the search tree.  — A* can avoid the duplicate nodes by storing them in the memory but IDA* is a DFS (no memory) and thus it can not detect most of the duplicates.  — This can increase the time complexity of IDA* compared to A*.  — Thus, if there are many short cycles in the graph and there is no memory problem - choose A*.
+- Slide 73: Experiments with IDA*
+- Slide 74: ID as an Algorithm Schema
+- Slide 75: Depth First Branch and Bound
+- Slide 76: IDA* And TSP
+- Slide 77: Example: Search Tree for TSP on Four Cities
+- Slide 78: How DFBnB Works
+- Slide 79: When DFBnB is Used
+- Slide 80: Improving DFBnB
+- Slide 81: Solution Quality and Complexity
+- Slide 82: Slide 82
+- Slide 83: An Analytic Model and Surprising Anomaly
+- Slide 84: Slide 84
+- Slide 85: Truncated Branch and Bound
+- Slide 86: ID vs. DFBnB
+- Slide 87: ID vs. DFBnB
+- Slide 88: Non Monotonic Cost Functions
+- Slide 89: Non Monotonic Cost Functions
+- Slide 90: RBFS is a linear-space algorithm that expands nodes in best-first order even with a non-monotonic cost function and generates fewer nodes than iterative deepening with a monotonic cost function.
+- Slide 91: RBFS-ILBFS
+- Slide 92: RBFS vs. ID
+- Slide 93: Suboptimal Searches
+- Slide 94: Different Search Settings
+- Slide 95: Bounded Suboptimal Search
+- Slide 96: Weighted A* (WA*)
+- Slide 97: WA* is w-admissible
+- Slide 98: WA*
+- Slide 99: Focal Search
+- Slide 100: Slide 100
+- Slide 101: Examples of Focal Search
+- Slide 102: Bounded Cost Search
+- Slide 103: Bounded Cost Search
+- Slide 104: Bounded Cost Search  — vs Bounded Suboptimal Search
+- Slide 105: Anytime algorithms
+- Slide 106: The WA* family of algorithms
+- Slide 107: Iterative weighting A*
+- Slide 108: Anytime weighed A* (AWA*)
+- Slide 109: Anytime weighed A* (AWA*)
+
+---
+
+## Complete slide-by-slide content
+
+### Slide 1 — Chapter 3
+
+Chapter 3
+Best First Search
+
+---
+
+### Slide 2 — Best First Search
+
+Best First Search
+
+So far, we have assumed that all the edges have the same cost, and that an optimal solution is a shortest path from the initial state to a goal state.
+Let’s generalize the model to allow individual edges with arbitrary costs associated with them.
+We’ll use the following denotations:
+length - number of edges in the path
+cost - sum of the edge costs on the path
+
+**Additional text recovered from rendered slide:**
+So far, we have assumed that all the edges have the
+same cost, and that an optimal solution is a shortest path
+from the initial state to a goal state.
+Let’s generalize the model to allow individual edges with
+arbitrary costs associated with them.
+
+**Speaker notes / hidden notes:**
+
+04/08/26
+<number>
+
+---
+
+### Slide 3 — Best First Search
+
+Best First Search
+
+Best First Search is an entire class of search algorithms, each of which employ a cost function.
+The cost function : from a node to its cost.
+Example: a sum of the edge costs from the root to the node.
+We assume that a lower cost node is a better node.
+The different best-first search algorithms differ primarily in their cost function.
+
+**Additional text recovered from rendered slide:**
+Best First Search is an entire class of search
+algorithms, each of which employ a cost function.
+Example: a sum of the edge costs from the root to
+the node.
+The different best-first search algorithms differ
+primarily in their cost function.
+
+---
+
+### Slide 4 — Best First Search
+
+Best First Search
+
+Best-first search employs two lists of nodes:
+Open list
+contains those nodes that have been generated but not yet expanded.
+Closed list
+contains those nodes that have already been completely expanded
+
+**Additional text recovered from rendered slide:**
+ contains those nodes that have been generated but
+not yet expanded.
+ contains those nodes that have already been
+completely expanded
+
+---
+
+### Slide 5 — Best First Search
+
+Best First Search
+
+Initially, just the root node is included on the Open list, and the Closed list is empty.
+At each cycle of the algorithm, an Open node of lowest cost is expanded, moved to Closed, and its children are inserted back to Open.
+The Open list is maintained as a priority queue.
+The algorithm terminates when a goal node is chosen for expansion, or there are no more nodes remaining in Open list.
+
+**Additional text recovered from rendered slide:**
+Initially, just the root node is included on the Open list, and
+the Closed list is empty.
+At each cycle of the algorithm, an Open node of lowest cost
+is expanded, moved to Closed, and its children are inserted
+back to Open.
+The algorithm terminates when a goal node is
+chosen for expansion, or there are no more
+nodes remaining in Open list.
+
+---
+
+### Slide 6 — Example of Best First Search
+
+Example of Best First Search
+
+One example of Best First Search is breadth first search.
+The cost here is a depth of the node below the root.
+depth first search is not considered to be best-first-search, because it does not maintain Open and Closed lists, in order to run in linear space.
+
+**Additional text recovered from rendered slide:**
+One example of Best First Search is breadth
+first search.
+The cost here is a depth of the node below the
+root.
+depth first search is not considered to be best-
+first-search, because it does not maintain Open
+and Closed lists, in order to run in linear space.
+
+---
+
+### Slide 7 — Uniform Cost Search
+
+Uniform Cost Search
+
+Let g(n) be the sum of the edges costs from root to node n. If g(n) is our overall cost function, then the best first search becomes Uniform Cost Search, also known as Dijkstra’s single-source-shortest-path algorithm .
+Initially the root node is placed in Open with a cost of zero. At each step, the next node n to be expanded is an Open node whose cost g(n) is lowest among all Open nodes.
+
+**Additional text recovered from rendered slide:**
+Let g(n) be the sum of the edges costs from root to
+node n. If g(n) is our overall cost function, then the best
+first search becomes Uniform Cost Search, also
+known as Dijkstra’s single-source-shortest-path
+algorithm .
+Initially the root node is placed in Open with a cost of
+zero. At each step, the next node n to be expanded is
+an Open node whose cost g(n) is lowest among all
+Open nodes.
+
+---
+
+### Slide 8 — Example of Uniform Cost Search
+
+Example of Uniform Cost Search
+
+Assume an example tree with different edge costs, represented by numbers next to the edges.
+Notations for this example:
+generated node
+expanded node
+
+**Additional text recovered from rendered slide:**
+Assume an example tree with different edge costs,
+represented by numbers next to the edges.
+1 2 1 2
+f gc dc ec
+
+---
+
+### Slide 9 — Example of Uniform Cost Search
+
+Example of Uniform Cost Search
+
+Closed list:
+Open list:
+
+a
+
+0
+
+**Additional text recovered from rendered slide:**
+Open list: a
+
+---
+
+### Slide 10 — Example of Uniform Cost Search
+
+Example of Uniform Cost Search
+
+Closed list:
+Open list:
+
+a
+
+**Additional text recovered from rendered slide:**
+1 2 1 2
+Closed list: a
+Open list: b c
+
+---
+
+### Slide 11 — Example of Uniform Cost Search
+
+Example of Uniform Cost Search
+
+Closed list:
+Open list:
+
+**Additional text recovered from rendered slide:**
+1 2 1 2
+dc ec
+Closed list: a c
+Open list: b d e
+2 2 3
+
+---
+
+### Slide 12 — Example of Uniform Cost Search
+
+Example of Uniform Cost Search
+
+Closed list:
+Open list:
+
+a
+
+**Additional text recovered from rendered slide:**
+1 2 1 2
+f gc dc ec
+Closed list: a c b
+Open list: d e f g
+2 3 3 4
+
+---
+
+### Slide 13 — Example of Uniform Cost Search
+
+Example of Uniform Cost Search
+
+Closed list:
+Open list:
+
+**Additional text recovered from rendered slide:**
+1 2 1 2
+f gc dc ec
+Closed list: a c b d
+Open list: e f g
+3 3 4
+
+---
+
+### Slide 14 — Example of Uniform Cost Search
+
+Example of Uniform Cost Search
+
+Closed list:
+Open list:
+
+**Additional text recovered from rendered slide:**
+1 2 1 2
+f gc dc ec
+Closed list: a c b d e
+Open list: f g
+
+---
+
+### Slide 15 — Example of Uniform Cost Search
+
+Example of Uniform Cost Search
+
+Closed list:
+Open list:
+
+a
+
+**Additional text recovered from rendered slide:**
+1 2 1 2
+f gc dc ec
+Closed list: a c b d e f
+Open list: g
+
+---
+
+### Slide 16 — Example of Uniform Cost Search
+
+Example of Uniform Cost Search
+
+Closed list:
+Open list:
+
+**Additional text recovered from rendered slide:**
+1 2 1 2
+f gc dc ec
+Closed list: a c b d e f g
+
+---
+
+### Slide 17 — Uniform Cost Search
+
+Uniform Cost Search
+
+We consider Uniform Cost Search to be brute force search, because it doesn’t use a heuristic function.
+Questions to ask:
+Whether Uniform cost always terminates?
+Whether it is guaranteed to find a goal state?
+
+**Additional text recovered from rendered slide:**
+We consider Uniform Cost Search to be brute force
+search, because it doesn’t use a heuristic function.
+
+---
+
+### Slide 18 — Uniform Cost Search - Termination
+
+Uniform Cost Search - Termination
+
+The algorithm will find a goal node or report that there is no goal node under following conditions:
+the problem space is finite
+there must exist a path to a goal with finite length and finite cost
+there must not be any infinitely long paths of finite cost
+We will assume that all the edges have a minimum non-zero edge cost e to a solve a problem of infinite chains of nodes with zero-cost edges.
+Then, UCS will eventually reach a goal of finite cost if one exists in the graph.
+
+**Additional text recovered from rendered slide:**
+Uniform Cost Search -
+Termination
+The algorithm will find a goal node or report that there is no goal
+node under following conditions:
+We will assume that all the edges have a minimum non-zero edge
+cost e to a solve a problem of infinite chains of nodes with zero-
+cost edges.
+Then, UCS will eventually reach a goal of finite cost if one
+exists in the graph.
+
+**Speaker notes / hidden notes:**
+
+04/08/26
+<number>
+
+---
+
+### Slide 19 — Uniform Cost Search - — Solution Quality
+
+Uniform Cost Search - Solution Quality
+
+Theorem 3.1 : In a graph where all edges have a minimum positive cost, and in which a finite path exists to a goal node, uniform-cost search will return a lowest-cost path to a goal node.
+Steps of proof
+show that if Open contains a node on an optimal path to a goal before a node expansion, then it must contain one after the node expansion
+show that if there is a path to a goal node, the algorithm will eventually find it
+show that the first time a goal node is chosen for expansion, the algorithm terminates and returns the path to that node as the solution
+
+**Additional text recovered from rendered slide:**
+Uniform Cost Search -
+Solution Quality
+Theorem 3.1 : In a graph where all edges have a minimum
+positive cost, and in which a finite path exists to a goal node,
+uniform-cost search will return a lowest-cost path to a goal
+node.
+ show that if Open contains a node on an optimal path to a goal
+before a node expansion, then it must contain one after the node
+expansion
+ show that if there is a path to a goal node, the algorithm will
+eventually find it
+ show that the first time a goal node is chosen for expansion, the
+algorithm terminates and returns the path to that node as the
+solution
+
+**Speaker notes / hidden notes:**
+
+04/08/26
+<number>
+
+---
+
+### Slide 20 — Uniform Cost Search - — Time Complexity
+
+Uniform Cost Search - Time Complexity
+
+In the worst case
+every edge has the minimum edge e.
+c is the cost of optimal solution, so once all nodes of cost c have been chosen for expansion, a goal must be chosen
+The maximum length of any path searched up to this point cannot exceed c/e, and hence the worst-case number of such nodes is bc/e .
+
+Thus, the worst case asymptotic time complexity of UCS is
+O(bc/e )
+
+**Additional text recovered from rendered slide:**
+Uniform Cost Search -
+Time Complexity
+ c is the cost of optimal solution, so once all nodes of cost c
+have been chosen for expansion, a goal must be chosen
+ The maximum length of any path searched up to this point
+cannot exceed c/e, and hence the worst-case number of such
+nodes is bc/e .
+
+---
+
+### Slide 21 — Uniform Cost Search - — Space Complexity
+
+Uniform Cost Search - Space Complexity
+
+As in all best-first searches, each node that is generated is stored in the Open or Closed lists, and hence the asymptotic space complexity of UCS is the same as its asymptotic time complexity.
+As a result, UCS is memory-limited in practice.
+
+The worst case asymptotic space complexity of UCS is
+O(bc/e )
+
+**Additional text recovered from rendered slide:**
+Uniform Cost Search -
+Space Complexity
+As in all best-first searches, each node that is
+generated is stored in the Open or Closed lists, and
+hence the asymptotic space complexity of UCS is the
+same as its asymptotic time complexity.
+As a result, UCS is memory-limited in
+practice.
+
+---
+
+### Slide 22 — Complexity of Dijkstra’s Algorithm
+
+Complexity of Dijkstra’s Algorithm
+
+Dijkstra’s algorithm is the same as uniform search (Why)?
+its time complexity is usually reported as n2. It is not a discrepancy, because:
+n is the total number of nodes in the graph. In UCS we measure problem size by the branching factor b and solution cost c.
+The Dijkstra’ algorithm it is assumed that every node may be connected to every node, which gives rise to the quadratic complexity. In UCS we assume a constant-bounded branching factor of b.
+
+**Additional text recovered from rendered slide:**
+Dijkstra’s algorithm is the same as uniform search
+(Why)?
+its time complexity is usually reported as n2. It is not a
+discrepancy, because:
+ n is the total number of nodes in the graph. In UCS we
+measure problem size by the branching factor b and
+solution cost c.
+ The Dijkstra’ algorithm it is assumed that every node may
+be connected to every node, which gives rise to the
+quadratic complexity. In UCS we assume a constant-
+bounded branching factor of b.
+
+---
+
+### Slide 23 — Combinatorial Explosion
+
+Combinatorial Explosion
+
+All the problems we have seen so far are brute-force methods, i.e. they rely only on the problem space, the initial state and description of the goal state.
+A brute-force algorithm can be expected to generate about a million states per second. For example, the Fifteen Puzzle has 1013 would require about two month of computation, and 3 X 3 X 3 Rubik’s Cube would take about 686 thousand years.
+The brute-force search algorithms are not efficient enough to solve even moderately large problems.
+A new idea is needed!
+
+**Additional text recovered from rendered slide:**
+All the problems we have seen so far are brute-force
+methods, i.e. they rely only on the problem space, the initial
+state and description of the goal state.
+A brute-force algorithm can be expected to generate about a
+million states per second. For example, the Fifteen Puzzle has
+1013 would require about two month of computation, and 3 X 3
+X 3 Rubik’s Cube would take about 686 thousand years.
+The brute-force search algorithms are not efficient enough
+to solve even moderately large problems.
+
+---
+
+### Slide 24 — [Table]
+
+[Table]
+| depth | Positions: Rubik’s cube |
+| --- | --- |
+| 0 | 1 |
+| 1 | 18 |
+| 2 | 243 |
+| 3 | 3,240 |
+| 4 | 43,239 |
+| 5 | 574,908 |
+| 6 | 7,618,438 |
+| 7 | 100,803,036 |
+| 8 | 1,332,343,288 |
+| 9 | 17,596,479,795 |
+| 10 | 232,248,063,316 |
+| 11 | 3,063,288,809,012 |
+| 12 | 40,374,425,656,248 |
+| 13 | 531,653,418,284,628 |
+| 14 | 6,989,320,578,825,350 |
+| 15 | 91,365,146,187,124,300 |
+| 16 | about 1,100,000,000,000,000,000 |
+| 17 | about 12,000,000,000,000,000,000 |
+| 18 | about 29,000,000,000,000,000,000 |
+| 19 | about 1,500,000,000,000,000,000 |
+| 20 | about 300,000,000 |
+
+<number>
+
+**Additional text recovered from rendered slide:**
+1 2 3
+4 5 6 7
+8 9 10 11
+12 13 14 15
+20 about 300,000,000 24
+
+---
+
+### Slide 25 — Heuristic Evaluation Functions
+
+Heuristic Evaluation Functions
+
+The efficiency of a brute-force can be greatly by the use of a heuristic static evaluation function, or heuristic function.
+Such a function can improve the efficiency of a search algorithm in two ways:
+leading the algorithm toward a goal state
+pruning off branches that don’t lie on any optimal solution path.
+
+**Additional text recovered from rendered slide:**
+The efficiency of a brute-force can be greatly by the
+use of a heuristic static evaluation function, or
+heuristic function.
+Such a function can improve the efficiency of a
+search algorithm in two ways:
+ pruning off branches that don’t lie on any optimal
+solution path.
+
+---
+
+### Slide 26 — Properties of Heuristic Functions
+
+Properties of Heuristic Functions
+
+The two most important properties of a heuristic function are:
+it is relatively cheap to compute
+it is a relatively accurate estimator of the cost to reach a goal.
+Usually a “good” heuristic is if ½ opt(n)<h(n)<opt(n)
+Another property:
+admissibility - the heuristic function is always a lower bound on actual solution cost.
+In other words h(n) is always under-estimating.
+
+**Additional text recovered from rendered slide:**
+The two most important properties of a heuristic function
+are:
+ admissibility - the heuristic function is always a lower
+bound on actual solution cost.
+
+---
+
+### Slide 27 — Example of Heuristic Functions
+
+Example of Heuristic Functions
+
+Task :Navigating in a network of roads from one location to another
+Heuristic function: airline distance
+Admissible: straight line is always a lower bound
+Cheap to calculate: yes.
+Accurate: normally, yes.
+
+<number>
+
+**Additional text recovered from rendered slide:**
+Task :Navigating in a network of roads from
+one location to another
+
+---
+
+### Slide 28 — Manhattan Distance
+
+Manhattan Distance
+
+Task :Sliding -tile puzzles
+Heuristic function: Manhattan distance - number of horizontal and vertical grid units a each tile is displaced from its goal position.
+Cheap to calculate – yes
+Accurate – well, somewhat
+Admissible – yes: each tile must move at least Manhattan distance
+
+<number>
+
+**Additional text recovered from rendered slide:**
+3 1 2 1 2 3
+4 5 7 6 4 5 6 7
+8 9 10 11 8 9 10 11
+12 13 15 14 12 13 14 15
+Heuristic function: Manhattan distance - number
+of horizontal and vertical grid units a each tile is
+displaced from its goal position.
+Admissible – yes: each tile must move at least
+
+---
+
+### Slide 29 — Traveling Salesman Problem
+
+Traveling Salesman Problem
+
+Task :Traveling Salesman Problem
+Heuristic function:A cost of minimum spanning tree(MST) of the cities.
+Cheap to calculate (polynomial)
+Admissible – yes
+Accurate: MST<TSP but also TSP<2*MST
+→ ½ TSP <MST < TSP
+
+<number>
+
+**Additional text recovered from rendered slide:**
+Heuristic function:A cost of minimum spanning
+tree(MST) of the cities.
+
+---
+
+### Slide 30 — Pure Heuristic Search
+
+Pure Heuristic Search
+
+Given a heuristic evaluation function, the simplest algorithm that uses it is:
+where f(n) - cost function
+h(n) - heuristic function
+This algorithm is called Pure heuristic search (PHS)
+PHS will eventually generate the entire graph finding a goal node if one exists.
+If the graph is infinite, PHS is not guaranteed to terminate, even if a goal node exists.
+
+f(n) = h(n)
+
+**Additional text recovered from rendered slide:**
+Given a heuristic evaluation function, the simplest algorithm that uses it
+PHS will eventually generate the entire graph finding a goal node if
+one exists.
+If the graph is infinite, PHS is not guaranteed to terminate, even if a
+goal node exists.
+
+---
+
+### Slide 31 — Pure Heuristic Search
+
+open
+s
+a b c
+a b e
+a e g
+g
+
+Pure Heuristic Search
+
+If the PHS terminates with solution, it is not guaranteed
+to be an optimal one.
+Example:
+Here the algorithm will return a solution of length 4, when one of length 3 exists. The problem is that PHS only considers the estimated cost h(n) to a goal when choosing a node for expansion, and doesn’t consider the cost g(n) from the initial state to the node.
+
+h=8
+
+e
+
+3
+
+1
+
+h=1
+
+h=2
+
+C
+
+2
+
+<number>
+
+**Additional text recovered from rendered slide:**
+Pure Heuristic Search s
+to be an optimal one. abc
+Example: h=8
+e abe
+a h=2 h=1 b h=1
+2 1 g
+Here the algorithm will return a solution of length 4, when one of length 3
+exists. The problem is that PHS only considers the estimated cost h(n) to
+a goal when choosing a node for expansion, and doesn’t consider the cost
+g(n) from the initial state to the node.
+
+---
+
+### Slide 32 — Properties of Pure heuristic Search
+
+Properties of Pure heuristic Search
+
+Complete: Yes. It is a best-first search.
+Optimal: certainly not.
+Space complexity: Can be exponential (up to the size of the domain)
+Time complexity: Hard to tell. Usually, finds the goal fast but not on an optimal path.
+
+<number>
+
+**Additional text recovered from rendered slide:**
+Properties of Pure heuristic
+Search
+Space complexity: Can be exponential (up to
+the size of the domain)
+Time complexity: Hard to tell. Usually, finds
+the goal fast but not on an optimal path.
+
+---
+
+### Slide 33 — A* Algorithm
+
+A* Algorithm
+
+We take into account both the cost of reaching a node form the Initial state, g(h), as well as the heuristic estimate from that node to the goal node, h(n).
+For given h(n), this is the best estimate of a lowest cost path from the initial state to a goal state that is constrained to pass through node n
+The A stands for “algorithm”, and the * indicates its optimality property.
+
+f(n) = g(n) + h(n)
+
+**Additional text recovered from rendered slide:**
+We take into account both the cost of reaching a node
+form the Initial state, g(h), as well as the heuristic estimate
+from that node to the goal node, h(n).
+For given h(n), this is the best estimate of a lowest cost
+path from the initial state to a goal state that is
+constrained to pass through node n
+The A stands for “algorithm”, and the * indicates its
+optimality property.
+
+---
+
+### Slide 34 — A* - Terminating Conditions
+
+A* - Terminating Conditions
+
+Like all best-first searches, A* terminates when it chooses a goal node for expansion, or when there are no more Open nodes.
+Admissible condition: the estimated cost to goal always underestimates the real cost (it is always optimistic) h(n) <= h*(n)
+when h(n) is admissible, so is f(n):f(n) <= f*(n)
+f(n) is the estimated cost of the cheapest solution through n
+f*(n) is the actual cost of the cheapest solution through n
+
+**Additional text recovered from rendered slide:**
+Like all best-first searches, A* terminates when it chooses a
+goal node for expansion, or when there are no more Open
+nodes.
+Admissible condition: the estimated cost to goal always
+underestimates the real cost (it is always optimistic)
+h(n) <= h*(n)
+
+---
+
+### Slide 35 — Best-first search: Cost functions
+
+Best-first search: Cost functions
+
+g(x): Real distance from the initial state to x
+h(x): The estimated remained distance from x to the goal state.
+Different cost combinations of g and h
+f(x)=level(x) Breadth-First Search.
+f(x)=g(x) Dijkstra’s algorithms. Uniform Search
+f(x)=h’(x) Pure Heuristic Search (PHS).
+f(x)=g(x)+h’(x) The A* algorithm (1968).
+
+<number>
+
+**Additional text recovered from rendered slide:**
+h(x): The estimated remained distance from x to
+the goal state.
+
+---
+
+### Slide 36 — A*
+
+A*
+
+Behavior of breadth-first search Vs. A*
+
+Breadth
+First
+Search
+
+<number>
+
+---
+
+### Slide 37 — Slide 37
+
+_No extractable text; see the original slide for its visual content._
+
+---
+
+### Slide 38 — A* - Solution Quality
+
+A* - Solution Quality
+
+In general, A* is guaranteed to return optimal solutions only if the heuristic is admissible.
+Counter example:
+The problem in this example is that the heuristic value at node b (3) overestimates the cost of reaching a goal from node b, which is only 1.
+
+h(b)= 3
+f(b) = 1 + 3 = 4
+
+h(a )= 1
+f(a) = 1 + 1 = 2
+
+open
+S
+A B
+C B
+C
+
+h(c)= 0
+f(c) = 3 + 0 = 3
+
+<number>
+
+**Additional text recovered from rendered slide:**
+In general, A* is guaranteed to return optimal solutions only if the
+heuristic is admissible.
+Counter example: s
+1 1 f(b) = 1 + 3 = 4
+h(a )= 1 a b
+2 c 1
+AB f(c) = 3 + 0 = 3
+The problem in this example is that the heuristic value at node b (3)
+overestimates the cost of reaching a goal from node b, which is only 1.38
+
+---
+
+### Slide 39 — A*
+
+A*
+
+Termination condition: stop running the algorithm only after the goal node was chosen for expansion.
+Counter example:
+
+h(b)= 1
+f(b) = 1 + 1 = 2
+
+h(a )= 0
+f(a) = 1 + 0 = 1
+
+open
+S
+A B
+C(3) B
+C(3) C(2)
+C(2)
+
+h(c)= 0
+f(c) = 3 + 0 = 3
+
+We could stop here after generating the goal node
+
+An optimal solution is attained only If we stop here after the goal node is chosen for expansion.
+
+<number>
+
+**Additional text recovered from rendered slide:**
+Termination condition: stop running the algorithm
+only after the goal node was chosen for expansion.
+Counter example: h(b)= 1
+1 1 f(b) = 1 + 1 = 2
+open 2 c 1
+AB We could stop here
+after generating
+C(3) B the goal node
+C(3) C(2) An optimal solution is attained only If we stop
+here after the goal node is chosen for expansion. 39
+
+---
+
+### Slide 40 — A* algorithm
+
+A* algorithm
+
+Theorem: when A* uses an admissible heuristic h(n) it returns an optimal solution when the goal node is chosen for expansion.
+Proof: The open list is a perimeter around the start node.
+Each node n in the open list has a lower bound on the path to the goal via n.
+The node chosen for expansion has the smallest lower bound.
+Descendents of lower bounds cannot have a better lower bound then their parents.
+When the goal node is chosen for expansion it has a real path of cost c, while all other nodes in the open list have lower bounds >=c.
+Thus c is optimal
+
+8, 8, 10, 12, 12, 14, 16
+
+Goal node
+
+<number>
+
+**Additional text recovered from rendered slide:**
+Theorem: when A* uses an admissible heuristic h(n) it
+returns an optimal solution when the goal node is chosen for
+expansion.
+Each node n in the open list has a lower bound on the path to
+the goal via n.
+The node chosen for expansion has the smallest lower
+bound.
+Descendents of lower bounds cannot have a better lower
+bound then their parents.
+When the goal node is chosen for expansion it has a real
+path of cost c, while all other nodes in the open list have
+lower bounds >=c.
+Goal node 40
+
+---
+
+### Slide 41 — A* מול חיפוש לרוחב
+
+A* מול חיפוש לרוחב
+
+Breadth
+First
+Search
+
+A*
+
+ככל שהיוריסטיקה טובה יותר האליפסה של A* צרה יותר
+
+g=5
+h=4
+
+goal
+
+start
+
+C*=10
+
+<number>
+
+**Additional text recovered from rendered slide:**
+‫‪start‬‬ ‫‪C*=10‬‬
+
+---
+
+### Slide 42 — A* מול חיפוש לרוחב
+
+A* מול חיפוש לרוחב
+
+ככל שהיוריסטיקה טובה יותר האליפסה של A*צרה יותר
+
+g=5
+h=6
+
+goal
+
+start
+
+C*=10
+
+<number>
+
+**Additional text recovered from rendered slide:**
+‫‪start‬‬ ‫‪C*=10‬‬
+
+---
+
+### Slide 43 — Time Complexity of A*
+
+Time Complexity of A*
+
+The running time of A* is proportional to the number of nodes generated or expanded.Therefore the branching factor is at most a constant, and heuristic evaluation of a node can be done in constant time.
+The Open and Closed lists can be maintained in constant time per node expansion.
+Closed list - can be organized as hash table, since we only need to check for the occurrence of a node.
+Open list - we have to be able to insert a node and retrieve a lowest-cost node in constant time. This would take time that is logarithmic in the size of the Open list.
+In many cases, the heuristic functions and edge costs are integer valued or have a small number of distinct values. In such case, the Open can be maintained as an array of lists, separate list for each different cost. This allows constant-time insertion and retrieval from the Open list.
+Thus, the question is how many nodes A* generates in the process of finding a solution. The answer depends on the quality of the heuristic function.
+
+**Additional text recovered from rendered slide:**
+The running time of A* is proportional to the number of nodes generated or
+expanded.Therefore the branching factor is at most a constant, and
+heuristic evaluation of a node can be done in constant time.
+The Open and Closed lists can be maintained in constant time per node
+expansion.
+ Closed list - can be organized as hash table, since we only need to check
+for the occurrence of a node.
+ Open list - we have to be able to insert a node and retrieve a lowest-cost
+node in constant time. This would take time that is logarithmic in the size of
+the Open list.
+ In many cases, the heuristic functions and edge costs are integer valued
+or have a small number of distinct values. In such case, the Open can be
+maintained as an array of lists, separate list for each different cost. This
+allows constant-time insertion and retrieval from the Open list.
+Thus, the question is how many nodes A* generates in the process of
+finding a solution. The answer depends on the quality of the heuristic
+function.
+
+---
+
+### Slide 44 — Special Cases
+
+Special Cases
+
+Worst case: Cost function f(n) = g(n)
+the heuristic function returns zero for every node and provides no information to the algorithm, but is still a lower-bound on actual cost.This is identical to the UCS or Dijkstra’s algorithm, which has a worst-case time complexity of
+Best case: Cost function f(n) = g(n) + h*(n)
+the heuristic function is perfect and always returns the exact optimal cost to a goal state from any given state,The optimal path will be chosen, and the number of node-expansion cycles will be the depth of the optimal path d. Thus, the asymptotic time complexity is
+
+O(bc/e )
+
+O(bd) = O(d)
+
+**Additional text recovered from rendered slide:**
+ the heuristic function returns zero for every node and provides no
+information to the algorithm, but is still a lower-bound on actual
+cost.This is identical to the UCS or Dijkstra’s algorithm, which has a
+worst-case time complexity of
+ the heuristic function is perfect and always returns the exact
+optimal cost to a goal state from any given state,The optimal path
+will be chosen, and the number of node-expansion cycles will be
+the depth of the optimal path d. Thus, the asymptotic time
+complexity is
+
+---
+
+### Slide 45 — Tie Breaking
+
+Tie Breaking
+
+Example
+
+h(b)= 2
+f(b) = 1 +2 = 3
+
+s
+
+h(a)= 2
+f(a) = 2 +1 = 3
+
+2
+
+1
+
+b
+
+a
+
+g1
+
+g2
+
+c
+
+g3
+
+g4
+
+h(g1)= 0
+f(g1) = 3+0 = 3
+
+**Additional text recovered from rendered slide:**
+h(a)= 2 s
+2 1 f(b) = 1 +2 = 3
+1 1 2 2
+g1 c
+g2 c
+g3 c
+
+---
+
+### Slide 46 — Tie Breaking
+
+Tie Breaking
+
+Consider a problem where every node at depth d is a goal node, and every path to depth d is an optimal solution path. As such a tree is explored, every node will have the same cost. If ties are broken in favor of nodes with lower g costs the entire tree may be generated before a goal node. Thus, the asymptotic time complexity would be O(bd), in spite of the fact that we have a perfect heuristic function.
+
+**Additional text recovered from rendered slide:**
+Consider a problem where every node at depth d is
+a goal node, and every path to depth d is an
+optimal solution path. As such a tree is explored,
+every node will have the same cost. If ties are
+broken in favor of nodes with lower g costs the
+entire tree may be generated before a goal node.
+Thus, the asymptotic time complexity would be
+O(bd), in spite of the fact that we have a perfect
+heuristic function.
+
+---
+
+### Slide 47 — Tie Breaking
+
+Tie Breaking
+
+A better tie breaking rule is to always break ties among nodes with the same f(n) value in favor of nodes with the smallest h(n) value (or the largest g(n) value). This ensures that:
+any tie will always be broken in favor of a goal node, which has h(Goal) = 0 by definition.
+the time complexity of A* with a perfect heuristic will be O(d).
+
+**Additional text recovered from rendered slide:**
+A better tie breaking rule is to always break ties
+among nodes with the same f(n) value in favor of
+nodes with the smallest h(n) value (or the largest
+g(n) value). This ensures that:
+ any tie will always be broken in favor of a goal node,
+which has h(Goal) = 0 by definition.
+ the time complexity of A* with a perfect heuristic will
+be O(d).
+
+---
+
+### Slide 48 — Conditions for Node Expansion by A*
+
+Conditions for Node Expansion by A*
+
+If the heuristic function is consistent, then the cost function f(n) is nondecreasing along any path away from the root node. The sequence of nodes expanded by A* starts at the h(s) and stays the same or increases until it reaches the cost of an optimal solution. Some nodes with the optimal solution cost might be expanded, until a goal node is chosen.
+
+**Additional text recovered from rendered slide:**
+If the heuristic function is consistent, then the cost
+function f(n) is nondecreasing along any path away
+from the root node. The sequence of nodes expanded
+by A* starts at the h(s) and stays the same or increases
+until it reaches the cost of an optimal solution. Some
+nodes with the optimal solution cost might be
+expanded, until a goal node is chosen.
+
+---
+
+### Slide 49 — Conditions for Node Expansion by A*
+
+Conditions for Node Expansion by A*
+
+This means that all nodes n whose cost f(n) < c will certainly be expanded, (where c is optimal solution cost), and no nodes n whose cost f(n) > c will be expanded. Some nodes n whose cost f(n) = c will be expanded.
+
+Thus, f(n) < c is a sufficient condition for A* to expand node n, and f(n)  c is a necessary condition.
+
+**Additional text recovered from rendered slide:**
+This means that all nodes n whose cost f(n) < c will
+certainly be expanded, (where c is optimal solution
+cost), and no nodes n whose cost f(n) > c will be
+expanded. Some nodes n whose cost f(n) = c will be
+expanded.
+Thus, f(n) < c is a sufficient condition for A* to expand node n, and
+f(n)  c is a necessary condition.
+
+---
+
+### Slide 50 — Time optimality of A*
+
+Time optimality of A*
+
+Theorem 3.3 : For a given consistent (admissible) heuristic function, every admissible algorithm must expand all nodes surely expanded by A*.
+Intuition: If a node m with f(m)<C is not expanded, maybe there is a solution path going from that node!!
+Proof: Suppose that there exists an admissible algorithm B, a problem P, a consistent heuristic function h and a node m such that node m is not expanded by algorithm B on problem P with heuristic function h, but node m is surely expanded by A*, meaning that f(m) = g(m) + h(m) < c.
+Let’s construct a new problem P’ that is identical to problem P, except for the addition of a single new edge leaving node m, which leads to a new goal nodes z. Let the cost of the edge from node m to node z be h(m), the heuristic value of node m in problem P’, or c’(m,z) = h(m). We use c’(m,z) here to denote the actual cost from m to z in problem P’.
+In problem P’, the cost of an optional path from the initial state to the new goal state is g(m) + c’(m,z) = g(m) + h(m) = f(m), since every path to z must go through node m. Since f(m) < c, the cost of an optimal solution to problem P, the optimal solution to problem P’ is the path from the start through node m to goal z.
+When we apply algorithm B to problem P’.By assumption, B never expands node m on problem P, thus it must not expand node m on problem P’ either. Thus B must fail to find the optimal solution to problem P’. Contradiction !
+
+**Additional text recovered from rendered slide:**
+Theorem 3.3 : For a given consistent (admissible) heuristic
+function, every admissible algorithm must expand all
+nodes surely expanded by A*.
+Intuition: If a node m with f(m)<C is not expanded, maybe there is a solution path
+going from that node!!
+Proof: Suppose that there exists an admissible algorithm B, a problem P, a
+consistent heuristic function h and a node m such that node m is not expanded by
+algorithm B on problem P with heuristic function h, but node m is surely expanded by
+A*, meaning that f(m) = g(m) + h(m) < c.
+Let’s construct a new problem P’ that is identical to problem P, except for the addition
+of a single new edge leaving node m, which leads to a new goal nodes z. Let the
+cost of the edge from node m to node z be h(m), the heuristic value of node m in
+problem P’, or c’(m,z) = h(m). We use c’(m,z) here to denote the actual cost from m
+to z in problem P’.
+In problem P’, the cost of an optional path from the initial state to the new goal state
+is g(m) + c’(m,z) = g(m) + h(m) = f(m), since every path to z must go through node m.
+Since f(m) < c, the cost of an optimal solution to problem P, the optimal solution to
+problem P’ is the path from the start through node m to goal z.
+When we apply algorithm B to problem P’.By assumption, B never expands node m
+on problem P, thus it must not expand node m on problem P’ either. Thus B must fail
+to find the optimal solution to problem P’. Contradiction !
+
+---
+
+### Slide 51 — Intuition for the optimality of A*
+
+Intuition for the optimality of A*
+
+If a node m with f(m)<C is not expanded, maybe there is a solution path going from that node!!
+
+**Additional text recovered from rendered slide:**
+If a node m with f(m)<C is not expanded,
+maybe there is a solution path going from that
+node!!
+
+---
+
+### Slide 52 — Space complexity of A*
+
+Space complexity of A*
+
+The main drawback of A* is its space complexity.
+Like all best-first search algorithms’ it stores all the nodes it generates in either the Open list or the Closed list.Thus, its space complexity is the same as its time complexity, assuming that a node can be stored in a constant amount of space.
+On current computers, it will typically exhaust the available memory in a number of minutes .
+This algorithm is memory- limited.
+
+**Additional text recovered from rendered slide:**
+Like all best-first search algorithms’ it stores all the
+nodes it generates in either the Open list or the Closed
+list.Thus, its space complexity is the same as its time
+complexity, assuming that a node can be stored in a
+constant amount of space.
+On current computers, it will typically exhaust the
+available memory in a number of minutes .
+
+---
+
+### Slide 53 — Admissible, Consistent and Monotonic Heuristics
+
+Admissible, Consistent and Monotonic Heuristics
+
+Admissible:
+if we define h*(n) as the exact lowest cost from node n to a goal, a heuristic function h(n) is admissible if and only if n
+Consistent:
+this quality is similar to the triangle inequality of all metrics. If c(n,m) is the cost of a shortest path from node n to node m , then a heuristic function h(x) is consistent if n,m
+
+h(n)  h*(n)
+
+h(n)  c(n,m) + h(m)
+
+**Additional text recovered from rendered slide:**
+Admissible, Consistent and
+Monotonic Heuristics
+if we define h*(n) as the exact lowest cost from node n to a goal, a
+heuristic function h(n) is admissible if and only if n
+this quality is similar to the triangle inequality of all metrics. If c(n,m) is
+the cost of a shortest path from node n to node m , then a heuristic
+function h(x) is consistent if n,m
+h(n)  c(n,m) +
+
+---
+
+### Slide 54 — Consistent heuristic
+
+Consistent heuristic
+
+h(n)  c(n,m) + h(m)
+|h(n)-h(m)| c(n,m)
+
+The heuristic cannot change more than the actual cost
+
+This is inconsistentHow do we fix this?Which answer is correct:1)The 8 becomes 5+2=72)The 5 becomes 8-2=6
+
+2
+
+5
+
+8
+
+**Additional text recovered from rendered slide:**
+2 This is inconsistent
+5 8 How do we fix this?
+Which answer is correct:
+1)The 8 becomes 5+2=7
+2)The 5 becomes 8-2=6
+
+---
+
+### Slide 55 — Admissible, Consistent and Monotonic Heuristics
+
+Admissible, Consistent and Monotonic Heuristics
+
+Monotonic:
+If a heuristic function h(n) is consistent, then the cost function f(n) is monotonic nondecreasing,i.e if and only if for all children n’ of n ,
+Proof: h(n)  c(n,n’)+h(n’)
+g(n) + h(n)  g(n)+c(n,n’) + h(n’)
+g(n) + h(n)  g(n’) + h(n’)
+f(n)  f(n’)
+Applying the same proof in the opposite direction shows that monotonicity of implies consistency of h.
+Thus, the two properties are equivalent.
+
+f(n)  f(n’)
+
+**Additional text recovered from rendered slide:**
+Admissible, Consistent and
+Monotonic Heuristics
+If a heuristic function h(n) is consistent, then the cost function f(n) is
+monotonic nondecreasing,i.e if and only if for all children n’ of n ,
+Applying the same proof in the opposite direction shows that
+monotonicity of implies consistency of h.
+
+---
+
+### Slide 56 — Consistency implies admissibility — To see this, we replace m with a goal node G. — Proof: h(n)  c(n,m)+h(m) — h(n)  c(n,G) + h(G) — h(G) = 0 — h(n)  c(n,G) (the shortest path) — h(n)  h*(n) —  — Admissibility does not imply consistency.Consistency is a stronger property.
+
+Admissible, Consistent and Monotonic Heuristics
+
+Consistency implies admissibility
+To see this, we replace m with a goal node G.
+Proof: h(n)  c(n,m)+h(m)
+h(n)  c(n,G) + h(G)
+h(G) = 0
+h(n)  c(n,G) (the shortest path)
+h(n)  h*(n)
+Admissibility does not imply consistency.Consistency is a stronger property.
+
+**Additional text recovered from rendered slide:**
+Admissible, Consistent and
+Monotonic Heuristics
+Admissibility does not imply consistency .Consistency is a stronger
+property.
+
+---
+
+### Slide 57 — Given an admissible but inconsistent function h (which is rare), we can easily construct a monotonic f function that is still admissible: — whenever the f(n’) value of a child node n’ is less than the f(n) value of its parent node n, we set the f(n’) value of the child to the f(n) value of the parent —  — if the heuristic function h(n) is admissible, the the new cost function f(n) will also be admissible, as follows. If h(n) is a lower bound on the cost of reaching the goal , then f(n) = g(n) +h(n) is a lower bound on total cost of reaching the goal from the initial state via the current path. Therefore, the total cost of reaching the goal via every child of node n must be at least as large as the minimum cost though the parent.
+
+Admissible, Consistent and Monotonic Heuristics
+
+Given an admissible but inconsistent function h (which is rare), we can easily construct a monotonic f function that is still admissible:
+whenever the f(n’) value of a child node n’ is less than the f(n) value of its parent node n, we set the f(n’) value of the child to the f(n) value of the parent
+if the heuristic function h(n) is admissible, the the new cost function f(n) will also be admissible, as follows. If h(n) is a lower bound on the cost of reaching the goal , then f(n) = g(n) +h(n) is a lower bound on total cost of reaching the goal from the initial state via the current path. Therefore, the total cost of reaching the goal via every child of node n must be at least as large as the minimum cost though the parent.
+
+f(n’) = max(f(n’), f(n))
+
+**Additional text recovered from rendered slide:**
+Admissible, Consistent and
+Monotonic Heuristics
+Given an admissible but inconsistent function h (which is rare), we can
+easily construct a monotonic f function that is still admissible:
+ whenever the f(n’) value of a child node n’ is less than the f(n) value of
+its parent node n, we set the f(n’) value of the child to the f(n) value of
+the parent
+ if the heuristic function f(n’)
+h(n) is=admissible,
+max(f(n’), thef(n))
+the new cost function f(n) will
+also be admissible, as follows. If h(n) is a lower bound on the cost of reaching
+the goal , then f(n) = g(n) +h(n) is a lower bound on total cost of reaching the
+goal from the initial state via the current path. Therefore, the total cost of
+reaching the goal via every child of node n must be at least as large as the
+minimum cost though the parent.
+
+---
+
+### Slide 58 — Slide 58
+
+
+
+**Additional text recovered from rendered slide:**
+AstarExamp.mov
+
+---
+
+### Slide 59 — Linear Space Heuristic Searches
+
+Linear Space Heuristic Searches
+
+The algorithms In Chapter 3 needed exponential space.
+Now we will see 3 algorithms that only require linear space.
+
+**Additional text recovered from rendered slide:**
+The algorithms In Chapter 3 needed exponential
+space.
+Now we will see 3 algorithms that only require
+linear space.
+
+---
+
+### Slide 60 — Iterative Deepening A* (IDA*)
+
+Iterative Deepening A* (IDA*)
+
+IDA* is to A* as DFID is to BFS
+How does it work:
+A cost threshold is set.
+f(n) = g(n) + h(n) is computed in each iteration.
+If f(n) < threshold we expand the node.
+Else the branch is pruned (we don’t expand it).
+
+---
+
+### Slide 61 — If a goal node is reached with a price lower then the goal it is returned. — Else if a whole iteration has ended without reaching the goal, then another iteration is begun with a greater cost threshold.  — The new cost threshold is set to the minimum cost of al nodes that were pruned on the previous iteration. — The cost Threshold for the first Iteration is set to the cost of the initial state.
+
+Iterative Deepening A* (IDA*)
+
+If a goal node is reached with a price lower then the goal it is returned.
+Else if a whole iteration has ended without reaching the goal, then another iteration is begun with a greater cost threshold.
+The new cost threshold is set to the minimum cost of al nodes that were pruned on the previous iteration.
+The cost Threshold for the first Iteration is set to the cost of the initial state.
+
+**Additional text recovered from rendered slide:**
+ If a goal node is reached with a price lower
+then the goal it is returned.
+ Else if a whole iteration has ended without
+reaching the goal, then another iteration is
+begun with a greater cost threshold.
+ The new cost threshold is set to the minimum
+cost of al nodes that were pruned on the
+previous iteration.
+ The cost Threshold for the first Iteration is set
+to the cost of the initial state.
+
+---
+
+### Slide 62 — IDA* - Example
+
+IDA* - Example
+
+This is the First Iteration of IDA*.
+In this example the initial cost threshold is 4 and every node with the price 4 is expanded.
+We stop when we reach a cost larger then 4.
+
+**Additional text recovered from rendered slide:**
+In this example the initial cost threshold is 4 and every node
+with the price 4 is expanded.
+
+---
+
+### Slide 63 — This is the Second Iteration of IDA*. — The cost threshold was 5 and every node with the cost 5 or less was expanded.
+
+IDA* - Example
+
+This is the Second Iteration of IDA*.
+The cost threshold was 5 and every node with the cost 5 or less was expanded.
+
+**Additional text recovered from rendered slide:**
+The cost threshold was 5 and every node with the cost 5
+or less was expanded.
+
+---
+
+### Slide 64 — Termination
+
+Termination
+
+If a solution of finite cost exists, it will eventually be found and returned by IDA*.
+
+**Additional text recovered from rendered slide:**
+If a solution of finite cost exists, it
+will eventually be found and
+returned by IDA*.
+
+---
+
+### Slide 65 — Solution Optimality
+
+Solution Optimality
+
+Theorem 4.1 : In a graph where all edges have a minimum positive cost, and non-negative heuristic values that never overestimate actual cost, in which a finite-cost path exists to a goal state, IDA* will return an optimal path to a goal.
+Steps of proof (by induction):
+For the induction step, assume that at the iteration I , there is a node n on the frontier on an optimal solution path.
+During iteration I+1, node n will be generated again, since the threshold for iteration I+1 is greater then for iteration I.
+In this way we can show that at the end of every iteration, there is at least one node node n on the iteration that is on an optimal solution path.
+
+**Additional text recovered from rendered slide:**
+Theorem 4.1 : In a graph where all edges have a minimum
+positive cost, and non-negative heuristic values that never
+overestimate actual cost, in which a finite-cost path exists to a
+goal state, IDA* will return an optimal path to a goal.
+ For the induction step, assume that at the iteration I , there is
+a node n on the frontier on an optimal solution path.
+ During iteration I+1, node n will be generated again, since the
+threshold for iteration I+1 is greater then for iteration I.
+In this way we can show that at the end of every iteration,
+there is at least one node node n on the iteration that is
+on an optimal solution path.
+
+---
+
+### Slide 66 — Space Complexity
+
+Space Complexity
+
+The asymptotic space complexity is the maximum depth of the recursion stack .
+The optimal solution cost is c, and the minimum edge cost is e.
+The maximum length of any path with total cost less than or equal c is c/e.
+The maximum search depth is c/e+1.
+Since e is a constant, the asymptotic space complexity of IDA* is O( c ).
+
+IDA* complexity eliminates the space constraint on A* in practice!
+
+**Additional text recovered from rendered slide:**
+The asymptotic space complexity is the maximum depth
+of the recursion stack .
+The optimal solution cost is c, and the minimum edge
+cost is e.
+The maximum length of any path with total cost less than
+or equal c is c/e.
+Since e is a constant, the asymptotic space complexity of
+IDA* is O( c ).
+IDA* complexity eliminates the space constraint on
+A* in practice!
+
+---
+
+### Slide 67 — Time Complexity
+
+Time Complexity
+
+The last iteration
+The last iteration will expand all nodes connected to the root whose cost is less then or equal to c.
+This is only true if the heuristic function is consistent.
+In the worst case (when the heuristic function is not consistent) IDA* expands the same set of nodes as A* does.
+
+**Additional text recovered from rendered slide:**
+ The last iteration will expand all nodes connected
+to the root whose cost is less then or equal to c.
+ This is only true if the heuristic function is
+consistent.
+ In the worst case (when the heuristic function is
+not consistent) IDA* expands the same set of
+nodes as A* does.
+
+---
+
+### Slide 68 — The previous iterations — The number of nodes generated by an iteration of IDA* with the cost threshold x is :  —  — If N(x) grows exponentially with x, with branching factor b then : —  — This means that in each iteration the number of nodes developed also grows exponentially with the branching factor b.
+
+Time Complexity
+
+The previous iterations
+The number of nodes generated by an iteration of IDA* with the cost threshold x is :
+If N(x) grows exponentially with x, with branching factor b then :
+This means that in each iteration the number of nodes developed also grows exponentially with the branching factor b.
+
+**Additional text recovered from rendered slide:**
+ The number of nodes generated by an iteration of
+IDA* with the cost threshold x is :
+ID A ( x )   N ( x )
+ If N(x) grows exponentially with x, with branching
+factor b then :
+ID A (x ) / ID A (x - 1 ) = b
+ This means that in each iteration the number of
+nodes developed also grows exponentially with the
+branching factor b.
+
+---
+
+### Slide 69 — Time Complexity
+
+Time Complexity
+
+So according to what we saw the asymptotic time complexity of IDA* is the same as that of A*.
+We have seen that like to iterative deepening (ID) most of the work is done in the final iteration. The time is not harmed by all the iterations we apply although we go over the nodes in the former levels a couple of times.
+
+**Additional text recovered from rendered slide:**
+So according to what we saw the asymptotic
+time complexity of IDA* is the same as that
+of A*.
+We have seen that like to iterative deepening
+(ID) most of the work is done in the final
+iteration. The time is not harmed by all the
+iterations we apply although we go over the
+nodes in the former levels a couple of times.
+
+---
+
+### Slide 70 — IDA* - Conclusion
+
+IDA* - Conclusion
+
+IDA* keeps the optimal solution of A*.
+IDA* solves the space constraint that A* has without any sacrifice to the asymptotic time complexity.
+IDA* may run even faster then A* (Why?).
+IDA* is much easier to implement then A* because it’s a DFS algorithm and no open and closed lists have to be kept.
+
+**Additional text recovered from rendered slide:**
+IDA* solves the space constraint that A* has
+without any sacrifice to the asymptotic time
+complexity.
+IDA* is much easier to implement then A*
+because it’s a DFS algorithm and no open and
+closed lists have to be kept.
+
+---
+
+### Slide 71 — limitations of IDA*
+
+limitations of IDA*
+
+When all the node costs are different:
+IDA* will develop a different iteration for each node and in each iteration only one new node will be expanded.
+On such a tree the time complexity of A* will be O(bd) but for IDA* O(b2d).
+If the asymptotic complexity of A* is O(N) - IDA*‘s complexity can get in the worst case to O(N2).
+
+**Additional text recovered from rendered slide:**
+ IDA* will develop a different iteration for each node
+and in each iteration only one new node will be
+expanded.
+ On such a tree the time complexity of A* will be
+O(bd) but for IDA* O(b2d).
+ If the asymptotic complexity of A* is O(N) - IDA*‘s
+complexity can get in the worst case to O(N2).
+
+---
+
+### Slide 72 — The problem space for IDA* must be a tree because : — if a certain node can be reached via multiple paths it will be represented by more than 1 node in the search tree.  — A* can avoid the duplicate nodes by storing them in the memory but IDA* is a DFS (no memory) and thus it can not detect most of the duplicates.  — This can increase the time complexity of IDA* compared to A*.  — Thus, if there are many short cycles in the graph and there is no memory problem - choose A*.
+
+limitations of IDA*
+
+The problem space for IDA* must be a tree because :
+if a certain node can be reached via multiple paths it will be represented by more than 1 node in the search tree.
+A* can avoid the duplicate nodes by storing them in the memory but IDA* is a DFS (no memory) and thus it can not detect most of the duplicates.
+This can increase the time complexity of IDA* compared to A*.
+Thus, if there are many short cycles in the graph and there is no memory problem - choose A*.
+
+**Additional text recovered from rendered slide:**
+ if a certain node can be reached via multiple paths it will be
+represented by more than 1 node in the search tree.
+ A* can avoid the duplicate nodes by storing them in the
+memory but IDA* is a DFS (no memory) and thus it can not
+detect most of the duplicates.
+ This can increase the time complexity of IDA* compared to
+ Thus, if there are many short cycles in the graph and there
+is no memory problem - choose A*.
+
+---
+
+### Slide 73 — Experiments with IDA*
+
+Experiments with IDA*
+
+With the 8 tile puzzle, a good implementation of IDA* runs about 3 times faster per node generation then a good implementation of A* .
+IDA* with the Manhattan distance heuristic was the first algorithm to optimally solve random 15 puzzle instances. When trying to solve this problem with A* the memory quickly ran out because billions of nodes need to be expanded in this problem.
+IDA* was also used to solve the 24 puzzle (took a couple of weeks to solve).
+IDA* has also been used to solve the 3x3x3 Rubik’s cube (This also takes about a week to solve).
+
+**Additional text recovered from rendered slide:**
+With the 8 tile puzzle, a good implementation of IDA* runs
+about 3 times faster per node generation then a good
+implementation of A* .
+IDA* with the Manhattan distance heuristic was the first
+algorithm to optimally solve random 15 puzzle instances. When
+trying to solve this problem with A* the memory quickly ran out
+because billions of nodes need to be expanded in this problem.
+IDA* was also used to solve the 24 puzzle (took a couple of
+weeks to solve).
+IDA* has also been used to solve the 3x3x3 Rubik’s cube (This
+also takes about a week to solve).
+
+---
+
+### Slide 74 — ID as an Algorithm Schema
+
+ID as an Algorithm Schema
+
+ID can be viewed as an algorithm schema with different instantiations based on the cost function.
+There are several types :
+DFID if cost = depth.
+IDA* if cost = g(n) + h(n)
+ID version of Uniform Cost Search
+if cost = g(n)
+
+**Additional text recovered from rendered slide:**
+ID can be viewed as an algorithm schema with
+different instantiations based on the cost
+function.
+
+---
+
+### Slide 75 — Depth First Branch and Bound
+
+Depth First Branch and Bound
+
+IDA* isn’t so effective for all the problems.
+For Example: TSP- the Traveling Salesman Problem deals with the possibilities of a salesman in visiting a finite number of cities in the cheapest way where every two cities have different price as their distance.
+
+**Additional text recovered from rendered slide:**
+For Example: TSP- the Traveling Salesman
+Problem deals with the possibilities of a salesman
+in visiting a finite number of cities in the cheapest
+way where every two cities have different price as
+their distance.
+
+---
+
+### Slide 76 — IDA* And TSP
+
+IDA* And TSP
+
+IDA* clearly doesn’t fit to deal with this problem in the best way because:
+in the TSP problem there is a finite depth of the search tree, so Iterative Deepening is not useful in this case, because we know the depth of the solution and there is n use of searching different depths all the time when we know the correct depth from the beginning.
+
+**Additional text recovered from rendered slide:**
+IDA* clearly doesn’t fit to deal with this problem in
+the best way because:
+ in the TSP problem there is a finite depth of the
+search tree, so Iterative Deepening is not useful in
+this case, because we know the depth of the
+solution and there is n use of searching different
+depths all the time when we know the correct depth
+from the beginning.
+
+---
+
+### Slide 77 — Example: Search Tree for TSP on Four Cities
+
+Example: Search Tree for TSP on Four Cities
+
+DFBnB assumes a cost function that can be applied to a partial solution, and is a lower bound on the cost of all completions of that partial solution.
+This is clearly the case in the TSP.
+
+**Additional text recovered from rendered slide:**
+Example: Search Tree for TSP on
+Four Cities
+B C D
+C D B D B C
+D C D B C B
+A A A A A A
+DFBnB assumes a cost function that can be applied to a
+partial solution, and is a lower bound on the cost of all
+completions of that partial solution.
+
+---
+
+### Slide 78 — How DFBnB Works
+
+How DFBnB Works
+
+DFBnB works like a simple DFS but
+when finding the first solution the cost of that solution is stored in .
+from this point on each time the cost of the new path exceeds or equals ,that branch is pruned and we continue checking the next one.
+each time we reach a path that costs less than we change to this cost andupdate the best solution.
+The search ends when we finish checking the whole tree.
+starts with infinity in the beginning of the search.
+
+**Additional text recovered from rendered slide:**
+ when finding the first solution the cost of that solution is
+stored in .
+ from this point on each time the cost of the new path
+exceeds or equals ,that branch is pruned and we
+continue checking the next one.
+ each time we reach a path that costs less than we
+change to this cost andupdate the best solution.
+
+---
+
+### Slide 79 — When DFBnB is Used
+
+When DFBnB is Used
+
+Depth-First Branch-and-Bound is often used when the optimal solution is required.
+It can also be applied in an infinite tree if there is a good upper bound available on the optimal solution depth or solution cost.
+It is also better then IDA* when IDA* wastes much time when there are a lot of different costs, for example in the TSP each cost is different then the other so the IDA* will only generate few nodes in each iteration thus costing us a lot of wasted time.
+
+**Additional text recovered from rendered slide:**
+Depth-First Branch-and-Bound is often used when
+the optimal solution is required.
+It can also be applied in an infinite tree if there is a
+good upper bound available on the optimal solution
+depth or solution cost.
+It is also better then IDA* when IDA* wastes much
+time when there are a lot of different costs, for
+example in the TSP each cost is different then the
+other so the IDA* will only generate few nodes in
+each iteration thus costing us a lot of wasted time.
+
+---
+
+### Slide 80 — Improving DFBnB
+
+Improving DFBnB
+
+Node Ordering
+We use node ordering to find a low cost solution as quickly as possible and this results in greater pruning in the remainder of the search. For example in the TSP we can order the nodes in increasing order of the distances between child cities and parent cities.
+Heuristic evaluation function
+We can use a heuristic evaluation function
+in order to improve the DFBnB Algorithm.
+
+f(n) = g(n) + h(n)
+
+**Additional text recovered from rendered slide:**
+ We use node ordering to find a low cost solution as quickly
+as possible and this results in greater pruning in the
+remainder of the search. For example in the TSP we can
+order the nodes in increasing order of the distances
+between child cities and parent cities.
+
+---
+
+### Slide 81 — Solution Quality and Complexity
+
+Solution Quality and Complexity
+
+DFBnB returns an optimal solution.
+The asymptotic complexity is O(bd), since all the children of each node on the current path must be generated and stored to order them. O(bd) = O(d) since we assume b is constant.
+An analysis of the time complexity of DFBnB has to model both the heuristic function and efficiency of node ordering. The existing analyses on this algorithm are all based on abstract analytic models.
+
+The asymptotic complexity is O(d)
+
+**Additional text recovered from rendered slide:**
+The asymptotic complexity is O(bd), since all the children of
+each node on the current path must be generated and stored
+to order them. O(bd) = O(d) since we assume b is constant.
+An analysis of the time complexity of DFBnB has to model
+both the heuristic function and efficiency of node ordering. The
+existing analyses on this algorithm are all based on abstract
+analytic models.
+
+---
+
+### Slide 82 — Slide 82
+
+1
+
+0
+
+---
+
+### Slide 83 — An Analytic Model and Surprising Anomaly
+
+An Analytic Model and Surprising Anomaly
+
+It is a model that assumed a tree with uniform branching factor and depth, were the edges are assigned costs randomly from some distribution .
+Example:
+The edges cost zero or one with probability 0.5 each. - It can be shown that if the expected number of zero-cost children of a node is greater than 1, DFBnB with node ordering will run in time that is polynomial in the search depth.
+
+**Additional text recovered from rendered slide:**
+It is a model that assumed a tree with uniform
+branching factor and depth, were the edges are
+assigned costs randomly from some distribution .
+ The edges cost zero or one with probability 0.5 each. - It can
+be shown that if the expected number of zero-cost children
+of a node is greater than 1, DFBnB with node ordering will
+run in time that is polynomial in the search depth.
+
+---
+
+### Slide 84 — Slide 84
+
+_No extractable text; see the original slide for its visual content._
+
+---
+
+### Slide 85 — Truncated Branch and Bound
+
+Truncated Branch and Bound
+
+DDFBnB is an any-time algorithm.
+It’s uniqueness is that at any given time the algorithm can stop and return a solution (not an optimal one).
+If you don’t know how much time you have to solve the problem you can use DFBnB and when you stop it, it will return the best path found so far.
+
+**Additional text recovered from rendered slide:**
+It’s uniqueness is that at any given time the
+algorithm can stop and return a solution (not
+an optimal one).
+If you don’t know how much time you have to
+solve the problem you can use DFBnB and
+when you stop it, it will return the best path
+found so far.
+
+---
+
+### Slide 86 — ID vs. DFBnB
+
+ID vs. DFBnB
+
+Similarities:
+Both guarantee optimal solutions given lower bound heuristics.
+Both are DFS and have linear space complexity
+Both use global cost bound.
+
+**Additional text recovered from rendered slide:**
+ Both guarantee optimal solutions given lower
+bound heuristics.
+
+---
+
+### Slide 87 — ID vs. DFBnB
+
+ID vs. DFBnB
+
+Main differences:
+In ID the cost threshold is always a lower bound of the best solution and it increases during the iterations.
+DFBnB starts with an upper bound cost threshold and decreases through the search.
+Both expand more nodes than A*. ID expands only nodes with lower cost than C but a couple of times, and DFBnB expands also nodes with a cost larger than C.
+
+**Additional text recovered from rendered slide:**
+ In ID the cost threshold is always a lower bound of the
+best solution and it increases during the iterations.
+ DFBnB starts with an upper bound cost threshold and
+decreases through the search.
+ Both expand more nodes than A*. ID expands only
+nodes with lower cost than C but a couple of times, and
+DFBnB expands also nodes with a cost larger than C.
+
+---
+
+### Slide 88 — Non Monotonic Cost Functions
+
+Non Monotonic Cost Functions
+
+WA* has a cost function:
+To avoid it’s large space complexity (same as A*) we would like to use Iterative Deepening with this cost function.
+
+f(n) = g(n) + wh(n)
+
+**Additional text recovered from rendered slide:**
+To avoid it’s large space complexity (same
+as A*) we would like to use Iterative
+Deepening with this cost function.
+
+---
+
+### Slide 89 — Non Monotonic Cost Functions
+
+Non Monotonic Cost Functions
+
+For W>1 the function is non-monotonic.
+IDA* with a non monotonic cost function does not search the tree in best first order.
+
+In The Picture Above it Is clear that IDA will expand nodes 3 and 4 before expanding node 2
+
+**Additional text recovered from rendered slide:**
+IDA* with a non monotonic cost function does not
+search the tree in best first order.
+In The Picture Above it Is clear that IDA will expand nodes 3 and 4
+before expanding node 2
+
+---
+
+### Slide 90 — RBFS is a linear-space algorithm that expands nodes in best-first order even with a non-monotonic cost function and generates fewer nodes than iterative deepening with a monotonic cost function.
+
+Recursive Best-First Search
+
+RBFS is a linear-space algorithm that expands nodes in best-first order even with a non-monotonic cost function and generates fewer nodes than iterative deepening with a monotonic cost function.
+
+**Additional text recovered from rendered slide:**
+RBFS is a linear-space algorithm that
+expands nodes in best-first order even
+with a non-monotonic cost function and
+generates fewer nodes than iterative
+deepening with a monotonic cost
+function.
+
+---
+
+### Slide 91 — RBFS-ILBFS
+
+RBFS-ILBFS
+
+We chose to study the ILBFS algorithms.
+It is identical to RBFS.
+There is a file colpase.ppt with the explanation.
+Then we continue to slide 118
+
+---
+
+### Slide 92 — RBFS vs. ID
+
+RBFS vs. ID
+
+If the cost function is non-monotonic, the two algorithms are not directly comparable.
+RBFS generate fewer nodes than ID on average. Because RBFS only backtracks to their common ancestor instead of directly to the root as IDA*.
+
+**Additional text recovered from rendered slide:**
+If the cost function is non-monotonic, the two algorithms
+are not directly comparable.
+RBFS generate fewer nodes than ID on average. Because
+RBFS only backtracks to their common ancestor instead of
+directly to the root as IDA*.
+
+---
+
+### Slide 93 — Suboptimal Searches
+
+Suboptimal Searches
+
+<number>
+
+**Additional text recovered from rendered slide:**
+Suboptimal
+Searches
+
+---
+
+### Slide 94 — Different Search Settings
+
+Different Search Settings
+
+Suboptimal search: Just find any solution fast: Speedy vs. Greedy.
+Bounded suboptimal search: Given a bound W we want the solution to be at most W x C* This is called w-admissible.
+Bounded cost search: Give B, find a solution below B
+Anytime search: Improve the quality as time passes
+PAC search: given e and d, find a solution that will be of quality e with probability d
+Target-Value-Search: Find a solution of exactly X
+
+**Additional text recovered from rendered slide:**
+Suboptimal search: Just find any solution fast: Speedy
+vs. Greedy.
+Bounded suboptimal search: Given a bound W we
+want the solution to be at most W x C* This is called w-
+admissible.
+PAC search: given e and d, find a solution that will be
+of quality e with probability d
+
+---
+
+### Slide 95 — Bounded Suboptimal Search
+
+Bounded Suboptimal Search
+
+Given a bound W we want the solution to be at most W x C* This is called W-admissible.
+Sometimes we are given e and we want to be e-admissible which means we want a solution that is at most (1+e) x C*
+
+**Additional text recovered from rendered slide:**
+• Given a bound W we want the solution to be at
+most W x C* This is called W-admissible.
+• Sometimes we are given e and we want to be e-
+admissible which means we want a solution that
+is at most (1+e) x C*
+
+---
+
+### Slide 96 — Weighted A* (WA*)
+
+Weighted A* (WA*)
+
+A generalized version of A* Where:
+Rewrite W=Wh/Wg 1<=W=<
+We get
+When W=1 it is A*
+When W= it is Pure Heuristic Search
+
+f(n) = Wg g(n) + Wh h(n)
+
+f(n) = g(n) + Wh(n)
+
+---
+
+### Slide 97 — WA* is w-admissible
+
+WA* is w-admissible
+
+Proof:
+
+---
+
+### Slide 98 — WA*
+
+WA*
+
+f(n) = g(n) + Wh(n)
+
+This table presents results of research of WA* for different values of W.
+We can clearly see that while a path length changes linearly, the number of expanded nodes grows exponentially
+There is a tradeoff. Small W – more time better solutionLarge W – less time worse solution
+Theorem → Given W, WA* will find a solution which is no more than W times the optimal solution
+
+**Additional text recovered from rendered slide:**
+ This table presents results of research
+W Number of Length
+of WA* for different values of W. nodes of path
+1 500 000 000 53
+ We can clearly see that while a path
+3 22 891 78.41
+length changes linearly, the number of 7 12 772 112.55
+expanded nodes grows exponentially
+99 6 972 145.22
+ There is a tradeoff.
+Small W – more time better solution
+Large W – less time worse solution
+ Theorem → Given W, WA* will find a
+solution which is no more than W times
+the optimal solution
+
+---
+
+### Slide 99 — Focal Search
+
+Focal Search
+
+Sort OPEN according to the f-value
+Keep a FOCAL list of nodes from OPEN
+Each node n in FOCAL has
+Fmin ≤ f(n) ≤ W * Fmin
+Then, expand a node from Focal via a secondary function.
+Any node in FOCAL is guaranteed to be W-admissible
+
+<number>
+
+---
+
+### Slide 100 — Slide 100
+
+_No extractable text; see the original slide for its visual content._
+
+---
+
+### Slide 101 — Examples of Focal Search
+
+Examples of Focal Search
+
+1) A*e: Choose to expand the node with minimal h
+2) Dynamic Potential Search. Choose to expand a node with maximal
+3) Explicit Estimation Search (EES): has a sophisticated way of doing this.
+
+**Additional text recovered from rendered slide:**
+2) Dynamic Potential Search. Choose to expand a
+node with maximal
+• 3) Explicit Estimation Search (EES): has a
+sophisticated way of doing this.
+
+---
+
+### Slide 102 — Bounded Cost Search
+
+Bounded Cost Search
+
+Given a cost C, try to find a solution <= C as fast as possible.
+Assume C=120. Which node will you choose to expand, a or b?
+
+**Additional text recovered from rendered slide:**
+• Given a cost C, try to find a solution <= C
+as fast as possible.
+• Assume C=120. Which node will you
+choose to expand, a or b?
+
+---
+
+### Slide 103 — Bounded Cost Search
+
+Bounded Cost Search
+
+Potential Search (PTS)
+Choose to always expand the node n in open with maximal:
+U(a)=(120-100)/3=6.666
+U(b)=(120-10)/90=1.222
+
+**Additional text recovered from rendered slide:**
+Choose to always expand the node n in open
+with maximal:
+
+---
+
+### Slide 104 — Bounded Cost Search  — vs Bounded Suboptimal Search
+
+Bounded Cost Search vs Bounded Suboptimal Search
+
+It turns out that any focal search can be turned to be a bounded cost search
+
+**Additional text recovered from rendered slide:**
+Bounded Cost Search
+vs Bounded Suboptimal Search
+It turns out that any focal search can be turned to be a
+bounded cost search
+
+---
+
+### Slide 105 — Anytime algorithms
+
+Anytime algorithms
+In general, anytime algorithms find a solution but continue and search for better and better solutions
+They can halt at ANYTIME.
+
+**Additional text recovered from rendered slide:**
+• In general, anytime algorithms find a
+solution but continue and search for better
+and better solutions
+
+---
+
+### Slide 106 — The WA* family of algorithms
+
+The WA* family of algorithms
+
+Pure WA*
+Determine a value for W.
+Run WA*.
+Halt once the first solution was found.
+
+<number>
+
+**Additional text recovered from rendered slide:**
+106
+
+---
+
+### Slide 107 — Iterative weighting A*
+
+Iterative weighting A*
+
+Set W=large value
+While (you have time){
+Run WA* with the current W until a solution is found.
+Decrease W
+}
+Each iteration will run more time but will return a better solution
+Decreasing quality solutions while time passes.
+
+<number>
+
+**Additional text recovered from rendered slide:**
+Each iteration will run more time but will return a better
+solution
+107
+
+---
+
+### Slide 108 — Anytime weighed A* (AWA*)
+
+Anytime weighed A* (AWA*)
+
+Set W=large value
+After a solution has been found, continue the search
+Decreasing quality solutions while time passes.
+
+<number>
+
+**Additional text recovered from rendered slide:**
+108
+
+---
+
+### Slide 109 — Anytime weighed A* (AWA*)
+
+Anytime weighed A* (AWA*)
+
+Set W=large value
+After a solution has been found, continue the search
+Decreasing quality solutions while time passes.
+
+<number>
+
+**Additional text recovered from rendered slide:**
+109
+
+---
