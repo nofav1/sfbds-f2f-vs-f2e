@@ -4,7 +4,7 @@ overview: "Literature-grounded research definition for a course project on SFBDS
 todos:
   - id: write-project-doc
     content: "After approval: write Stages 1–6 project-definition markdown under docs/ (no code)"
-    status: pending
+    status: completed
   - id: instructor-confirm
     content: Confirm primary scope (caching crossover in SFBDS) and baselines with course instructor
     status: pending
