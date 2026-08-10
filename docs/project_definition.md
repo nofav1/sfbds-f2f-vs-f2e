@@ -313,6 +313,6 @@ Grid instances → Experiment runner
 
 ## Next actions for the team
 
-1. **Instructor confirmation** of primary Idea B (pair/result cache) and baselines (list above).
-2. **Verify originals** — fill locked-equations sheet (pair \(f\), stop, duplicates, cache key).
+1. **Instructor confirmation** — send [`instructor_confirmation_brief.md`](instructor_confirmation_brief.md); record answers in its decision log.
+2. **Verify originals** — fill locked-equations sheet (pair \(f\), stop, duplicates, cache key). *No PDFs in this repo yet — add paper PDFs or paths before this step.*
 3. **Then** produce an incremental coding plan and implement.

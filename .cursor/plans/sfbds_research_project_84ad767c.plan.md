@@ -6,7 +6,7 @@ todos:
     content: "After approval: write Stages 1–6 project-definition markdown under docs/ (no code)"
     status: completed
   - id: instructor-confirm
-    content: Confirm primary scope (caching crossover in SFBDS) and baselines with course instructor
+    content: "Confirm primary scope with instructor (brief ready in docs/instructor_confirmation_brief.md; awaiting reply)"
     status: pending
   - id: verify-originals
     content: Verify SFBDS/F2E/F2F formulas, termination, and cited numbers in original PDFs before coding
