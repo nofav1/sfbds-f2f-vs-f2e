@@ -1,4 +1,4 @@
-﻿"""Unidirectional Manhattan heuristic for grid problems."""
+"""Unidirectional Manhattan heuristic for grid problems."""
 
 from __future__ import annotations
 

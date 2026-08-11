@@ -1,4 +1,4 @@
-﻿"""Search node types."""
+"""Search node types."""
 
 from __future__ import annotations
 

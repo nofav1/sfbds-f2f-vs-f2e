@@ -13,7 +13,7 @@ SortKey = tuple
 class OpenList(Protocol[K, N]):
     """OPEN interface used by A* and SFBDS (no heapq details)."""
 
-    def push(self, node: N) -> None: ...
+    def push(self, node: N) -> bool: ...
 
     def pop_min(self) -> Optional[N]: ...
 
@@ -38,6 +38,11 @@ class LazyHeapOpen(Generic[K, N]):
     - ``key_of(node)``: membership / duplicate key
     - ``g_of(node)``: path cost used for stale detection and ``best_g``
     - ``sort_key_of(node)``: total order for ``pop_min`` (e.g. TBh tuple)
+
+    ``push`` is **improve-only**: if ``key`` already has a champion with
+    ``g_new >= g_best``, the push is rejected (returns ``False``) and the
+    champion is unchanged. Strictly better ``g`` updates the champion and
+    inserts a new heap row (old row becomes stale).
     """
 
     def __init__(
@@ -58,11 +63,16 @@ class LazyHeapOpen(Generic[K, N]):
     def stale_skipped(self) -> int:
         return self._stale_skipped
 
-    def push(self, node: N) -> None:
+    def push(self, node: N) -> bool:
         key = self._key_of(node)
+        g = self._g_of(node)
+        current = self._best.get(key)
+        if current is not None and g >= self._g_of(current):
+            return False
         self._best[key] = node
         heapq.heappush(self._heap, (self._sort_key_of(node), self._seq, node))
         self._seq += 1
+        return True
 
     def pop_min(self) -> Optional[N]:
         while self._heap:

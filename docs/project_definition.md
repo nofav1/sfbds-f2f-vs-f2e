@@ -69,7 +69,7 @@ This addresses the open “efficient F2F / SFBDS trade-off” question (Siag et 
 | [Master-Class BDS](context/presentations_summary/01_Master-ClassBDS_context.md) | F2E vs F2F tradeoff; two-frontier side selection (Pohl); early vs late stopping language |
 | [Best-First / A*](context/presentations_summary/02_SAI-3-4_Best-First-AStar_context.md) | Admissibility/consistency, OPEN/CLOSED, tie-breaking |
 | [Heuristics](context/presentations_summary/03_SAI-6-Heuristics_context.md) | Manhattan / Octile; pairwise \(h(a,b)\) for F2F |
-| [Early vs Late](context/presentations_summary/04_SAI-3.7_Early-vs-Late-AStar_context.md) | Incumbent \(U\); early-style stopping for **uni A*** and two-frontier BiHS |
+| [Early vs Late](context/presentations_summary/04_SAI-3.7_Early-vs-Late-AStar_context.md) | Background only. **MVP locks A\*-Late** (goal on select/pop) for uni A* and SFBDS pair goals — not Early+\(U\). |
 
 Pohl cardinality (smaller OPEN) applies to **two** frontiers. SFBDS has **one** OPEN of pairs; direction is a **local** which-side-of-the-pair choice ([`01`](context/sfbds_literature_context_md/01_single_frontier_bidirectional_search_2010.md)). Do not import Pohl as the SFBDS direction default.
 
@@ -242,7 +242,7 @@ Same SFBDS framework without pair-cache as the primary factor; emphasize density
 |-------|--------|----------------|
 | Framework | Locked | Shared SFBDS shell; vary heuristic (F2E vs F2F) and **pair/result** cache policy |
 | Direction | Locked (SFBDS-native) | Expand the side of the **current pair** with **fewer legal operators**; documented deterministic tie-break (e.g. prefer start-side). **Not** Pohl smaller-OPEN (that needs two frontiers). Idea C out of MVP. |
-| Stopping / termination | **Gate — not locked** | Pair coincide / connectable, pair-level \(f\), and duplicate replacement must come from SFBDS/eSBS PDFs. Early / incumbent-\(U\) language is two-frontier BiHS; do not claim SFBDS optimality proof locked. **Provisional:** align **A*** baseline with early-style (A*-Early) once uni stopping is fixed. |
+| Stopping / termination | **Locked (MVP)** | **A\*-Late** for uni A* and SFBDS: goal test when a node/pair is **selected from OPEN**. SFBDS goal iff \(x=y\). No incumbent-\(U\) Early baseline in MVP. Goal selection is **not** counted in ``expanded``. Parent-operator suppression via ``forbid_state`` is applied in A* and will match SFBDS generation/BF (affects ``generated`` vs textbook non-suppressed A*). |
 | Ties | Locked | **TBh** (prefer smaller \(h\) / larger \(g\)), then deterministic pair/state id |
 | Heuristic | Locked for MVP | **Manhattan** on 4-connected unit grids (admissible + consistent) |
 | Reopening | Locked under consistent \(h\) | None required for MVP |
@@ -298,7 +298,7 @@ Thin entrypoints; logic in library modules.
 
 ```text
 Grid instances → Experiment runner
-                    ├─ A* (early-style provisional)
+                    ├─ A* (Late; same conventions as SFBDS)
                     └─ SFBDS core
                          ├─ Direction: fewer legal operators (local)
                          ├─ F2E heuristic ─┐

@@ -75,6 +75,16 @@ def test_tbh_prefers_smaller_h_on_equal_f() -> None:
     assert open_list.pop_min() is b
 
 
+def test_push_rejects_worse_or_equal_g() -> None:
+    open_list = _make_open()
+    assert open_list.push(_Node("x", g=5)) is True
+    assert open_list.push(_Node("x", g=5)) is False
+    assert open_list.push(_Node("x", g=6)) is False
+    assert open_list.best_g("x") == 5.0
+    assert open_list.push(_Node("x", g=3)) is True
+    assert open_list.best_g("x") == 3.0
+
+
 def test_closed_set_roundtrip() -> None:
     closed: ClosedSet[str, _Node] = ClosedSet()
     node = _Node("c", g=1)

@@ -1,4 +1,4 @@
-﻿"""Heuristic exports."""
+"""Heuristic exports."""
 
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
 

@@ -28,7 +28,15 @@ def _reconstruct_path(node: AStarNode[StateT]) -> list[StateT]:
 
 
 class AStarSearcher(Generic[StateT]):
-    """A* with goal test on select/pop, NoReopen, TBh ordering via lazy OPEN."""
+    """A* with Late goal test, NoReopen, TBh ordering via lazy OPEN.
+
+    Metric conventions (locked for MVP comparisons with SFBDS):
+    - **Late:** goal is detected when selected from OPEN; that selection is
+      **not** counted in ``expanded``.
+    - **Parent suppression:** successors use ``forbid_state=parent``, matching
+      the SFBDS BF/expansion convention. ``generated`` is therefore lower than
+      textbook A* that re-generates the reverse parent edge (usually already CLOSED).
+    """
 
     def __init__(
         self,
