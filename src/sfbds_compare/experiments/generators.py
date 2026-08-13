@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import random
+from collections import deque
 from typing import Iterable
 
 from sfbds_compare.domain.grid import GridProblem, GridState
@@ -96,6 +97,90 @@ def build_problem(
         )
 
     raise ValueError(f"unknown generator kind: {kind}")
+
+
+def _manhattan(a: GridState, b: GridState) -> int:
+    return abs(a.row - b.row) + abs(a.col - b.col)
+
+
+def reachable_from(problem: GridProblem, origin: GridState) -> set[GridState]:
+    """4-connected free cells reachable from ``origin`` (empty if blocked)."""
+
+    if not problem.is_free(origin):
+        return set()
+    seen = {origin}
+    queue: deque[GridState] = deque([origin])
+    while queue:
+        cur = queue.popleft()
+        for suc in problem.successors(cur):
+            if suc.state not in seen:
+                seen.add(suc.state)
+                queue.append(suc.state)
+    return seen
+
+
+def endpoints_connected(problem: GridProblem) -> bool:
+    """True iff start and goal lie in the same free connected component."""
+
+    return problem.goal_state in reachable_from(problem, problem.start_state)
+
+
+def _largest_component(problem: GridProblem) -> list[GridState]:
+    seen: set[GridState] = set()
+    best: list[GridState] = []
+    for r in range(problem.height):
+        for c in range(problem.width):
+            cell = GridState(r, c)
+            if cell in seen or not problem.is_free(cell):
+                continue
+            comp = reachable_from(problem, cell)
+            seen |= comp
+            if len(comp) > len(best):
+                best = sorted(comp, key=lambda s: (s.row, s.col))
+    return best
+
+
+def ensure_connected_query(
+    problem: GridProblem,
+    *,
+    min_manhattan: int,
+    rng: random.Random,
+) -> GridProblem:
+    """Keep obstacle geometry; move start/goal onto a connected free pair.
+
+    Used after ``build_problem`` for ``query_sample`` so random-obstacle maps
+    are not scored as solver failures when the sampled cells are separated.
+    Explicit YAML queries are left unchanged (caller skips this helper).
+    """
+
+    if (
+        endpoints_connected(problem)
+        and _manhattan(problem.start_state, problem.goal_state) >= min_manhattan
+    ):
+        return problem
+
+    cells = _largest_component(problem)
+    pairs = [
+        (a, b)
+        for i, a in enumerate(cells)
+        for b in cells[i + 1 :]
+        if _manhattan(a, b) >= min_manhattan
+    ]
+    if not pairs:
+        raise ValueError(
+            f"no connected free pair with min_manhattan={min_manhattan} "
+            f"on {problem.height}x{problem.width}"
+        )
+    start, goal = pairs[rng.randrange(len(pairs))]
+    if rng.random() < 0.5:
+        start, goal = goal, start
+    return GridProblem(
+        problem.height,
+        problem.width,
+        start,
+        goal,
+        obstacles=problem.obstacles,
+    )
 
 
 def _sample_obstacles(

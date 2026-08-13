@@ -14,13 +14,19 @@ from sfbds_compare.experiments.config import (
     ExperimentConfig,
     GeneratorConfig,
     QuerySpec,
+    config_from_dict,
 )
 from sfbds_compare.experiments.export import write_csv
-from sfbds_compare.experiments.generators import build_problem, map_fingerprint
+from sfbds_compare.experiments.generators import (
+    build_problem,
+    endpoints_connected,
+    map_fingerprint,
+)
 from sfbds_compare.experiments.runner import (
     _record_for,
     export_records,
     run_experiment,
+    run_experiment_with_frames,
     run_query,
 )
 from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
@@ -365,6 +371,139 @@ def test_cli_writes_2d_visual_with_axes(tmp_path: Path) -> None:
     lines = viz_text.splitlines()
     assert any(line.startswith("0 ") for line in lines)
     assert any(line.startswith("  |") or line.startswith("  0") for line in lines)
+
+
+def test_cli_config_dir_runs_sorted_yaml(tmp_path: Path) -> None:
+    from sfbds_compare.experiments.runner import main
+
+    def write_cfg(name: str) -> None:
+        (tmp_path / f"{name}.yaml").write_text(
+            "\n".join(
+                [
+                    f"name: {name}",
+                    "algorithm: astar",
+                    "seed: 1",
+                    f"output_dir: {tmp_path.as_posix()}",
+                    "generator:",
+                    "  kind: corridor",
+                    "  height: 1",
+                    "  width: 4",
+                    "query_sample:",
+                    "  count: 2",
+                    "  min_manhattan: 2",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+    write_cfg("cli_dir_b")
+    write_cfg("cli_dir_a")
+    assert main(["--config-dir", str(tmp_path)]) == 0
+    for name in ("cli_dir_a", "cli_dir_b"):
+        csv_path = tmp_path / f"{name}.csv"
+        assert csv_path.is_file()
+        with csv_path.open(encoding="utf-8", newline="") as fh:
+            rows = list(csv.DictReader(fh))
+        assert len(rows) == 2
+
+
+def test_cli_config_dir_continues_after_bad_yaml(tmp_path: Path) -> None:
+    from sfbds_compare.experiments.runner import main
+
+    (tmp_path / "aaa_bad.yaml").write_text(
+        "\n".join(
+            [
+                "name: aaa_bad",
+                "algorithm: nbs",
+                "seed: 1",
+                f"output_dir: {tmp_path.as_posix()}",
+                "generator:",
+                "  kind: open",
+                "  height: 2",
+                "  width: 2",
+                "queries:",
+                "  - start: [0, 0]",
+                "    goal: [1, 1]",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "zzz_ok.yaml").write_text(
+        "\n".join(
+            [
+                "name: zzz_ok",
+                "algorithm: astar",
+                "seed: 1",
+                f"output_dir: {tmp_path.as_posix()}",
+                "generator:",
+                "  kind: corridor",
+                "  height: 1",
+                "  width: 4",
+                "query_sample:",
+                "  count: 2",
+                "  min_manhattan: 2",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    assert main(["--config-dir", str(tmp_path)]) == 1
+    assert not (tmp_path / "aaa_bad.csv").is_file()
+    ok_csv = tmp_path / "zzz_ok.csv"
+    assert ok_csv.is_file()
+    with ok_csv.open(encoding="utf-8", newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    assert len(rows) == 2
+
+
+def test_random_sampled_queries_are_connected() -> None:
+    cfg = config_from_dict(
+        {
+            "name": "random_connected",
+            "algorithms": ["astar"],
+            "seed": 130,
+            "timeout_sec": 5,
+            "output_dir": "results",
+            "generator": {
+                "kind": "random_obstacles",
+                "height": 12,
+                "width": 12,
+                "obstacle_density": 0.35,
+            },
+            "query_sample": {"count": 8, "min_manhattan": 6},
+        }
+    )
+    records, frames = run_experiment_with_frames(cfg)
+    assert len(frames) == 8
+    for frame in frames:
+        assert endpoints_connected(frame.problem)
+        md = abs(
+            frame.problem.start_state.row - frame.problem.goal_state.row
+        ) + abs(
+            frame.problem.start_state.col - frame.problem.goal_state.col
+        )
+        assert md >= 6
+    assert all(r.success for r in records)
+
+
+def test_sampled_open_run_cost_agreement() -> None:
+    cfg = config_from_dict(
+        {
+            "name": "sampled_open",
+            "algorithms": ["astar", "sfbds_f2f", "sfbds_f2e"],
+            "seed": 9,
+            "timeout_sec": 5,
+            "output_dir": "results",
+            "generator": {"kind": "open", "height": 8, "width": 8},
+            "query_sample": {"count": 3, "min_manhattan": 4},
+        }
+    )
+    records = run_experiment(cfg)
+    assert len(records) == 9
+    assert all(r.success for r in records)
+    by_q: dict[int, set[float | None]] = {}
+    for r in records:
+        by_q.setdefault(r.query_index, set()).add(r.solution_cost)
+    assert all(len(costs) == 1 for costs in by_q.values())
 
 
 def test_write_csv_empty(tmp_path: Path) -> None:

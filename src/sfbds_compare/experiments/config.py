@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
@@ -35,6 +36,7 @@ class ExperimentConfig:
     queries: tuple[QuerySpec, ...]
     output_dir: str
     timeout_sec: Optional[float] = None
+    min_manhattan: Optional[int] = None
 
     @property
     def algorithm(self) -> str:
@@ -46,6 +48,51 @@ def _as_cell(value: Sequence[Any], *, label: str) -> tuple[int, int]:
     if len(value) != 2:
         raise ValueError(f"{label} must be [row, col]")
     return (int(value[0]), int(value[1]))
+
+
+def sample_queries(
+    *,
+    height: int,
+    width: int,
+    count: int,
+    min_manhattan: int,
+    seed: int,
+) -> tuple[QuerySpec, ...]:
+    """Sample distinct in-bounds start/goal pairs with a Manhattan floor."""
+
+    if count < 1:
+        raise ValueError("query_sample count must be positive")
+    if min_manhattan < 1:
+        raise ValueError("min_manhattan must be at least 1")
+    max_md = (height - 1) + (width - 1)
+    if min_manhattan > max_md:
+        raise ValueError(
+            f"min_manhattan {min_manhattan} exceeds grid diameter {max_md}"
+        )
+
+    rng = random.Random(seed)
+    seen: set[tuple[tuple[int, int], tuple[int, int]]] = set()
+    out: list[QuerySpec] = []
+    attempts = 0
+    limit = max(10_000, count * 200)
+    while len(out) < count:
+        attempts += 1
+        if attempts > limit:
+            raise ValueError(
+                f"could not sample {count} queries with min_manhattan="
+                f"{min_manhattan} on {height}x{width}"
+            )
+        start = (rng.randrange(height), rng.randrange(width))
+        goal = (rng.randrange(height), rng.randrange(width))
+        md = abs(start[0] - goal[0]) + abs(start[1] - goal[1])
+        if md < min_manhattan:
+            continue
+        key = (start, goal) if start <= goal else (goal, start)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(QuerySpec(start=start, goal=goal))
+    return tuple(out)
 
 
 def _parse_algorithms(data: Mapping[str, Any]) -> tuple[str, ...]:
@@ -96,38 +143,58 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
     if not 0.0 <= density < 1.0:
         raise ValueError("obstacle_density must be in [0, 1)")
 
-    queries_raw = data.get("queries") or []
-    if not queries_raw:
-        raise ValueError("queries must be a non-empty list")
-    queries = tuple(
-        QuerySpec(
-            start=_as_cell(q["start"], label="start"),
-            goal=_as_cell(q["goal"], label="goal"),
-        )
-        for q in queries_raw
-    )
-
     generator = GeneratorConfig(
         kind=kind,
         height=height,
         width=width,
         obstacle_density=density,
     )
-    _validate_queries(queries, generator)
 
     timeout = data.get("timeout_sec")
     timeout_sec = None if timeout is None else float(timeout)
     if timeout_sec is not None and timeout_sec <= 0:
         raise ValueError("timeout_sec must be positive when set")
 
+    seed = int(data.get("seed", 0))
+    queries_raw = data.get("queries") or []
+    sample_raw = data.get("query_sample")
+    min_manhattan: Optional[int] = None
+    if queries_raw and sample_raw:
+        raise ValueError("set queries or query_sample, not both")
+    if sample_raw:
+        if not isinstance(sample_raw, Mapping):
+            raise ValueError("query_sample must be a mapping")
+        if "count" not in sample_raw:
+            raise ValueError("query_sample.count is required")
+        min_manhattan = int(sample_raw.get("min_manhattan", 1))
+        queries = sample_queries(
+            height=height,
+            width=width,
+            count=int(sample_raw["count"]),
+            min_manhattan=min_manhattan,
+            seed=seed,
+        )
+    elif queries_raw:
+        queries = tuple(
+            QuerySpec(
+                start=_as_cell(q["start"], label="start"),
+                goal=_as_cell(q["goal"], label="goal"),
+            )
+            for q in queries_raw
+        )
+    else:
+        raise ValueError("config must set queries or query_sample")
+    _validate_queries(queries, generator)
+
     return ExperimentConfig(
         name=str(data.get("name", "run")),
         algorithms=algorithms,
-        seed=int(data.get("seed", 0)),
+        seed=seed,
         generator=generator,
         queries=queries,
         output_dir=str(data.get("output_dir", "results")),
         timeout_sec=timeout_sec,
+        min_manhattan=min_manhattan,
     )
 
 

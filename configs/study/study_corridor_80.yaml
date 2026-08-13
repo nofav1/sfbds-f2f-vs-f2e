@@ -1,0 +1,15 @@
+name: study_corridor_80
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 150
+timeout_sec: 10
+output_dir: results/study
+generator:
+  kind: corridor
+  height: 1
+  width: 80
+query_sample:
+  count: 8
+  min_manhattan: 20

@@ -1,0 +1,16 @@
+name: study_random_d30
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 130
+timeout_sec: 20
+output_dir: results/study
+generator:
+  kind: random_obstacles
+  height: 24
+  width: 24
+  obstacle_density: 0.30
+query_sample:
+  count: 12
+  min_manhattan: 12

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import random
 import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
@@ -15,6 +16,7 @@ from sfbds_compare.experiments.config import ExperimentConfig, load_config
 from sfbds_compare.experiments.export import write_csv, write_json
 from sfbds_compare.experiments.generators import (
     build_problem,
+    ensure_connected_query,
     map_fingerprint,
     realized_obstacle_density,
 )
@@ -207,7 +209,6 @@ def _record_for(
     result: SearchResult[GridState],
 ) -> RunRecord:
     m = result.metrics
-    q = config.queries[query_index]
     if algorithm.startswith("sfbds"):
         _validate_sfbds_metrics(result)
     return RunRecord(
@@ -221,10 +222,10 @@ def _record_for(
         obstacle_density=realized_obstacle_density(problem),
         obstacle_count=len(problem.obstacles),
         map_hash=map_hash,
-        start_row=q.start[0],
-        start_col=q.start[1],
-        goal_row=q.goal[0],
-        goal_col=q.goal[1],
+        start_row=problem.start_state.row,
+        start_col=problem.start_state.col,
+        goal_row=problem.goal_state.row,
+        goal_col=problem.goal_state.col,
         success=result.success,
         termination_reason=result.termination_reason.value,
         solution_cost=result.solution_cost,
@@ -266,6 +267,12 @@ def run_experiment_with_frames(
         problem = build_problem(
             config.generator, query, seed=config.seed + idx
         )
+        if config.min_manhattan is not None:
+            problem = ensure_connected_query(
+                problem,
+                min_manhattan=config.min_manhattan,
+                rng=random.Random(config.seed + idx + 1_000_003),
+            )
         fingerprint = map_fingerprint(
             problem, generator=config.generator, seed=config.seed + idx
         )
@@ -322,24 +329,43 @@ def export_records(
 
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Run SFBDS comparison experiment")
-    parser.add_argument(
-        "--config",
-        required=True,
-        help="Path to experiment YAML config",
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--config", help="Path to one experiment YAML config")
+    group.add_argument(
+        "--config-dir",
+        help="Directory of YAML configs (sorted *.yaml)",
     )
     args = parser.parse_args(argv)
-    config = load_config(args.config)
-    records, frames = run_experiment_with_frames(config)
-    csv_path, json_path = export_records(config, records)
-    viz_path = write_visual(
-        Path(config.output_dir) / f"{config.name}_visual.txt",
-        config,
-        frames,
-    )
-    print(f"wrote {csv_path}")
-    print(f"wrote {json_path}")
-    print(f"wrote {viz_path}")
-    return 0
+    if args.config_dir:
+        paths = sorted(Path(args.config_dir).glob("*.yaml"))
+        if not paths:
+            raise ValueError(f"no YAML configs in {args.config_dir}")
+    else:
+        paths = [Path(args.config)]
+    failed = 0
+    for path in paths:
+        try:
+            config = load_config(path)
+            records, frames = run_experiment_with_frames(config)
+            csv_path, json_path = export_records(config, records)
+            viz_path = write_visual(
+                Path(config.output_dir) / f"{config.name}_visual.txt",
+                config,
+                frames,
+            )
+            n_ok = sum(1 for r in records if r.success)
+            n_to = sum(1 for r in records if r.timed_out)
+            print(f"wrote {csv_path}")
+            print(f"wrote {json_path}")
+            print(f"wrote {viz_path}")
+            print(
+                f"{config.name}: {n_ok}/{len(records)} success, "
+                f"{n_to} timed out"
+            )
+        except Exception as exc:
+            failed += 1
+            print(f"{path}: {exc}", file=sys.stderr)
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
