@@ -7,8 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from sfbds_compare.domain.grid import GridState
 from sfbds_compare.experiments.config import load_config
 from sfbds_compare.experiments.runner import export_records, run_experiment
+from sfbds_compare.heuristics.grid_distance import manhattan
 
 _PILOT_DIR = Path(__file__).resolve().parents[2] / "configs" / "pilot"
 
@@ -48,6 +50,9 @@ def test_pilot_config_cost_agreement_and_metrics(
         assert rec.peak_closed >= 0
         assert rec.map_hash
         assert rec.generator_kind == cfg.generator.kind
+        assert rec.expanded_unit in ("state", "pair")
+        if cfg.generator.kind == "maze":
+            assert rec.obstacle_count > 0
 
     for q_idx, group in by_query.items():
         assert len(group) == len(cfg.algorithms)
@@ -67,10 +72,25 @@ def test_pilot_config_cost_agreement_and_metrics(
             assert next(iter(costs)) is not None
             assert next(iter(costs)) >= 0.0
         else:
-            # Unreachable / exhausted — still finite metrics, shared hash.
             assert all(
                 r.termination_reason == "open_exhausted" for r in failures
             )
+
+    if cfg.generator.kind == "maze":
+        detoured = False
+        for group in by_query.values():
+            ok = [r for r in group if r.success and r.solution_cost is not None]
+            if not ok:
+                continue
+            r0 = ok[0]
+            md = manhattan(
+                GridState(r0.start_row, r0.start_col),
+                GridState(r0.goal_row, r0.goal_col),
+            )
+            if r0.solution_cost > md:
+                detoured = True
+                break
+        assert detoured, "maze pilot should force a detour on some query"
 
     csv_path, json_path = export_records(cfg, records)
     assert csv_path.is_file() and json_path.is_file()

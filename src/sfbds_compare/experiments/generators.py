@@ -20,12 +20,15 @@ def map_fingerprint(
     generator: GeneratorConfig,
     seed: int,
 ) -> str:
-    """Deterministic identity for a resolved map instance."""
+    """Deterministic identity for resolved map geometry (not generator label).
+
+    Two configs that yield the same free/obstacle layout and endpoints share a
+    hash even if ``generator.kind`` differs (e.g. empty maze vs open).
+    """
 
     obstacles = sorted((o.row, o.col) for o in problem.obstacles)
     payload = (
-        f"{generator.kind}|{generator.height}x{generator.width}|"
-        f"d={generator.obstacle_density}|seed={seed}|"
+        f"{problem.height}x{problem.width}|"
         f"S={problem.start_state.row},{problem.start_state.col}|"
         f"G={problem.goal_state.row},{problem.goal_state.col}|"
         f"obs={obstacles}"
@@ -70,7 +73,7 @@ def build_problem(
         )
 
     if kind == "maze":
-        obstacles = _dfs_maze_obstacles(
+        obstacles = _wall_passage_maze_obstacles(
             generator.height,
             generator.width,
             seed=seed,
@@ -110,16 +113,30 @@ def _sample_obstacles(
     return rng.sample(candidates, k=min(k, len(candidates)))
 
 
-def _neighbors(state: GridState, height: int, width: int) -> list[GridState]:
-    out: list[GridState] = []
-    for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-        nxt = GridState(state.row + dr, state.col + dc)
-        if 0 <= nxt.row < height and 0 <= nxt.col < width:
-            out.append(nxt)
-    return out
+def _snap_to_room(state: GridState, height: int, width: int) -> GridState:
+    """Nearest even-even room cell on the maze lattice (clamped in-bounds)."""
+
+    r = state.row - (state.row % 2)
+    c = state.col - (state.col % 2)
+    max_r = height - 1 - ((height - 1) % 2)
+    max_c = width - 1 - ((width - 1) % 2)
+    return GridState(min(r, max_r), min(c, max_c))
 
 
-def _dfs_maze_obstacles(
+def _carve_manhattan(
+    free: set[GridState], a: GridState, b: GridState
+) -> None:
+    r, c = a.row, a.col
+    free.add(GridState(r, c))
+    while (r, c) != (b.row, b.col):
+        if r != b.row:
+            r += 1 if b.row > r else -1
+        elif c != b.col:
+            c += 1 if b.col > c else -1
+        free.add(GridState(r, c))
+
+
+def _wall_passage_maze_obstacles(
     height: int,
     width: int,
     *,
@@ -127,32 +144,58 @@ def _dfs_maze_obstacles(
     start: GridState,
     goal: GridState,
 ) -> list[GridState]:
-    """Carve a seeded DFS spanning tree; remaining cells are obstacles."""
+    """Perfect maze: rooms on even lattice; walls stay blocked unless carved.
+
+    DFS spans rooms at ``(2i, 2j)``. Moving between adjacent rooms carves the
+    intervening wall cell. Remaining cells are obstacles. ``start``/``goal``
+    are always free and connected to the nearest room by a short tunnel.
+    """
+
+    if height < 3 or width < 3:
+        raise ValueError("maze generator requires height and width >= 3")
 
     rng = random.Random(seed)
-    free: set[GridState] = {start}
-    stack: list[GridState] = [start]
+    room_start = _snap_to_room(start, height, width)
+    free: set[GridState] = {room_start}
+    stack: list[GridState] = [room_start]
+    visited_rooms: set[GridState] = {room_start}
+
+    def room_neighbors(room: GridState) -> list[tuple[GridState, GridState]]:
+        """Return (neighbor_room, wall_between) pairs."""
+        out: list[tuple[GridState, GridState]] = []
+        for dr, dc in ((-2, 0), (2, 0), (0, -2), (0, 2)):
+            nr, nc = room.row + dr, room.col + dc
+            if 0 <= nr < height and 0 <= nc < width and nr % 2 == 0 and nc % 2 == 0:
+                wall = GridState(room.row + dr // 2, room.col + dc // 2)
+                out.append((GridState(nr, nc), wall))
+        return out
+
     while stack:
         cur = stack[-1]
-        options = [n for n in _neighbors(cur, height, width) if n not in free]
+        options = [
+            (nbr, wall)
+            for nbr, wall in room_neighbors(cur)
+            if nbr not in visited_rooms
+        ]
         if not options:
             stack.pop()
             continue
-        nxt = rng.choice(options)
-        free.add(nxt)
-        stack.append(nxt)
+        nbr, wall = rng.choice(options)
+        free.add(wall)
+        free.add(nbr)
+        visited_rooms.add(nbr)
+        stack.append(nbr)
 
-    if goal not in free:
-        # Manhattan tunnel from goal until we hit the carved component.
-        r, c = goal.row, goal.col
-        while GridState(r, c) not in free:
-            free.add(GridState(r, c))
-            if r != start.row:
-                r += 1 if start.row > r else -1
-            elif c != start.col:
-                c += 1 if start.col > c else -1
-            else:
-                break
+    # Ensure start/goal are free and attached to the carved maze.
+    free.add(start)
+    free.add(goal)
+    _carve_manhattan(free, start, room_start)
+    room_goal = _snap_to_room(goal, height, width)
+    if room_goal not in visited_rooms:
+        # Connect room_goal into the maze by carving toward room_start.
+        _carve_manhattan(free, room_goal, room_start)
+        visited_rooms.add(room_goal)
+    _carve_manhattan(free, goal, room_goal)
 
     return [
         GridState(r, c)

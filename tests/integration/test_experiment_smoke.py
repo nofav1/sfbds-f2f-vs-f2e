@@ -161,12 +161,27 @@ def test_random_obstacles_reproducible_hash() -> None:
     )
 
 
-def test_maze_solvable() -> None:
+def test_maze_has_walls_and_detours() -> None:
+    from sfbds_compare.heuristics.grid_distance import manhattan
+
     gen = GeneratorConfig(kind="maze", height=11, width=11)
     query = QuerySpec(start=(0, 0), goal=(10, 10))
     problem = build_problem(gen, query, seed=3)
+    assert len(problem.obstacles) > 0
     result = AStarSearcher(UniManhattanHeuristic()).search(problem)
     assert result.success
+    assert result.solution_cost is not None
+    assert result.solution_cost > manhattan(problem.start_state, problem.goal_state)
+
+
+def test_open_and_empty_geometry_share_hash_ignoring_kind_label() -> None:
+    open_gen = GeneratorConfig(kind="open", height=5, width=5)
+    # Build an open map; fingerprint ignores kind label.
+    query = QuerySpec(start=(0, 0), goal=(4, 4))
+    open_p = build_problem(open_gen, query, seed=0)
+    assert map_fingerprint(open_p, generator=open_gen, seed=0) == map_fingerprint(
+        open_p, generator=GeneratorConfig(kind="maze", height=5, width=5), seed=99
+    )
 
 
 def test_cli_writes_artifacts(tmp_path: Path) -> None:

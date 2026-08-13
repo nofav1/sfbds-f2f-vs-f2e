@@ -28,7 +28,12 @@ _TIMEOUT_GRACE_SEC = 2.0
 
 @dataclass(frozen=True, slots=True)
 class RunRecord:
-    """Flat record for one algorithm × query run."""
+    """Flat record for one algorithm × query run.
+
+    ``expanded`` / ``generated`` count **states** for ``astar`` and **pairs**
+    for ``sfbds_*`` (see ``expanded_unit``). Do not compare those columns
+    across algorithm families without converting units.
+    """
 
     experiment: str
     algorithm: str
@@ -50,6 +55,7 @@ class RunRecord:
     runtime_sec: float
     generated: int
     expanded: int
+    expanded_unit: str
     heuristic_evals: int
     heuristic_time_sec: float
     peak_open: int
@@ -60,6 +66,10 @@ class RunRecord:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+def _expanded_unit(algorithm: str) -> str:
+    return "state" if algorithm == "astar" else "pair"
 
 
 def _search_with_stop(
@@ -173,6 +183,7 @@ def _record_for(
         runtime_sec=m.runtime_sec,
         generated=m.generated,
         expanded=m.expanded,
+        expanded_unit=_expanded_unit(algorithm),
         heuristic_evals=m.heuristic_evals,
         heuristic_time_sec=m.heuristic_time_sec,
         peak_open=m.peak_open,
