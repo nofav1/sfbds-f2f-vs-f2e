@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import argparse
 import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable, Hashable, Optional, TypeVar
+from typing import Any, Callable, Optional
 
-from sfbds_compare.domain.base import SearchProblem
 from sfbds_compare.domain.grid import GridProblem, GridState
 from sfbds_compare.experiments.config import ExperimentConfig, load_config
 from sfbds_compare.experiments.export import write_csv, write_json
-from sfbds_compare.experiments.generators import build_problem
+from sfbds_compare.experiments.generators import build_problem, map_fingerprint
 from sfbds_compare.heuristics.f2e import F2EFixedEndpointHeuristic
 from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
@@ -22,18 +22,24 @@ from sfbds_compare.search.astar import AStarSearcher
 from sfbds_compare.search.result import SearchResult, TerminationReason
 from sfbds_compare.search.sfbds import SFBDSSearcher
 
-StateT = TypeVar("StateT", bound=Hashable)
-Searcher = Callable[[SearchProblem[StateT]], SearchResult[StateT]]
+# Grace period after signaling should_stop for the loop to return real metrics.
+_TIMEOUT_GRACE_SEC = 2.0
 
 
 @dataclass(frozen=True, slots=True)
 class RunRecord:
-    """Flat record for one query run."""
+    """Flat record for one algorithm × query run."""
 
     experiment: str
     algorithm: str
     seed: int
     query_index: int
+    generator_kind: str
+    height: int
+    width: int
+    obstacle_density: float
+    obstacle_count: int
+    map_hash: str
     start_row: int
     start_col: int
     goal_row: int
@@ -56,20 +62,28 @@ class RunRecord:
         return asdict(self)
 
 
-def make_searcher(algorithm: str) -> Searcher[GridState]:
+def _search_with_stop(
+    algorithm: str,
+    problem: GridProblem,
+    should_stop: Callable[[], bool],
+) -> SearchResult[GridState]:
     if algorithm == "astar":
-        searcher: Any = AStarSearcher(UniManhattanHeuristic())
-        return searcher.search
+        return AStarSearcher(UniManhattanHeuristic()).search(
+            problem, should_stop=should_stop
+        )
     if algorithm == "sfbds_f2f":
-        searcher = SFBDSSearcher(F2FManhattanHeuristic())
-        return searcher.search
+        return SFBDSSearcher(F2FManhattanHeuristic()).search(
+            problem, should_stop=should_stop
+        )
     if algorithm == "sfbds_f2e":
-        searcher = SFBDSSearcher(F2EFixedEndpointHeuristic())
-        return searcher.search
+        return SFBDSSearcher(F2EFixedEndpointHeuristic()).search(
+            problem, should_stop=should_stop
+        )
     raise ValueError(f"unsupported algorithm: {algorithm}")
 
 
 def _timeout_result() -> SearchResult[GridState]:
+    """Last-resort synthetic timeout if cooperative stop does not return."""
     metrics = MetricsCollector()
     metrics.start()
     metrics.timed_out = True
@@ -83,58 +97,118 @@ def _timeout_result() -> SearchResult[GridState]:
 
 def run_query(
     problem: GridProblem,
-    search_fn: Searcher[GridState],
+    algorithm: str,
     *,
     timeout_sec: Optional[float],
+    search_impl: Optional[
+        Callable[[GridProblem, Callable[[], bool]], SearchResult[GridState]]
+    ] = None,
 ) -> SearchResult[GridState]:
+    """Run one search, optionally with a wall-clock timeout.
+
+    On timeout the cooperative ``should_stop`` flag is set and the searcher
+    returns a real TIMEOUT result with metrics so far. The pool is shut down
+    with ``wait=False`` so the caller does not block on a stuck worker.
+    """
+
+    def default_impl(
+        p: GridProblem, should_stop: Callable[[], bool]
+    ) -> SearchResult[GridState]:
+        return _search_with_stop(algorithm, p, should_stop)
+
+    impl = search_impl or default_impl
+
     if timeout_sec is None:
-        return search_fn(problem)
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        future = pool.submit(search_fn, problem)
+        return impl(problem, lambda: False)
+
+    stop = threading.Event()
+
+    def work() -> SearchResult[GridState]:
+        return impl(problem, stop.is_set)
+
+    pool = ThreadPoolExecutor(max_workers=1)
+    try:
+        future = pool.submit(work)
         try:
             return future.result(timeout=timeout_sec)
         except FuturesTimeout:
-            return _timeout_result()
+            stop.set()
+            try:
+                return future.result(timeout=_TIMEOUT_GRACE_SEC)
+            except FuturesTimeout:
+                return _timeout_result()
+    finally:
+        pool.shutdown(wait=False)
+
+
+def _record_for(
+    config: ExperimentConfig,
+    *,
+    algorithm: str,
+    query_index: int,
+    problem: GridProblem,
+    map_hash: str,
+    result: SearchResult[GridState],
+) -> RunRecord:
+    m = result.metrics
+    q = config.queries[query_index]
+    return RunRecord(
+        experiment=config.name,
+        algorithm=algorithm,
+        seed=config.seed,
+        query_index=query_index,
+        generator_kind=config.generator.kind,
+        height=config.generator.height,
+        width=config.generator.width,
+        obstacle_density=config.generator.obstacle_density,
+        obstacle_count=len(problem.obstacles),
+        map_hash=map_hash,
+        start_row=q.start[0],
+        start_col=q.start[1],
+        goal_row=q.goal[0],
+        goal_col=q.goal[1],
+        success=result.success,
+        termination_reason=result.termination_reason.value,
+        solution_cost=result.solution_cost,
+        runtime_sec=m.runtime_sec,
+        generated=m.generated,
+        expanded=m.expanded,
+        heuristic_evals=m.heuristic_evals,
+        heuristic_time_sec=m.heuristic_time_sec,
+        peak_open=m.peak_open,
+        peak_closed=m.peak_closed,
+        stale_skipped=m.stale_skipped,
+        duplicates_discarded=m.duplicates_discarded,
+        timed_out=m.timed_out
+        or result.termination_reason is TerminationReason.TIMEOUT,
+    )
 
 
 def run_experiment(config: ExperimentConfig) -> list[RunRecord]:
-    search_fn = make_searcher(config.algorithm)
+    """Run all algorithms on each query's resolved map (same instance)."""
+
     records: list[RunRecord] = []
     for idx, query in enumerate(config.queries):
-        # Per-query seed mix so obstacle layouts can vary across queries.
         problem = build_problem(
             config.generator, query, seed=config.seed + idx
         )
-        result = run_query(
-            problem, search_fn, timeout_sec=config.timeout_sec
+        fingerprint = map_fingerprint(
+            problem, generator=config.generator, seed=config.seed + idx
         )
-        m = result.metrics
-        records.append(
-            RunRecord(
-                experiment=config.name,
-                algorithm=config.algorithm,
-                seed=config.seed,
-                query_index=idx,
-                start_row=query.start[0],
-                start_col=query.start[1],
-                goal_row=query.goal[0],
-                goal_col=query.goal[1],
-                success=result.success,
-                termination_reason=result.termination_reason.value,
-                solution_cost=result.solution_cost,
-                runtime_sec=m.runtime_sec,
-                generated=m.generated,
-                expanded=m.expanded,
-                heuristic_evals=m.heuristic_evals,
-                heuristic_time_sec=m.heuristic_time_sec,
-                peak_open=m.peak_open,
-                peak_closed=m.peak_closed,
-                stale_skipped=m.stale_skipped,
-                duplicates_discarded=m.duplicates_discarded,
-                timed_out=m.timed_out
-                or result.termination_reason is TerminationReason.TIMEOUT,
+        for algorithm in config.algorithms:
+            result = run_query(
+                problem, algorithm, timeout_sec=config.timeout_sec
             )
-        )
+            records.append(
+                _record_for(
+                    config,
+                    algorithm=algorithm,
+                    query_index=idx,
+                    problem=problem,
+                    map_hash=fingerprint,
+                    result=result,
+                )
+            )
     return records
 
 

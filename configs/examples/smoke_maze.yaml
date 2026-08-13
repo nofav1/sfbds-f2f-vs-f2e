@@ -1,0 +1,12 @@
+name: smoke_maze
+algorithm: sfbds_f2f
+seed: 3
+timeout_sec: 5
+output_dir: results
+generator:
+  kind: maze
+  height: 11
+  width: 11
+queries:
+  - start: [0, 0]
+    goal: [10, 10]

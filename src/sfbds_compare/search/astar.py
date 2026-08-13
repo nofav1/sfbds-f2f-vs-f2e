@@ -47,7 +47,12 @@ class AStarSearcher(Generic[StateT]):
         self._heuristic = heuristic
         self._metrics_factory = metrics_factory or MetricsCollector
 
-    def search(self, problem: SearchProblem[StateT]) -> SearchResult[StateT]:
+    def search(
+        self,
+        problem: SearchProblem[StateT],
+        *,
+        should_stop: Optional[Callable[[], bool]] = None,
+    ) -> SearchResult[StateT]:
         metrics = self._metrics_factory()
         metrics.start()
 
@@ -70,6 +75,16 @@ class AStarSearcher(Generic[StateT]):
         metrics.note_open_size(open_list.logical_size())
 
         while not open_list.is_empty():
+            if should_stop is not None and should_stop():
+                metrics.timed_out = True
+                metrics.stale_skipped = open_list.stale_skipped
+                snap = metrics.finish(success=False, solution_cost=None)
+                return SearchResult(
+                    success=False,
+                    termination_reason=TerminationReason.TIMEOUT,
+                    metrics=snap,
+                )
+
             current = open_list.pop_min()
             if current is None:
                 break
@@ -94,7 +109,6 @@ class AStarSearcher(Generic[StateT]):
             closed.add(current.state, current)
             metrics.expanded += 1
             metrics.note_closed_size(len(closed))
-
             parent_state = current.parent.state if current.parent is not None else None
             for succ in problem.successors(
                 current.state, forbid_state=parent_state
