@@ -42,6 +42,12 @@ class RunRecord:
     ``expanded`` / ``generated`` count **states** for ``astar`` and **pairs**
     for ``sfbds_*`` (see ``expanded_unit``). Do not compare those columns
     across algorithm families without converting units.
+
+    ``forward_expanded`` / ``backward_expanded`` are SFBDS **pair** expansions
+    on that side, not A* state expansions. ``direction_switches`` counts
+    consecutive expansion-side flips in the search trace, not along the
+    solution path. ``obstacle_density`` is ``obstacle_count / (height * width)``
+    from generated geometry, not the YAML sampler setting.
     """
 
     experiment: str
@@ -165,6 +171,32 @@ def run_query(
         pool.shutdown(wait=False)
 
 
+def _validate_sfbds_metrics(result: SearchResult[GridState]) -> None:
+    """Export-time checks for SFBDS rows with recorded side counts."""
+
+    m = result.metrics
+    if m.forward_expanded is None:
+        return
+    if m.backward_expanded is None:
+        raise ValueError("SFBDS run has forward_expanded but missing backward_expanded")
+    if m.forward_expanded + m.backward_expanded != m.expanded:
+        raise ValueError(
+            f"forward_expanded + backward_expanded != expanded "
+            f"({m.forward_expanded} + {m.backward_expanded} != {m.expanded})"
+        )
+    if not result.success:
+        return
+    if m.meeting_g_F is None or m.meeting_g_B is None:
+        raise ValueError("successful SFBDS run missing meeting costs")
+    if result.solution_cost is None:
+        raise ValueError("successful SFBDS run missing solution_cost")
+    if m.meeting_g_F + m.meeting_g_B != result.solution_cost:
+        raise ValueError(
+            f"meeting_g_F + meeting_g_B != solution_cost "
+            f"({m.meeting_g_F} + {m.meeting_g_B} != {result.solution_cost})"
+        )
+
+
 def _record_for(
     config: ExperimentConfig,
     *,
@@ -176,25 +208,8 @@ def _record_for(
 ) -> RunRecord:
     m = result.metrics
     q = config.queries[query_index]
-    if algorithm.startswith("sfbds") and result.success:
-        fwd = m.forward_expanded
-        bwd = m.backward_expanded
-        if fwd is None or bwd is None:
-            raise AssertionError("successful SFBDS run missing side-expansion counts")
-        if fwd + bwd != m.expanded:
-            raise AssertionError(
-                f"forward_expanded + backward_expanded != expanded "
-                f"({fwd} + {bwd} != {m.expanded})"
-            )
-        if m.meeting_g_F is None or m.meeting_g_B is None:
-            raise AssertionError("successful SFBDS run missing meeting costs")
-        if result.solution_cost is None:
-            raise AssertionError("successful SFBDS run missing solution_cost")
-        if m.meeting_g_F + m.meeting_g_B != result.solution_cost:
-            raise AssertionError(
-                f"meeting_g_F + meeting_g_B != solution_cost "
-                f"({m.meeting_g_F} + {m.meeting_g_B} != {result.solution_cost})"
-            )
+    if algorithm.startswith("sfbds"):
+        _validate_sfbds_metrics(result)
     return RunRecord(
         experiment=config.name,
         algorithm=algorithm,

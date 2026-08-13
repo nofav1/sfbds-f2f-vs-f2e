@@ -62,6 +62,11 @@ def test_sfbds_start_equals_goal() -> None:
     assert result.path == [GridState(0, 0)]
     assert result.termination_reason == TerminationReason.GOAL_FOUND
     assert result.metrics.expanded == 0
+    assert result.metrics.forward_expanded == 0
+    assert result.metrics.backward_expanded == 0
+    assert result.metrics.direction_switches == 0
+    assert result.metrics.meeting_g_F == 0.0
+    assert result.metrics.meeting_g_B == 0.0
     assert result.metrics.heuristic_evals == 1
     _assert_sfbds_instrumentation(result)
 
@@ -139,6 +144,30 @@ def test_sfbds_f2e_cost_agrees_with_astar_open_and_obstacle() -> None:
         _assert_heuristic_eval_aligned(sfbds)
         _assert_sfbds_instrumentation(sfbds)
         _assert_astar_sfbds_fields_na(astar)
+
+
+def test_sfbds_dead_end_goal_expands_backward() -> None:
+    """Goal pocket has BF 1, start has BF 2: first expansion is Backward.
+
+    After moving out of the pocket, BF ties and the policy returns Forward,
+    so the trace must also record a direction switch.
+    """
+
+    problem = GridProblem(
+        height=3,
+        width=3,
+        start=GridState(0, 0),
+        goal=GridState(2, 2),
+        obstacles=[GridState(2, 1)],
+    )
+    for heuristic in (F2FManhattanHeuristic(), F2EFixedEndpointHeuristic()):
+        result = SFBDSSearcher(heuristic).search(problem)
+        assert result.success
+        _assert_sfbds_instrumentation(result)
+        assert result.metrics.backward_expanded is not None
+        assert result.metrics.direction_switches is not None
+        assert result.metrics.backward_expanded >= 1
+        assert result.metrics.direction_switches >= 1
 
 
 def test_sfbds_unreachable_open_exhausted() -> None:

@@ -51,11 +51,12 @@ def test_pilot_config_cost_agreement_and_metrics(
         assert rec.map_hash
         assert rec.generator_kind == cfg.generator.kind
         assert rec.expanded_unit in ("state", "pair")
+        n_cells = rec.height * rec.width
+        assert rec.obstacle_density == rec.obstacle_count / n_cells
+        if rec.obstacle_count > 0:
+            assert rec.obstacle_density != 0.0
         if cfg.generator.kind == "maze":
             assert rec.obstacle_count > 0
-            n_cells = rec.height * rec.width
-            assert rec.obstacle_density == rec.obstacle_count / n_cells
-            assert rec.obstacle_density != 0.0
 
     for q_idx, group in by_query.items():
         assert len(group) == len(cfg.algorithms)
@@ -94,6 +95,16 @@ def test_pilot_config_cost_agreement_and_metrics(
                 detoured = True
                 break
         assert detoured, "maze pilot should force a detour on some query"
+
+    if cfg.generator.kind == "random_obstacles":
+        sfbds_ok = [
+            r
+            for r in records
+            if r.algorithm.startswith("sfbds") and r.success
+        ]
+        assert any(
+            (r.backward_expanded or 0) > 0 for r in sfbds_ok
+        ), "random pilot should expand Backward on some SFBDS row"
 
     csv_path, json_path = export_records(cfg, records)
     assert csv_path.is_file() and json_path.is_file()

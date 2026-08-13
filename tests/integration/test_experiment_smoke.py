@@ -7,6 +7,8 @@ import json
 import time
 from pathlib import Path
 
+import pytest
+
 from sfbds_compare.domain.grid import GridProblem, GridState
 from sfbds_compare.experiments.config import (
     ExperimentConfig,
@@ -16,13 +18,17 @@ from sfbds_compare.experiments.config import (
 from sfbds_compare.experiments.export import write_csv
 from sfbds_compare.experiments.generators import build_problem, map_fingerprint
 from sfbds_compare.experiments.runner import (
+    _record_for,
     export_records,
     run_experiment,
     run_query,
 )
+from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
+from sfbds_compare.metrics.collector import MetricsSnapshot
 from sfbds_compare.search.astar import AStarSearcher
-from sfbds_compare.search.result import TerminationReason
+from sfbds_compare.search.result import SearchResult, TerminationReason
+from sfbds_compare.search.sfbds import SFBDSSearcher
 
 
 def test_smoke_astar_corridor_exports(tmp_path: Path) -> None:
@@ -219,6 +225,69 @@ def test_maze_export_uses_realized_obstacle_density(tmp_path: Path) -> None:
     assert rec.obstacle_density == expected
     assert rec.obstacle_density != 0.0
     assert cfg.generator.obstacle_density == 0.0
+
+
+def test_exhausted_sfbds_export_enforces_side_sum() -> None:
+    problem = GridProblem(
+        height=3,
+        width=3,
+        start=GridState(1, 0),
+        goal=GridState(1, 2),
+        obstacles=[GridState(0, 1), GridState(1, 1), GridState(2, 1)],
+    )
+    result = SFBDSSearcher(F2FManhattanHeuristic()).search(problem)
+    assert result.success is False
+    assert result.termination_reason is TerminationReason.OPEN_EXHAUSTED
+    cfg = ExperimentConfig(
+        name="exhausted",
+        algorithms=("sfbds_f2f",),
+        seed=0,
+        generator=GeneratorConfig(kind="open", height=3, width=3),
+        queries=(QuerySpec(start=(1, 0), goal=(1, 2)),),
+        output_dir="results",
+    )
+    rec = _record_for(
+        cfg,
+        algorithm="sfbds_f2f",
+        query_index=0,
+        problem=problem,
+        map_hash="x",
+        result=result,
+    )
+    assert rec.forward_expanded is not None
+    assert rec.backward_expanded is not None
+    assert rec.forward_expanded + rec.backward_expanded == rec.expanded
+    assert rec.meeting_g_F is None
+    assert rec.meeting_g_B is None
+
+    bad = SearchResult(
+        success=False,
+        termination_reason=TerminationReason.OPEN_EXHAUSTED,
+        metrics=MetricsSnapshot(
+            runtime_sec=0.0,
+            generated=0,
+            expanded=3,
+            heuristic_evals=0,
+            heuristic_time_sec=0.0,
+            peak_open=0,
+            peak_closed=0,
+            stale_skipped=0,
+            duplicates_discarded=0,
+            success=False,
+            forward_expanded=1,
+            backward_expanded=0,
+            direction_switches=0,
+        ),
+    )
+    with pytest.raises(ValueError, match="forward_expanded"):
+        _record_for(
+            cfg,
+            algorithm="sfbds_f2f",
+            query_index=0,
+            problem=problem,
+            map_hash="x",
+            result=bad,
+        )
 
 
 def test_open_and_empty_geometry_share_hash_ignoring_kind_label() -> None:
