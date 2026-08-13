@@ -1,29 +1,16 @@
-"""Unit tests for SFBDSSearcher (test-local pair heuristic)."""
+"""Unit tests for SFBDSSearcher with F2F / F2E heuristics."""
 
 from __future__ import annotations
 
 import pytest
 
-from sfbds_compare.domain.base import SearchProblem
 from sfbds_compare.domain.grid import GridProblem, GridState
+from sfbds_compare.heuristics.f2e import F2EFixedEndpointHeuristic
+from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
 from sfbds_compare.search.astar import AStarSearcher
 from sfbds_compare.search.result import TerminationReason
 from sfbds_compare.search.sfbds import SFBDSSearcher
-
-
-class _ManhattanGapHeuristic:
-    """Test-local F2F-style gap: Manhattan between pair endpoints."""
-
-    def evaluate(
-        self,
-        forward: GridState,
-        backward: GridState,
-        problem: SearchProblem[GridState],
-    ) -> float:
-        return float(
-            abs(forward.row - backward.row) + abs(forward.col - backward.col)
-        )
 
 
 def _assert_unit_path(
@@ -44,7 +31,7 @@ def _assert_heuristic_eval_aligned(result) -> None:
 
 def test_sfbds_start_equals_goal() -> None:
     problem = GridProblem(1, 1, GridState(0, 0), GridState(0, 0))
-    result = SFBDSSearcher(_ManhattanGapHeuristic()).search(problem)
+    result = SFBDSSearcher(F2FManhattanHeuristic()).search(problem)
     assert result.success
     assert result.solution_cost == 0.0
     assert result.path == [GridState(0, 0)]
@@ -55,7 +42,7 @@ def test_sfbds_start_equals_goal() -> None:
 
 def test_sfbds_straight_corridor() -> None:
     problem = GridProblem(1, 4, GridState(0, 0), GridState(0, 3))
-    result = SFBDSSearcher(_ManhattanGapHeuristic()).search(problem)
+    result = SFBDSSearcher(F2FManhattanHeuristic()).search(problem)
     assert result.success
     assert result.solution_cost == 3.0
     assert result.path is not None
@@ -71,7 +58,7 @@ def test_sfbds_obstacle_matches_astar() -> None:
         goal=GridState(0, 2),
         obstacles=[GridState(0, 1)],
     )
-    sfbds = SFBDSSearcher(_ManhattanGapHeuristic()).search(problem)
+    sfbds = SFBDSSearcher(F2FManhattanHeuristic()).search(problem)
     astar = AStarSearcher(UniManhattanHeuristic()).search(problem)
     assert sfbds.success and astar.success
     assert sfbds.solution_cost == astar.solution_cost == 4.0
@@ -89,17 +76,36 @@ def test_sfbds_obstacle_matches_astar() -> None:
         (2, 3, GridState(0, 0), GridState(0, 2)),
     ],
 )
-def test_sfbds_cost_agrees_with_astar_open_grids(
+def test_sfbds_f2f_cost_agrees_with_astar_open_grids(
     height: int, width: int, start: GridState, goal: GridState
 ) -> None:
     problem = GridProblem(height, width, start, goal)
-    sfbds = SFBDSSearcher(_ManhattanGapHeuristic()).search(problem)
+    sfbds = SFBDSSearcher(F2FManhattanHeuristic()).search(problem)
     astar = AStarSearcher(UniManhattanHeuristic()).search(problem)
     assert sfbds.success and astar.success
     assert sfbds.solution_cost == astar.solution_cost
     assert sfbds.path is not None
     _assert_unit_path(problem, list(sfbds.path), sfbds.solution_cost)
     _assert_heuristic_eval_aligned(sfbds)
+
+
+def test_sfbds_f2e_cost_agrees_with_astar_open_and_obstacle() -> None:
+    open_problem = GridProblem(5, 5, GridState(0, 0), GridState(4, 3))
+    obstacle_problem = GridProblem(
+        height=2,
+        width=3,
+        start=GridState(0, 0),
+        goal=GridState(0, 2),
+        obstacles=[GridState(0, 1)],
+    )
+    for problem in (open_problem, obstacle_problem):
+        sfbds = SFBDSSearcher(F2EFixedEndpointHeuristic()).search(problem)
+        astar = AStarSearcher(UniManhattanHeuristic()).search(problem)
+        assert sfbds.success and astar.success
+        assert sfbds.solution_cost == astar.solution_cost
+        assert sfbds.path is not None
+        _assert_unit_path(problem, list(sfbds.path), sfbds.solution_cost)
+        _assert_heuristic_eval_aligned(sfbds)
 
 
 def test_sfbds_unreachable_open_exhausted() -> None:
@@ -110,12 +116,10 @@ def test_sfbds_unreachable_open_exhausted() -> None:
         goal=GridState(1, 2),
         obstacles=[GridState(0, 1), GridState(1, 1), GridState(2, 1)],
     )
-    result = SFBDSSearcher(_ManhattanGapHeuristic()).search(problem)
+    result = SFBDSSearcher(F2FManhattanHeuristic()).search(problem)
     assert result.success is False
     assert result.termination_reason == TerminationReason.OPEN_EXHAUSTED
     assert result.solution_cost is None
-    # Reachable free cells on the start side: 3; pair search expands more than
-    # uni A*, but must expand at least the trivial root non-goal work.
     assert result.metrics.expanded >= 1
     assert result.metrics.success is False
     _assert_heuristic_eval_aligned(result)
