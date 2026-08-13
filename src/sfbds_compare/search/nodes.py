@@ -55,6 +55,16 @@ class SFBDSNode(Generic[StateT]):
         """Pair path cost g_F + g_B (for OPEN / TBh)."""
         return self.g_F + self.g_B
 
+    @property
+    def forbid_forward(self) -> Optional[StateT]:
+        """Parent state on the forward path (for successor / BF suppression)."""
+        return self.parent_F.forward if self.parent_F is not None else None
+
+    @property
+    def forbid_backward(self) -> Optional[StateT]:
+        """Parent state on the backward path (for successor / BF suppression)."""
+        return self.parent_B.backward if self.parent_B is not None else None
+
 
 def reconstruct_sfbds_path(node: SFBDSNode[StateT]) -> list[StateT]:
     """Rebuild S→G path from dual parent chains (meeting state once).
