@@ -8,10 +8,10 @@ version = "0.1.0"
 description = "Controlled SFBDS F2F vs F2E comparison on grid pathfinding"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["PyYAML>=6.0"]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "PyYAML>=6.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

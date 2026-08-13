@@ -1,0 +1,12 @@
+name: smoke_sfbds_f2e
+algorithm: sfbds_f2e
+seed: 1
+timeout_sec: 5
+output_dir: results
+generator:
+  kind: corridor
+  height: 1
+  width: 4
+queries:
+  - start: [0, 0]
+    goal: [0, 3]
