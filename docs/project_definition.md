@@ -242,7 +242,7 @@ Same SFBDS framework without pair-cache as the primary factor; emphasize density
 |-------|--------|----------------|
 | Framework | Locked | Shared SFBDS shell; vary heuristic (F2E vs F2F) and **pair/result** cache policy |
 | Direction | Locked (SFBDS-native) | Expand the side of the **current pair** with **fewer legal operators**; documented deterministic tie-break (e.g. prefer start-side). **Not** Pohl smaller-OPEN (that needs two frontiers). Idea C out of MVP. |
-| Stopping / termination | **Locked (MVP)** | **A\*-Late** for uni A* and SFBDS: goal test when a node/pair is **selected from OPEN**. SFBDS goal iff \(x=y\). No incumbent-\(U\) Early baseline in MVP. Goal selection is **not** counted in ``expanded``. Parent-operator suppression via ``forbid_state`` is applied in A* and will match SFBDS generation/BF (affects ``generated`` vs textbook non-suppressed A*). |
+| Stopping / termination | **Locked (MVP)** | **A\*-Late** for uni A* and SFBDS: goal test when a node/pair is **selected from OPEN**. SFBDS goal iff \(x=y\) (**coincide-only**; connectable out of MVP). No incumbent-\(U\) Early baseline. Goal selection is **not** counted in ``expanded``. Parent-operator suppression via ``forbid_state``. Backward expansion uses ``predecessors`` (defaults to successors on undirected grids). Heuristic evals occur only after duplicate/better-path (A*-aligned). |
 | Ties | Locked | **TBh** (prefer smaller \(h\) / larger \(g\)), then deterministic pair/state id |
 | Heuristic | Locked for MVP | **Manhattan** on 4-connected unit grids (admissible + consistent) |
 | Reopening | Locked under consistent \(h\) | None required for MVP |
@@ -250,16 +250,22 @@ Same SFBDS framework without pair-cache as the primary factor; emphasize density
 | Eval-cost sensitivity | Locked in MVP | Small multiplier on heuristic wall time / artificial delay (Idea D light) |
 | Metrics | Locked | Runtime, expansions, generations, heuristic evals + time, peak OPEN/CLOSED/cache, solution cost, timeouts |
 
-### Still must verify in original PDFs before coding (locked-equations gate)
+### Still must verify in original PDFs (documentation / report gate)
 
-Produce a one-page “locked equations” sheet from originals before any coding plan:
+MVP **implementation locks** already in code (not waiting on PDFs):
 
-1. SFBDS pseudocode, pair expansion, termination (coincide / connectable).
-2. Exact F2E and F2F formulas on an SFBDS pair \((s,g)\) (pair \(f\)).
+- Stopping: **Late** on select; SFBDS goal iff \(x=y\) (**coincide-only**).
+- Domain assumption: **undirected** unit grids — ``predecessors`` defaults to ``successors``; directed graphs must override.
+- Heuristic modules F2F/F2E and pair-\(f\) writeup still benefit from PDF cross-check before the report.
+
+Historical PDF checklist (report / claims, not a coding blocker for the shell):
+
+1. SFBDS pseudocode vs our Late/coincide MVP (note: connectable stopping **out of MVP**).
+2. Exact F2E and F2F formulas on an SFBDS pair \((x,y)\) (pair \(f\)).
 3. Pair-level duplicate detection / better-path replacement (duplicate key).
-4. eSBS pair/result cache semantics (canonical key; what is stored; eviction; interaction with pruning).
+4. eSBS pair/result cache — **out of active project scope**.
 
-Until (1)–(3) are filled, do **not** treat stopping as locked and do **not** claim optimality vs A* beyond empirical cost agreement on solved instances.
+Do **not** claim literature-faithful connectable termination or directed-graph SFBDS without implementing those variants.
 
 ### Confirm with instructor before coding
 

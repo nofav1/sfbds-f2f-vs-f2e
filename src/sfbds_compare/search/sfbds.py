@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import Callable, Generic, Hashable, Optional, TypeVar
 
-from sfbds_compare.domain.base import SearchProblem
+from sfbds_compare.domain.base import SearchProblem, Successor
 from sfbds_compare.heuristics.base import PairHeuristic
 from sfbds_compare.metrics.collector import MetricsCollector
 from sfbds_compare.policies import PolicyBundle, default_policies
@@ -26,6 +26,10 @@ class SFBDSSearcher(Generic[StateT]):
     - **Late:** goal when selected from OPEN (``forward == backward``); that
       selection is **not** counted in ``expanded``.
     - **Parent suppression:** children use ``forbid_forward`` / ``forbid_backward``.
+    - **Heuristic evals:** ``h_gap`` is evaluated only when about to insert/improve
+      OPEN (after duplicate / better-path), matching A*.
+    - **Backward moves:** use ``problem.predecessors`` (defaults to successors on
+      undirected domains such as MVP grids).
     """
 
     def __init__(
@@ -92,18 +96,50 @@ class SFBDSSearcher(Generic[StateT]):
             metrics.expanded += 1
             metrics.note_closed_size(len(closed))
 
-            side = policies.direction.choose(current, problem)
-            for child in self._generate_children(current, side, problem, metrics):
+            # Materialize each side once: BF choice + expansion share the lists.
+            fwd_nbrs = list(
+                problem.successors(
+                    current.forward, forbid_state=current.forbid_forward
+                )
+            )
+            bwd_nbrs = list(
+                problem.predecessors(
+                    current.backward, forbid_state=current.forbid_backward
+                )
+            )
+            side = policies.direction.choose_by_branch_factors(
+                len(fwd_nbrs), len(bwd_nbrs)
+            )
+            neighbors = fwd_nbrs if side is Side.FORWARD else bwd_nbrs
+
+            for edge in neighbors:
+                metrics.generated += 1
+                provisional = self._child_shell(current, side, edge)
                 lookup = policies.duplicate.lookup(
-                    child.pair_key, open_list, closed
+                    provisional.pair_key, open_list, closed
                 )
                 action = policies.better_path.decide(
-                    lookup, child, policies.reopen
+                    lookup, provisional, policies.reopen
                 )
                 if action is PathAction.DISCARD:
                     metrics.duplicates_discarded += 1
                     continue
-                # PUSH and REPLACE_OPEN both improve-or-insert via lazy OPEN.
+
+                # PUSH and REPLACE_OPEN both mean insert/improve OPEN (lazy).
+                t1 = time.perf_counter()
+                h_gap = self._heuristic.evaluate(
+                    provisional.forward, provisional.backward, problem
+                )
+                metrics.add_heuristic_time(time.perf_counter() - t1)
+                child = SFBDSNode(
+                    forward=provisional.forward,
+                    backward=provisional.backward,
+                    g_F=provisional.g_F,
+                    g_B=provisional.g_B,
+                    h_gap=h_gap,
+                    parent_F=provisional.parent_F,
+                    parent_B=provisional.parent_B,
+                )
                 if open_list.push(child):
                     metrics.note_open_size(open_list.logical_size())
                 else:
@@ -117,54 +153,30 @@ class SFBDSSearcher(Generic[StateT]):
             metrics=snap,
         )
 
-    def _generate_children(
+    def _child_shell(
         self,
         node: SFBDSNode[StateT],
         side: Side,
-        problem: SearchProblem[StateT],
-        metrics: MetricsCollector,
-    ) -> list[SFBDSNode[StateT]]:
-        children: list[SFBDSNode[StateT]] = []
+        edge: Successor[StateT],
+    ) -> SFBDSNode[StateT]:
+        """Build a child with placeholder ``h_gap`` for duplicate / g checks."""
+
         if side is Side.FORWARD:
-            for succ in problem.successors(
-                node.forward, forbid_state=node.forbid_forward
-            ):
-                metrics.generated += 1
-                t1 = time.perf_counter()
-                h_gap = self._heuristic.evaluate(
-                    succ.state, node.backward, problem
-                )
-                metrics.add_heuristic_time(time.perf_counter() - t1)
-                children.append(
-                    SFBDSNode(
-                        forward=succ.state,
-                        backward=node.backward,
-                        g_F=node.g_F + succ.cost,
-                        g_B=node.g_B,
-                        h_gap=h_gap,
-                        parent_F=node,
-                        parent_B=node.parent_B,
-                    )
-                )
-        else:
-            for succ in problem.successors(
-                node.backward, forbid_state=node.forbid_backward
-            ):
-                metrics.generated += 1
-                t1 = time.perf_counter()
-                h_gap = self._heuristic.evaluate(
-                    node.forward, succ.state, problem
-                )
-                metrics.add_heuristic_time(time.perf_counter() - t1)
-                children.append(
-                    SFBDSNode(
-                        forward=node.forward,
-                        backward=succ.state,
-                        g_F=node.g_F,
-                        g_B=node.g_B + succ.cost,
-                        h_gap=h_gap,
-                        parent_F=node.parent_F,
-                        parent_B=node,
-                    )
-                )
-        return children
+            return SFBDSNode(
+                forward=edge.state,
+                backward=node.backward,
+                g_F=node.g_F + edge.cost,
+                g_B=node.g_B,
+                h_gap=0.0,
+                parent_F=node,
+                parent_B=node.parent_B,
+            )
+        return SFBDSNode(
+            forward=node.forward,
+            backward=edge.state,
+            g_F=node.g_F,
+            g_B=node.g_B + edge.cost,
+            h_gap=0.0,
+            parent_F=node.parent_F,
+            parent_B=node,
+        )

@@ -60,6 +60,21 @@ class SearchProblem(ABC, Generic[StateT]):
         This is the generic parent-reversal suppression hook.
         """
 
+    def predecessors(
+        self,
+        state: StateT,
+        *,
+        forbid_state: Optional[StateT] = None,
+    ) -> Iterable[Successor[StateT]]:
+        """Yield legal predecessors of ``state`` (incoming edges).
+
+        Each yielded ``Successor`` uses ``state`` = predecessor and ``cost`` =
+        cost(pred → ``state``). Default equals :meth:`successors` (undirected
+        graphs). Directed domains must override.
+        """
+
+        return self.successors(state, forbid_state=forbid_state)
+
     @abstractmethod
     def transition_cost(self, from_state: StateT, to_state: StateT) -> float:
         """Nonnegative cost of the edge from ``from_state`` to ``to_state``.
@@ -81,6 +96,18 @@ class SearchProblem(ABC, Generic[StateT]):
         """Count legal successors after optional parent suppression."""
 
         return sum(1 for _ in self.successors(state, forbid_state=forbid_state))
+
+    def predecessor_branch_factor(
+        self,
+        state: StateT,
+        *,
+        forbid_state: Optional[StateT] = None,
+    ) -> int:
+        """Count legal predecessors after optional parent suppression."""
+
+        return sum(
+            1 for _ in self.predecessors(state, forbid_state=forbid_state)
+        )
 
     def describe(self) -> dict[str, Any]:
         """Optional metadata for experiment logging."""
