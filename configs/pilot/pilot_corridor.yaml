@@ -1,0 +1,19 @@
+name: pilot_corridor
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 40
+timeout_sec: 5
+output_dir: results/pilot
+generator:
+  kind: corridor
+  height: 1
+  width: 40
+queries:
+  - start: [0, 0]
+    goal: [0, 39]
+  - start: [0, 0]
+    goal: [0, 20]
+  - start: [0, 5]
+    goal: [0, 35]

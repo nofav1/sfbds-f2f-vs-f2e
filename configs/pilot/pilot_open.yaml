@@ -1,0 +1,19 @@
+name: pilot_open
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 10
+timeout_sec: 10
+output_dir: results/pilot
+generator:
+  kind: open
+  height: 15
+  width: 15
+queries:
+  - start: [0, 0]
+    goal: [14, 14]
+  - start: [0, 0]
+    goal: [7, 14]
+  - start: [2, 3]
+    goal: [12, 11]
