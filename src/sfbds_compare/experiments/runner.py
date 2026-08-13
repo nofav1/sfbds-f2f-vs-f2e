@@ -13,7 +13,16 @@ from typing import Any, Callable, Optional
 from sfbds_compare.domain.grid import GridProblem, GridState
 from sfbds_compare.experiments.config import ExperimentConfig, load_config
 from sfbds_compare.experiments.export import write_csv, write_json
-from sfbds_compare.experiments.generators import build_problem, map_fingerprint
+from sfbds_compare.experiments.generators import (
+    build_problem,
+    map_fingerprint,
+    realized_obstacle_density,
+)
+from sfbds_compare.experiments.visualize import (
+    AlgoFrame,
+    QueryFrame,
+    write_visual,
+)
 from sfbds_compare.heuristics.f2e import F2EFixedEndpointHeuristic
 from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
@@ -56,6 +65,11 @@ class RunRecord:
     generated: int
     expanded: int
     expanded_unit: str
+    forward_expanded: Optional[int]
+    backward_expanded: Optional[int]
+    meeting_g_F: Optional[float]
+    meeting_g_B: Optional[float]
+    direction_switches: Optional[int]
     heuristic_evals: int
     heuristic_time_sec: float
     peak_open: int
@@ -162,6 +176,25 @@ def _record_for(
 ) -> RunRecord:
     m = result.metrics
     q = config.queries[query_index]
+    if algorithm.startswith("sfbds") and result.success:
+        fwd = m.forward_expanded
+        bwd = m.backward_expanded
+        if fwd is None or bwd is None:
+            raise AssertionError("successful SFBDS run missing side-expansion counts")
+        if fwd + bwd != m.expanded:
+            raise AssertionError(
+                f"forward_expanded + backward_expanded != expanded "
+                f"({fwd} + {bwd} != {m.expanded})"
+            )
+        if m.meeting_g_F is None or m.meeting_g_B is None:
+            raise AssertionError("successful SFBDS run missing meeting costs")
+        if result.solution_cost is None:
+            raise AssertionError("successful SFBDS run missing solution_cost")
+        if m.meeting_g_F + m.meeting_g_B != result.solution_cost:
+            raise AssertionError(
+                f"meeting_g_F + meeting_g_B != solution_cost "
+                f"({m.meeting_g_F} + {m.meeting_g_B} != {result.solution_cost})"
+            )
     return RunRecord(
         experiment=config.name,
         algorithm=algorithm,
@@ -170,7 +203,7 @@ def _record_for(
         generator_kind=config.generator.kind,
         height=config.generator.height,
         width=config.generator.width,
-        obstacle_density=config.generator.obstacle_density,
+        obstacle_density=realized_obstacle_density(problem),
         obstacle_count=len(problem.obstacles),
         map_hash=map_hash,
         start_row=q.start[0],
@@ -192,13 +225,28 @@ def _record_for(
         duplicates_discarded=m.duplicates_discarded,
         timed_out=m.timed_out
         or result.termination_reason is TerminationReason.TIMEOUT,
+        forward_expanded=m.forward_expanded,
+        backward_expanded=m.backward_expanded,
+        meeting_g_F=m.meeting_g_F,
+        meeting_g_B=m.meeting_g_B,
+        direction_switches=m.direction_switches,
     )
 
 
 def run_experiment(config: ExperimentConfig) -> list[RunRecord]:
     """Run all algorithms on each query's resolved map (same instance)."""
 
+    records, _frames = run_experiment_with_frames(config)
+    return records
+
+
+def run_experiment_with_frames(
+    config: ExperimentConfig,
+) -> tuple[list[RunRecord], list[QueryFrame]]:
+    """Same as ``run_experiment``, plus per-query frames for ASCII visuals."""
+
     records: list[RunRecord] = []
+    frames: list[QueryFrame] = []
     for idx, query in enumerate(config.queries):
         problem = build_problem(
             config.generator, query, seed=config.seed + idx
@@ -206,6 +254,7 @@ def run_experiment(config: ExperimentConfig) -> list[RunRecord]:
         fingerprint = map_fingerprint(
             problem, generator=config.generator, seed=config.seed + idx
         )
+        algo_frames: list[AlgoFrame] = []
         for algorithm in config.algorithms:
             result = run_query(
                 problem, algorithm, timeout_sec=config.timeout_sec
@@ -220,7 +269,27 @@ def run_experiment(config: ExperimentConfig) -> list[RunRecord]:
                     result=result,
                 )
             )
-    return records
+            path = tuple(result.path) if result.path is not None else None
+            algo_frames.append(
+                AlgoFrame(
+                    algorithm=algorithm,
+                    success=result.success,
+                    termination_reason=result.termination_reason.value,
+                    solution_cost=result.solution_cost,
+                    expanded=result.metrics.expanded,
+                    expanded_unit=_expanded_unit(algorithm),
+                    path=path,
+                )
+            )
+        frames.append(
+            QueryFrame(
+                query_index=idx,
+                problem=problem,
+                map_hash=fingerprint,
+                algorithms=tuple(algo_frames),
+            )
+        )
+    return records, frames
 
 
 def export_records(
@@ -245,10 +314,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     args = parser.parse_args(argv)
     config = load_config(args.config)
-    records = run_experiment(config)
+    records, frames = run_experiment_with_frames(config)
     csv_path, json_path = export_records(config, records)
+    viz_path = write_visual(
+        Path(config.output_dir) / f"{config.name}_visual.txt",
+        config,
+        frames,
+    )
     print(f"wrote {csv_path}")
     print(f"wrote {json_path}")
+    print(f"wrote {viz_path}")
     return 0
 
 

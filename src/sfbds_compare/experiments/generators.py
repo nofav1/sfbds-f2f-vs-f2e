@@ -36,6 +36,13 @@ def map_fingerprint(
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
+def realized_obstacle_density(problem: GridProblem) -> float:
+    """Obstacle fraction of the generated grid: ``count / (height * width)``."""
+
+    n_cells = problem.height * problem.width
+    return len(problem.obstacles) / n_cells
+
+
 def build_problem(
     generator: GeneratorConfig,
     query: QuerySpec,

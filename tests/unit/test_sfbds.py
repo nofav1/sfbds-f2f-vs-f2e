@@ -29,6 +29,31 @@ def _assert_heuristic_eval_aligned(result) -> None:
     assert m.heuristic_evals == 1 + (m.generated - m.duplicates_discarded)
 
 
+def _assert_sfbds_instrumentation(result) -> None:
+    m = result.metrics
+    assert m.forward_expanded is not None
+    assert m.backward_expanded is not None
+    assert m.direction_switches is not None
+    assert m.forward_expanded + m.backward_expanded == m.expanded
+    if result.success:
+        assert m.meeting_g_F is not None
+        assert m.meeting_g_B is not None
+        assert result.solution_cost is not None
+        assert m.meeting_g_F + m.meeting_g_B == result.solution_cost
+    else:
+        assert m.meeting_g_F is None
+        assert m.meeting_g_B is None
+
+
+def _assert_astar_sfbds_fields_na(result) -> None:
+    m = result.metrics
+    assert m.forward_expanded is None
+    assert m.backward_expanded is None
+    assert m.meeting_g_F is None
+    assert m.meeting_g_B is None
+    assert m.direction_switches is None
+
+
 def test_sfbds_start_equals_goal() -> None:
     problem = GridProblem(1, 1, GridState(0, 0), GridState(0, 0))
     result = SFBDSSearcher(F2FManhattanHeuristic()).search(problem)
@@ -38,6 +63,7 @@ def test_sfbds_start_equals_goal() -> None:
     assert result.termination_reason == TerminationReason.GOAL_FOUND
     assert result.metrics.expanded == 0
     assert result.metrics.heuristic_evals == 1
+    _assert_sfbds_instrumentation(result)
 
 
 def test_sfbds_straight_corridor() -> None:
@@ -48,6 +74,7 @@ def test_sfbds_straight_corridor() -> None:
     assert result.path is not None
     _assert_unit_path(problem, list(result.path), result.solution_cost)
     _assert_heuristic_eval_aligned(result)
+    _assert_sfbds_instrumentation(result)
 
 
 def test_sfbds_obstacle_matches_astar() -> None:
@@ -65,6 +92,8 @@ def test_sfbds_obstacle_matches_astar() -> None:
     assert sfbds.path is not None
     _assert_unit_path(problem, list(sfbds.path), sfbds.solution_cost)
     _assert_heuristic_eval_aligned(sfbds)
+    _assert_sfbds_instrumentation(sfbds)
+    _assert_astar_sfbds_fields_na(astar)
 
 
 @pytest.mark.parametrize(
@@ -87,6 +116,8 @@ def test_sfbds_f2f_cost_agrees_with_astar_open_grids(
     assert sfbds.path is not None
     _assert_unit_path(problem, list(sfbds.path), sfbds.solution_cost)
     _assert_heuristic_eval_aligned(sfbds)
+    _assert_sfbds_instrumentation(sfbds)
+    _assert_astar_sfbds_fields_na(astar)
 
 
 def test_sfbds_f2e_cost_agrees_with_astar_open_and_obstacle() -> None:
@@ -106,6 +137,8 @@ def test_sfbds_f2e_cost_agrees_with_astar_open_and_obstacle() -> None:
         assert sfbds.path is not None
         _assert_unit_path(problem, list(sfbds.path), sfbds.solution_cost)
         _assert_heuristic_eval_aligned(sfbds)
+        _assert_sfbds_instrumentation(sfbds)
+        _assert_astar_sfbds_fields_na(astar)
 
 
 def test_sfbds_unreachable_open_exhausted() -> None:
@@ -123,3 +156,4 @@ def test_sfbds_unreachable_open_exhausted() -> None:
     assert result.metrics.expanded >= 1
     assert result.metrics.success is False
     _assert_heuristic_eval_aligned(result)
+    _assert_sfbds_instrumentation(result)

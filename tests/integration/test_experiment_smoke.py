@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import csv
+import json
 import time
 from pathlib import Path
 
@@ -45,6 +47,21 @@ def test_smoke_astar_corridor_exports(tmp_path: Path) -> None:
     text = csv_path.read_text(encoding="utf-8")
     assert "solution_cost" in text
     assert "map_hash" in text
+    rec = records[0]
+    assert rec.forward_expanded is None
+    assert rec.backward_expanded is None
+    assert rec.meeting_g_F is None
+    assert rec.meeting_g_B is None
+    assert rec.direction_switches is None
+    row = next(csv.DictReader(csv_path.open(encoding="utf-8")))
+    assert row["forward_expanded"] == ""
+    assert row["backward_expanded"] == ""
+    assert row["meeting_g_F"] == ""
+    assert row["meeting_g_B"] == ""
+    assert row["direction_switches"] == ""
+    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    assert payload[0]["forward_expanded"] is None
+    assert payload[0]["meeting_g_F"] is None
 
 
 def test_smoke_sfbds_f2f_and_f2e_corridor() -> None:
@@ -61,6 +78,13 @@ def test_smoke_sfbds_f2f_and_f2e_corridor() -> None:
         records = run_experiment(cfg)
         assert records[0].success
         assert records[0].solution_cost == 3.0
+        rec = records[0]
+        assert rec.forward_expanded is not None
+        assert rec.backward_expanded is not None
+        assert rec.forward_expanded + rec.backward_expanded == rec.expanded
+        assert rec.meeting_g_F is not None
+        assert rec.meeting_g_B is not None
+        assert rec.meeting_g_F + rec.meeting_g_B == rec.solution_cost
 
 
 def test_multi_algo_same_instance_cost_agreement() -> None:
@@ -115,6 +139,8 @@ def test_timeout_wall_clock_bound() -> None:
     assert result.metrics.timed_out is True
     assert result.metrics.expanded >= 1
     assert elapsed < 1.0
+    assert result.metrics.meeting_g_F is None
+    assert result.metrics.meeting_g_B is None
 
 
 def test_timeout_cooperative_preserves_metrics() -> None:
@@ -146,6 +172,8 @@ def test_timeout_cooperative_preserves_metrics() -> None:
     assert result.termination_reason is TerminationReason.TIMEOUT
     assert result.metrics.expanded >= 1
     assert result.metrics.generated >= 1
+    assert result.metrics.meeting_g_F is None
+    assert result.metrics.meeting_g_B is None
 
 
 def test_random_obstacles_reproducible_hash() -> None:
@@ -172,6 +200,25 @@ def test_maze_has_walls_and_detours() -> None:
     assert result.success
     assert result.solution_cost is not None
     assert result.solution_cost > manhattan(problem.start_state, problem.goal_state)
+
+
+def test_maze_export_uses_realized_obstacle_density(tmp_path: Path) -> None:
+    cfg = ExperimentConfig(
+        name="maze_density",
+        algorithms=("astar",),
+        seed=3,
+        generator=GeneratorConfig(kind="maze", height=11, width=11),
+        queries=(QuerySpec(start=(0, 0), goal=(10, 10)),),
+        output_dir=str(tmp_path),
+        timeout_sec=5.0,
+    )
+    records = run_experiment(cfg)
+    rec = records[0]
+    assert rec.obstacle_count > 0
+    expected = rec.obstacle_count / (rec.height * rec.width)
+    assert rec.obstacle_density == expected
+    assert rec.obstacle_density != 0.0
+    assert cfg.generator.obstacle_density == 0.0
 
 
 def test_open_and_empty_geometry_share_hash_ignoring_kind_label() -> None:
@@ -209,6 +256,46 @@ def test_cli_writes_artifacts(tmp_path: Path) -> None:
     assert main(["--config", str(cfg_path)]) == 0
     assert (tmp_path / "cli_smoke.csv").is_file()
     assert (tmp_path / "cli_smoke.json").is_file()
+    viz = tmp_path / "cli_smoke_visual.txt"
+    assert viz.is_file()
+    viz_text = viz.read_text(encoding="utf-8")
+    assert "Generated corridor" in viz_text
+    assert "astar" in viz_text
+    assert "S**G" in viz_text
+    assert "S***G" not in viz_text
+
+
+def test_cli_writes_2d_visual_with_axes(tmp_path: Path) -> None:
+    from sfbds_compare.experiments.runner import main
+
+    cfg_path = tmp_path / "cfg.yaml"
+    cfg_path.write_text(
+        "\n".join(
+            [
+                "name: cli_smoke_2d",
+                "algorithm: astar",
+                "seed: 1",
+                f"output_dir: {tmp_path.as_posix()}",
+                "generator:",
+                "  kind: open",
+                "  height: 3",
+                "  width: 4",
+                "queries:",
+                "  - start: [0, 0]",
+                "    goal: [2, 3]",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    assert main(["--config", str(cfg_path)]) == 0
+    viz = tmp_path / "cli_smoke_2d_visual.txt"
+    assert viz.is_file()
+    viz_text = viz.read_text(encoding="utf-8")
+    assert "coords=(row,col), (0,0)=top-left" in viz_text
+    assert "Generated open" in viz_text
+    lines = viz_text.splitlines()
+    assert any(line.startswith("0 ") for line in lines)
+    assert any(line.startswith("  |") or line.startswith("  0") for line in lines)
 
 
 def test_write_csv_empty(tmp_path: Path) -> None:

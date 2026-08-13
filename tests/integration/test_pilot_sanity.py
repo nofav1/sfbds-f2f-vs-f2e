@@ -53,6 +53,9 @@ def test_pilot_config_cost_agreement_and_metrics(
         assert rec.expanded_unit in ("state", "pair")
         if cfg.generator.kind == "maze":
             assert rec.obstacle_count > 0
+            n_cells = rec.height * rec.width
+            assert rec.obstacle_density == rec.obstacle_count / n_cells
+            assert rec.obstacle_density != 0.0
 
     for q_idx, group in by_query.items():
         assert len(group) == len(cfg.algorithms)

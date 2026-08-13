@@ -51,6 +51,10 @@ class SFBDSSearcher(Generic[StateT]):
     ) -> SearchResult[StateT]:
         metrics = self._metrics_factory()
         metrics.start()
+        metrics.forward_expanded = 0
+        metrics.backward_expanded = 0
+        metrics.direction_switches = 0
+        last_side: Optional[Side] = None
         policies = self._policies
 
         open_list: LazyHeapOpen[PairKey, SFBDSNode[StateT]] = LazyHeapOpen(
@@ -95,6 +99,8 @@ class SFBDSSearcher(Generic[StateT]):
             if policies.goal.is_goal(current):
                 path = reconstruct_sfbds_path(current)
                 cost = current.g
+                metrics.meeting_g_F = current.g_F
+                metrics.meeting_g_B = current.g_B
                 snap = metrics.finish(success=True, solution_cost=cost)
                 return SearchResult(
                     success=True,
@@ -124,6 +130,13 @@ class SFBDSSearcher(Generic[StateT]):
             side = policies.direction.choose_by_branch_factors(
                 len(fwd_nbrs), len(bwd_nbrs)
             )
+            if side is Side.FORWARD:
+                metrics.forward_expanded = (metrics.forward_expanded or 0) + 1
+            else:
+                metrics.backward_expanded = (metrics.backward_expanded or 0) + 1
+            if last_side is not None and side is not last_side:
+                metrics.direction_switches = (metrics.direction_switches or 0) + 1
+            last_side = side
             neighbors = fwd_nbrs if side is Side.FORWARD else bwd_nbrs
 
             for edge in neighbors:

@@ -23,6 +23,11 @@ class MetricsSnapshot:
     success: bool
     solution_cost: Optional[float] = None
     timed_out: bool = False
+    forward_expanded: Optional[int] = None
+    backward_expanded: Optional[int] = None
+    meeting_g_F: Optional[float] = None
+    meeting_g_B: Optional[float] = None
+    direction_switches: Optional[int] = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -41,6 +46,11 @@ class MetricsCollector:
     stale_skipped: int = 0
     duplicates_discarded: int = 0
     timed_out: bool = False
+    forward_expanded: Optional[int] = None
+    backward_expanded: Optional[int] = None
+    meeting_g_F: Optional[float] = None
+    meeting_g_B: Optional[float] = None
+    direction_switches: Optional[int] = None
     _start_perf: float = field(default=0.0, repr=False)
     _finished: bool = field(default=False, repr=False)
 
@@ -81,4 +91,9 @@ class MetricsCollector:
             success=success,
             solution_cost=solution_cost,
             timed_out=self.timed_out,
+            forward_expanded=self.forward_expanded,
+            backward_expanded=self.backward_expanded,
+            meeting_g_F=self.meeting_g_F,
+            meeting_g_B=self.meeting_g_B,
+            direction_switches=self.direction_switches,
         )

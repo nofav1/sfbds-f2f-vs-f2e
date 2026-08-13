@@ -23,6 +23,11 @@ def test_metrics_finish_snapshot() -> None:
     assert snap.heuristic_evals == 1
     assert snap.success is False
     assert snap.runtime_sec >= 0.0
+    assert snap.forward_expanded is None
+    assert snap.backward_expanded is None
+    assert snap.meeting_g_F is None
+    assert snap.meeting_g_B is None
+    assert snap.direction_switches is None
 
 
 def test_search_result_failure_open_exhausted() -> None:
