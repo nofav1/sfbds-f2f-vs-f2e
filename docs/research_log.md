@@ -38,6 +38,7 @@ These are in force until we explicitly revise this section.
 
 - `obstacle_density` XOR `obstacle_densities` (random only). Shuffle non-reserved cells once; prefix `round(d * n_candidates)` so `obs10 ⊆ obs20 ⊆ obs30`.
 - `ensure_connected_query` **once** on the densest map; reuse relocated S/G at lower densities.
+- Optional YAML `query_sample.skip_unconnected` (default false): if connect-once cannot place a pair at `min_manhattan`, skip that query instead of aborting. `query_index` may have gaps; realized n may be `< count`. Use only when the scientific plan is “accept fewer queries,” not as a silent default.
 - Skip ASCII visuals when `obstacle_densities` is set.
 - Independent `*_d10/d20/d30` CSVs (old non-nested sampling) may still sit in `results/study/`. They pair F2F vs F2E but **must not** enter nested `obstacle_count` tests, `overall_random`, or `saving_by_density.png`.
 - Optional YAML `maze_braid` in `[0, 1)` (maze only, default 0): after the perfect spanning tree, open that fraction of leftover inter-room walls. Same seed + queries as a `maze_braid: 0` run share endpoints; the braided map has extra openings.
@@ -162,12 +163,33 @@ These are in force until we explicitly revise this section.
 
 ---
 
+### 2026-08-14 — Maze 255 braid and nested 128 @ 45–50% with `min_manhattan` 48
+
+**Folder:** [`results/analysis/2026-08-14-maze255-braid-and-128-md48/`](../results/analysis/2026-08-14-maze255-braid-and-128-md48/)
+
+**Configs:** [`study_maze_255_braid.yaml`](../configs/followup/study_maze_255_braid.yaml) (`maze_braid: 0.5`, same seed/queries as `study_maze_255`), [`study_random_128_d45_md48.yaml`](../configs/followup/study_random_128_d45_md48.yaml) (same densities and seed 221 as `study_random_128_d45`, `min_manhattan` 48, `skip_unconnected: true`). Compared against existing maze 127 / 127-braid / 255 and nested 128 d45 (md 28). Cache still off.
+
+**What we asked.** (1) Does braid still increase F2F/F2E ties at 255×255, where perfect-maze size had helped? (2) Does the nested 128 @ 45–50% expansion gap survive the original Manhattan floor of 48, if we accept fewer than 30 connected queries?
+
+**Headline.** 261 paired rows, all solved, 0 timeouts. Read per-experiment counts below; the generated density table **pools** md-28 and md-48 rows that share `obstacle_count`, so it is not the md-48 confirmatory test.
+
+- **Maze 255 braid:** same 30 start/goal pairs as perfect maze 255. Walls ~32256 → ~24192. F2F-fewer **26/30 → 11/30**; ties 4 → 19. No F2E-fewer. Same direction as 127 (**21/30 → 11/30**). Size does not protect the perfect-maze gap from braid.
+- **Nested 128 @ 45/47.5/50%, md 48:** connect-once at 50% with md 48 cannot place 30/30 (probe: ~15–19 of 30 across seeds). This run skipped **13/30** queries; **17** families remain (51 paired rows). F2F-fewer **6 / 7 / 8** of 17; ties 11 / 10 / 9; no F2E-fewer. `n_untied` is 6–8 **< 10** at every density, so Wilcoxon p is null if this experiment is tested alone. Direction matches the md-28 pass (13 / 17 / 17 of 30) but this is underpowered, not a confirmation.
+- Contrast md-28 on the same density targets (30/30 connected): still the strong slice. Raising md to 48 trades n for a longer floor; it does not reverse who wins on the maps that still connect.
+
+**Decisions from this run.**
+
+1. Braid × size: loops increase ties at **both** 127 and 255. The maze result to keep is **perfect** (unbraided) mazes; larger perfect mazes raise the F2F-fewer rate, braid knocks it back down.
+2. Nested 128 @ 45–50% with md 48 is connectivity-limited. Accepting fewer queries is valid descriptively (no F2E-fewer) but does not meet the locked `n_untied ≥ 10` rule. Do not treat the pooled 47-row density tests in this snapshot as an md-48 result.
+3. Cache still off. Strongest confirmatory sets remain perfect maze 255 and nested 128 @ 45–50% **with md 28** (full n=30).
+
+---
+
 ## Next experiment (not started)
 
 Cache stays off until instructor/scope lock. Nothing else is queued until we pick one of:
 
-1. **Nested 128 @ 45–50% with the original `min_manhattan` 48** if we can connect (or accept fewer queries) — this pass lowered md to 28.
-2. **Maze 255 braid** — size helped on perfect mazes; braid hurt at 127. Confirm the interaction.
-3. **Cache ablation** — only after instructor/scope lock; strongest instance sets so far are perfect maze 255 and nested 128 @ 45–50%.
+1. **More queries at nested 128 @ 45–50% md 48** (larger `query_sample.count` + `skip_unconnected`) if we want `n_untied ≥ 10` at the original Manhattan floor. Do not lower md again.
+2. **Cache ablation** — only after instructor/scope lock; strongest instance sets so far are perfect maze 255 and nested 128 @ 45–50% (md 28).
 
 When we choose, add a YAML under `configs/followup/`, run into `results/study/` without deleting old CSVs, analyze into `results/analysis/YYYY-MM-DD-<slug>/` with `--experiment` filters, and add a row here plus in [`results/analysis/README.md`](../results/analysis/README.md).

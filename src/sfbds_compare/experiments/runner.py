@@ -294,6 +294,27 @@ def _record_for(
     )
 
 
+def _connect_query(
+    config: ExperimentConfig,
+    problem: GridProblem,
+    idx: int,
+) -> Optional[GridProblem]:
+    """Relocate endpoints onto a connected pair, or skip when allowed."""
+
+    if config.min_manhattan is None:
+        return problem
+    try:
+        return ensure_connected_query(
+            problem,
+            min_manhattan=config.min_manhattan,
+            rng=random.Random(config.seed + idx + 1_000_003),
+        )
+    except ValueError:
+        if config.skip_unconnected:
+            return None
+        raise
+
+
 def _problems_for_query(
     config: ExperimentConfig,
     query,
@@ -305,13 +326,8 @@ def _problems_for_query(
     levels = gen.obstacle_densities
     if not levels:
         problem = build_problem(gen, query, seed=config.seed + idx)
-        if config.min_manhattan is not None:
-            problem = ensure_connected_query(
-                problem,
-                min_manhattan=config.min_manhattan,
-                rng=random.Random(config.seed + idx + 1_000_003),
-            )
-        return [problem]
+        problem = _connect_query(config, problem, idx)
+        return [] if problem is None else [problem]
 
     start = GridState(query.start[0], query.start[1])
     goal = GridState(query.goal[0], query.goal[1])
@@ -329,12 +345,9 @@ def _problems_for_query(
         goal,
         obstacles=prefix_obstacles(ranked, densest),
     )
-    if config.min_manhattan is not None:
-        dense = ensure_connected_query(
-            dense,
-            min_manhattan=config.min_manhattan,
-            rng=random.Random(config.seed + idx + 1_000_003),
-        )
+    dense = _connect_query(config, dense, idx)
+    if dense is None:
+        return []
     start, goal = dense.start_state, dense.goal_state
     return [
         GridProblem(
@@ -362,8 +375,12 @@ def run_experiment_with_frames(
 
     records: list[RunRecord] = []
     frames: list[QueryFrame] = []
+    n_skipped = 0
     for idx, query in enumerate(config.queries):
         problems = _problems_for_query(config, query, idx)
+        if not problems:
+            n_skipped += 1
+            continue
         for problem in problems:
             fingerprint = map_fingerprint(
                 problem, generator=config.generator, seed=config.seed + idx
@@ -403,6 +420,18 @@ def run_experiment_with_frames(
                     algorithms=tuple(algo_frames),
                 )
             )
+    if not records:
+        raise ValueError(
+            f"{config.name}: all {len(config.queries)} queries skipped "
+            f"(no connected pair with min_manhattan={config.min_manhattan})"
+        )
+    if n_skipped:
+        print(
+            f"{config.name}: skipped {n_skipped}/{len(config.queries)} "
+            "queries with no connected pair at min_manhattan="
+            f"{config.min_manhattan}",
+            file=sys.stderr,
+        )
     return records, frames
 
 

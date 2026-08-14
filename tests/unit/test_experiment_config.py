@@ -340,7 +340,44 @@ _FOLLOWUP_SPECS = {
         "obstacle_densities": (0.50, 0.51, 0.52),
         "runtime_repeats": 1,
     },
+    "study_random_128_d45_md48.yaml": {
+        "kind": "random_obstacles",
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 48,
+        "obstacle_densities": (0.45, 0.475, 0.50),
+        "runtime_repeats": 1,
+        "skip_unconnected": True,
+    },
+    "study_maze_255_braid.yaml": {
+        "kind": "maze",
+        "height": 255,
+        "width": 255,
+        "count": 30,
+        "min_manhattan": 120,
+        "maze_braid": 0.5,
+        "runtime_repeats": 1,
+    },
 }
+
+
+def test_skip_unconnected_from_query_sample() -> None:
+    cfg = config_from_dict(
+        {
+            "algorithm": "astar",
+            "seed": 1,
+            "generator": {"kind": "open", "height": 8, "width": 8},
+            "query_sample": {
+                "count": 3,
+                "min_manhattan": 4,
+                "skip_unconnected": True,
+            },
+        }
+    )
+    assert cfg.skip_unconnected is True
+    assert cfg.min_manhattan == 4
+    assert len(cfg.queries) == 3
 
 
 def test_runtime_repeats_must_be_positive() -> None:
@@ -388,6 +425,7 @@ def test_load_followup_yaml_configs() -> None:
             assert cfg.generator.obstacle_densities == spec["obstacle_densities"]
         assert cfg.generator.maze_braid == spec.get("maze_braid", 0.0)
         assert cfg.min_manhattan == spec["min_manhattan"]
+        assert cfg.skip_unconnected == spec.get("skip_unconnected", False)
         assert len(cfg.queries) == spec["count"]
 
 

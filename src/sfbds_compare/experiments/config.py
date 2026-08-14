@@ -40,6 +40,7 @@ class ExperimentConfig:
     timeout_sec: Optional[float] = None
     min_manhattan: Optional[int] = None
     runtime_repeats: int = 1
+    skip_unconnected: bool = False
 
     @property
     def algorithm(self) -> str:
@@ -197,6 +198,7 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
     queries_raw = data.get("queries") or []
     sample_raw = data.get("query_sample")
     min_manhattan: Optional[int] = None
+    skip_unconnected = False
     if queries_raw and sample_raw:
         raise ValueError("set queries or query_sample, not both")
     if sample_raw:
@@ -205,6 +207,7 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
         if "count" not in sample_raw:
             raise ValueError("query_sample.count is required")
         min_manhattan = int(sample_raw.get("min_manhattan", 1))
+        skip_unconnected = bool(sample_raw.get("skip_unconnected", False))
         queries = sample_queries(
             height=height,
             width=width,
@@ -234,6 +237,7 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
         timeout_sec=timeout_sec,
         min_manhattan=min_manhattan,
         runtime_repeats=runtime_repeats,
+        skip_unconnected=skip_unconnected,
     )
 
 

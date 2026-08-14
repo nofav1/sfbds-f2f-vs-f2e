@@ -636,3 +636,74 @@ def test_runtime_repeats_keeps_expansions_and_skips_visual(tmp_path: Path) -> No
     assert (tmp_path / "timed_cli.csv").is_file()
     assert not (tmp_path / "timed_cli_visual.txt").is_file()
 
+
+def test_skip_unconnected_drops_queries_without_a_far_pair() -> None:
+    from sfbds_compare.experiments.runner import _connect_query
+
+    isolated = GridProblem(
+        3,
+        3,
+        GridState(0, 0),
+        GridState(0, 2),
+        obstacles=[
+            GridState(0, 1),
+            GridState(1, 0),
+            GridState(1, 1),
+            GridState(1, 2),
+            GridState(2, 0),
+            GridState(2, 1),
+            GridState(2, 2),
+        ],
+    )
+    skip_cfg = ExperimentConfig(
+        name="skip",
+        algorithms=("astar",),
+        seed=0,
+        generator=GeneratorConfig(kind="open", height=3, width=3),
+        queries=(QuerySpec(start=(0, 0), goal=(0, 2)),),
+        output_dir="results",
+        min_manhattan=1,
+        skip_unconnected=True,
+    )
+    raise_cfg = ExperimentConfig(
+        name="raise",
+        algorithms=("astar",),
+        seed=0,
+        generator=GeneratorConfig(kind="open", height=3, width=3),
+        queries=(QuerySpec(start=(0, 0), goal=(0, 2)),),
+        output_dir="results",
+        min_manhattan=1,
+        skip_unconnected=False,
+    )
+    assert _connect_query(skip_cfg, isolated, 0) is None
+    with pytest.raises(ValueError, match="no connected free pair"):
+        _connect_query(raise_cfg, isolated, 0)
+
+
+def test_skip_unconnected_run_keeps_later_queries(tmp_path: Path) -> None:
+    cfg = config_from_dict(
+        {
+            "name": "skip_run",
+            "algorithm": "astar",
+            "seed": 0,
+            "timeout_sec": 5,
+            "output_dir": str(tmp_path),
+            "generator": {
+                "kind": "random_obstacles",
+                "height": 8,
+                "width": 8,
+                "obstacle_density": 0.55,
+            },
+            "query_sample": {
+                "count": 8,
+                "min_manhattan": 8,
+                "skip_unconnected": True,
+            },
+        }
+    )
+    records = run_experiment(cfg)
+    indices = {r.query_index for r in records}
+    assert records
+    assert indices <= set(range(8))
+    assert all(r.success for r in records)
+
