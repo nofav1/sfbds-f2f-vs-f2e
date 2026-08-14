@@ -313,6 +313,33 @@ _FOLLOWUP_SPECS = {
         "obstacle_densities": (0.30, 0.40, 0.45),
         "runtime_repeats": 1,
     },
+    "study_maze_127_braid.yaml": {
+        "kind": "maze",
+        "height": 127,
+        "width": 127,
+        "count": 30,
+        "min_manhattan": 60,
+        "maze_braid": 0.5,
+        "runtime_repeats": 1,
+    },
+    "study_random_128_d45.yaml": {
+        "kind": "random_obstacles",
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 28,
+        "obstacle_densities": (0.45, 0.475, 0.50),
+        "runtime_repeats": 1,
+    },
+    "study_random_64_d52.yaml": {
+        "kind": "random_obstacles",
+        "height": 64,
+        "width": 64,
+        "count": 30,
+        "min_manhattan": 16,
+        "obstacle_densities": (0.50, 0.51, 0.52),
+        "runtime_repeats": 1,
+    },
 }
 
 
@@ -323,6 +350,22 @@ def test_runtime_repeats_must_be_positive() -> None:
                 "algorithm": "astar",
                 "runtime_repeats": 0,
                 "generator": {"kind": "open", "height": 2, "width": 2},
+                "queries": [{"start": [0, 0], "goal": [1, 1]}],
+            }
+        )
+
+
+def test_maze_braid_requires_maze_kind() -> None:
+    with pytest.raises(ValueError, match="maze_braid"):
+        config_from_dict(
+            {
+                "algorithm": "astar",
+                "generator": {
+                    "kind": "open",
+                    "height": 4,
+                    "width": 4,
+                    "maze_braid": 0.5,
+                },
                 "queries": [{"start": [0, 0], "goal": [1, 1]}],
             }
         )
@@ -343,6 +386,7 @@ def test_load_followup_yaml_configs() -> None:
         assert cfg.runtime_repeats == spec["runtime_repeats"]
         if "obstacle_densities" in spec:
             assert cfg.generator.obstacle_densities == spec["obstacle_densities"]
+        assert cfg.generator.maze_braid == spec.get("maze_braid", 0.0)
         assert cfg.min_manhattan == spec["min_manhattan"]
         assert len(cfg.queries) == spec["count"]
 

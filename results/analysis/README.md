@@ -23,3 +23,4 @@ python -m sfbds_compare.analysis --input-dir results/study --out-dir results/ana
 | [`2026-08-14-harder-followup`](2026-08-14-harder-followup/) | 2026-08-14 | maze 63/127/255 + `study_random_64_dense` | Harder maze size rung and denser nested 64×64 random (30/40/45%). |
 | [`2026-08-14-maze-runtime`](2026-08-14-maze-runtime/) | 2026-08-14 | `study_maze_127_timed` only | Maze 127 re-run with median of 5 wall-clock repeats; runtime slice on maps where expansions already differ. |
 | [`2026-08-14-far-maze-and-dense-random`](2026-08-14-far-maze-and-dense-random/) | 2026-08-14 | maze 127 vs 127-far; nested 64@40/45/50% and 128@30/40/45% | Query-length maze contrast plus denser nested random. |
+| [`2026-08-14-braid-and-denser-nested`](2026-08-14-braid-and-denser-nested/) | 2026-08-14 | maze 127 vs braid 0.5; nested 64@50–52% and 128@45–50% | Braided maze contrast and denser nested random (md lowered so connect-once succeeds). |

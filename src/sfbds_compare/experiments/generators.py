@@ -87,6 +87,7 @@ def build_problem(
             seed=seed,
             start=start,
             goal=goal,
+            braid=generator.maze_braid,
         )
         return GridProblem(
             generator.height,
@@ -255,6 +256,49 @@ def _carve_manhattan(
         free.add(GridState(r, c))
 
 
+def _room_neighbors(
+    room: GridState, height: int, width: int
+) -> list[tuple[GridState, GridState]]:
+    """Return (neighbor_room, wall_between) pairs on the even lattice."""
+
+    out: list[tuple[GridState, GridState]] = []
+    for dr, dc in ((-2, 0), (2, 0), (0, -2), (0, 2)):
+        nr, nc = room.row + dr, room.col + dc
+        if 0 <= nr < height and 0 <= nc < width and nr % 2 == 0 and nc % 2 == 0:
+            wall = GridState(room.row + dr // 2, room.col + dc // 2)
+            out.append((GridState(nr, nc), wall))
+    return out
+
+
+def _open_braid_walls(
+    free: set[GridState],
+    visited_rooms: set[GridState],
+    *,
+    height: int,
+    width: int,
+    rng: random.Random,
+    braid: float,
+) -> None:
+    """Knock down a fraction of leftover walls between adjacent rooms."""
+
+    if braid <= 0.0:
+        return
+    unique: dict[tuple[tuple[int, int], tuple[int, int]], GridState] = {}
+    for room in visited_rooms:
+        for nbr, wall in _room_neighbors(room, height, width):
+            if nbr not in visited_rooms or wall in free:
+                continue
+            a = (room.row, room.col)
+            b = (nbr.row, nbr.col)
+            key = (a, b) if a <= b else (b, a)
+            unique[key] = wall
+    walls = list(unique.values())
+    rng.shuffle(walls)
+    k = int(round(braid * len(walls)))
+    for wall in walls[:k]:
+        free.add(wall)
+
+
 def _wall_passage_maze_obstacles(
     height: int,
     width: int,
@@ -262,16 +306,21 @@ def _wall_passage_maze_obstacles(
     seed: int,
     start: GridState,
     goal: GridState,
+    braid: float = 0.0,
 ) -> list[GridState]:
-    """Perfect maze: rooms on even lattice; walls stay blocked unless carved.
+    """Perfect maze, optionally braided by opening extra room-to-room walls.
 
     DFS spans rooms at ``(2i, 2j)``. Moving between adjacent rooms carves the
     intervening wall cell. Remaining cells are obstacles. ``start``/``goal``
     are always free and connected to the nearest room by a short tunnel.
+    ``braid`` in ``[0, 1)`` is the fraction of leftover inter-room walls to
+    open after the spanning tree (0 = unique paths between rooms).
     """
 
     if height < 3 or width < 3:
         raise ValueError("maze generator requires height and width >= 3")
+    if not 0.0 <= braid < 1.0:
+        raise ValueError("maze braid must be in [0, 1)")
 
     rng = random.Random(seed)
     room_start = _snap_to_room(start, height, width)
@@ -279,21 +328,11 @@ def _wall_passage_maze_obstacles(
     stack: list[GridState] = [room_start]
     visited_rooms: set[GridState] = {room_start}
 
-    def room_neighbors(room: GridState) -> list[tuple[GridState, GridState]]:
-        """Return (neighbor_room, wall_between) pairs."""
-        out: list[tuple[GridState, GridState]] = []
-        for dr, dc in ((-2, 0), (2, 0), (0, -2), (0, 2)):
-            nr, nc = room.row + dr, room.col + dc
-            if 0 <= nr < height and 0 <= nc < width and nr % 2 == 0 and nc % 2 == 0:
-                wall = GridState(room.row + dr // 2, room.col + dc // 2)
-                out.append((GridState(nr, nc), wall))
-        return out
-
     while stack:
         cur = stack[-1]
         options = [
             (nbr, wall)
-            for nbr, wall in room_neighbors(cur)
+            for nbr, wall in _room_neighbors(cur, height, width)
             if nbr not in visited_rooms
         ]
         if not options:
@@ -311,10 +350,17 @@ def _wall_passage_maze_obstacles(
     _carve_manhattan(free, start, room_start)
     room_goal = _snap_to_room(goal, height, width)
     if room_goal not in visited_rooms:
-        # Connect room_goal into the maze by carving toward room_start.
         _carve_manhattan(free, room_goal, room_start)
         visited_rooms.add(room_goal)
     _carve_manhattan(free, goal, room_goal)
+    _open_braid_walls(
+        free,
+        visited_rooms,
+        height=height,
+        width=width,
+        rng=rng,
+        braid=braid,
+    )
 
     return [
         GridState(r, c)

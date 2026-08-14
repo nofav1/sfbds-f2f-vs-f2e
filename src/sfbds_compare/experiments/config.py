@@ -26,6 +26,7 @@ class GeneratorConfig:
     width: int
     obstacle_density: float = 0.0
     obstacle_densities: tuple[float, ...] = ()
+    maze_braid: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,12 +168,19 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
         if not 0.0 <= density < 1.0:
             raise ValueError("obstacle_density must be in [0, 1)")
 
+    maze_braid = float(gen_raw.get("maze_braid", 0.0))
+    if maze_braid != 0.0 and kind != "maze":
+        raise ValueError("maze_braid requires kind maze")
+    if not 0.0 <= maze_braid < 1.0:
+        raise ValueError("maze_braid must be in [0, 1)")
+
     generator = GeneratorConfig(
         kind=kind,
         height=height,
         width=width,
         obstacle_density=density,
         obstacle_densities=densities,
+        maze_braid=maze_braid,
     )
 
     timeout = data.get("timeout_sec")

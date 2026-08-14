@@ -1,0 +1,16 @@
+name: study_maze_127_braid
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 140
+timeout_sec: 60
+output_dir: results/study
+generator:
+  kind: maze
+  height: 127
+  width: 127
+  maze_braid: 0.5
+query_sample:
+  count: 30
+  min_manhattan: 60

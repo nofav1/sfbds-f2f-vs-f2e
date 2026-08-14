@@ -40,6 +40,7 @@ These are in force until we explicitly revise this section.
 - `ensure_connected_query` **once** on the densest map; reuse relocated S/G at lower densities.
 - Skip ASCII visuals when `obstacle_densities` is set.
 - Independent `*_d10/d20/d30` CSVs (old non-nested sampling) may still sit in `results/study/`. They pair F2F vs F2E but **must not** enter nested `obstacle_count` tests, `overall_random`, or `saving_by_density.png`.
+- Optional YAML `maze_braid` in `[0, 1)` (maze only, default 0): after the perfect spanning tree, open that fraction of leftover inter-room walls. Same seed + queries as a `maze_braid: 0` run share endpoints; the braided map has extra openings.
 
 **Pairing and stats**
 
@@ -139,12 +140,34 @@ These are in force until we explicitly revise this section.
 
 ---
 
+### 2026-08-14 — Braided maze 127 and denser nested random
+
+**Folder:** [`results/analysis/2026-08-14-braid-and-denser-nested/`](../results/analysis/2026-08-14-braid-and-denser-nested/)
+
+**Configs:** [`study_maze_127_braid.yaml`](../configs/followup/study_maze_127_braid.yaml) (`maze_braid: 0.5`, same seed/queries as `study_maze_127`), [`study_random_64_d52.yaml`](../configs/followup/study_random_64_d52.yaml), [`study_random_128_d45.yaml`](../configs/followup/study_random_128_d45.yaml).
+
+**What we asked.** (1) At fixed 127×127 and the same endpoints, does opening 50% of leftover maze walls (braid) change the F2F expansion gap? (2) Nested 128 starting at 45% (drop 30/40%), and 64 just above 50%.
+
+**Headline.** 240 paired rows, all solved, 0 timeouts.
+
+- **Braid:** same 30 start/goal pairs as perfect maze 127. Obstacle count drops ~7936 → ~5952. F2F-fewer **21/30 → 11/30**; ties 9 → 19. No F2E-fewer. Loops made F2F and F2E agree more often, not less.
+- **64×64 @ 50/51/52%** needed `min_manhattan` 16 (24 at ≥55% could not connect 30/30). All three densities stay too tied (`n_untied` 7). Going above 50% at 64 did not help.
+- **128×128 @ 45/47.5/50%** needed `min_manhattan` 28 (48 at 50–55% could not connect). This is the strong slice: F2F-fewer **13 / 17 / 17** of 30; Holm p ≈ 2e-4 to 5e-5. No F2E-fewer.
+
+**Decisions from this run.**
+
+1. Perfect (unbraided) mazes are where F2F separates; braid toward open-with-loops **increases ties**. Do not expect braid to amplify the maze result.
+2. Nested 128 **≥ 45%** (with a shorter Manhattan floor so connect-once succeeds) is the random density regime that actually unties. Tiny 64 steps above 50% are still mostly ties.
+3. Connectivity, not timeout, is the limiter past ~50% obstacles at the old `min_manhattan` values.
+
+---
+
 ## Next experiment (not started)
 
 Cache stays off until instructor/scope lock. Nothing else is queued until we pick one of:
 
-1. **Maze braid / other generators** — query length at 127 did not help; size did. A different maze style is the remaining maze factor.
-2. **Nested 128 @ ≥ 45%** only (drop 30/40%) or 64×64 above 50% if we want a denser 64 slice.
-3. **Cache ablation** — only after instructor/scope lock; use maze 255 and/or 64@45–50% as the instance set.
+1. **Nested 128 @ 45–50% with the original `min_manhattan` 48** if we can connect (or accept fewer queries) — this pass lowered md to 28.
+2. **Maze 255 braid** — size helped on perfect mazes; braid hurt at 127. Confirm the interaction.
+3. **Cache ablation** — only after instructor/scope lock; strongest instance sets so far are perfect maze 255 and nested 128 @ 45–50%.
 
 When we choose, add a YAML under `configs/followup/`, run into `results/study/` without deleting old CSVs, analyze into `results/analysis/YYYY-MM-DD-<slug>/` with `--experiment` filters, and add a row here plus in [`results/analysis/README.md`](../results/analysis/README.md).

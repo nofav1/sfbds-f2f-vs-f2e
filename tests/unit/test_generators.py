@@ -5,7 +5,9 @@ from __future__ import annotations
 import random
 
 from sfbds_compare.domain.grid import GridProblem, GridState
+from sfbds_compare.experiments.config import GeneratorConfig, QuerySpec
 from sfbds_compare.experiments.generators import (
+    build_problem,
     endpoints_connected,
     ensure_connected_query,
     prefix_obstacles,
@@ -47,3 +49,32 @@ def test_ranked_obstacles_are_nested_prefixes() -> None:
     assert obs10 <= obs20 <= obs30
     assert GridState(0, 0) not in obs30
     assert GridState(7, 7) not in obs30
+
+
+def test_maze_braid_zero_matches_perfect_maze() -> None:
+    gen = GeneratorConfig(kind="maze", height=15, width=15)
+    query = QuerySpec(start=(0, 0), goal=(14, 14))
+    perfect = build_problem(gen, query, seed=7)
+    also = build_problem(
+        GeneratorConfig(kind="maze", height=15, width=15, maze_braid=0.0),
+        query,
+        seed=7,
+    )
+    assert set(perfect.obstacles) == set(also.obstacles)
+
+
+def test_maze_braid_opens_extra_walls_and_stays_connected() -> None:
+    query = QuerySpec(start=(0, 0), goal=(14, 14))
+    perfect = build_problem(
+        GeneratorConfig(kind="maze", height=15, width=15), query, seed=7
+    )
+    braided = build_problem(
+        GeneratorConfig(kind="maze", height=15, width=15, maze_braid=0.5),
+        query,
+        seed=7,
+    )
+    assert set(braided.obstacles) < set(perfect.obstacles)
+    assert endpoints_connected(braided)
+    assert braided.start_state == perfect.start_state
+    assert braided.goal_state == perfect.goal_state
+
