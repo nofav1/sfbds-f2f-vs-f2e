@@ -1,0 +1,31 @@
+---
+description: Keep results/study and results/analysis in snapshot folders; never overwrite a previous run
+alwaysApply: true
+---
+
+# Results and analysis folders
+
+Raw study output and analysis snapshots are append-only. Index: [`results/analysis/README.md`](results/analysis/README.md). Notes: [`docs/research_log.md`](docs/research_log.md).
+
+**Study CSVs / JSON**
+
+- Write to `results/study/` (or `results/pilot/` for pilots)
+- New config → new filename stem. Do not delete or overwrite older CSVs
+
+**Analysis**
+
+- Each pass is `results/analysis/YYYY-MM-DD-short-slug/`
+- `--out-dir` must be that run folder, never `results/analysis/`
+- New experiment, re-analysis, or stats-code fix → **new slug**. Never overwrite a previous folder
+- Do not place `paired.csv`, plots, or generated READMEs in `results/analysis/` itself
+- Do not edit a generated `<run>/README.md` by hand (except fixing a relocated `--out-dir` line)
+
+```bash
+# BAD
+python -m sfbds_compare.analysis --input-dir results/study --out-dir results/analysis
+
+# GOOD
+python -m sfbds_compare.analysis --input-dir results/study --out-dir results/analysis/2026-08-20-harder-maze
+```
+
+When you add a run folder, add a row to `results/analysis/README.md` and a timeline entry in `docs/research_log.md`.

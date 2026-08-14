@@ -179,6 +179,14 @@ _STUDY_SPECS = {
         "min_manhattan": 64,
         "obstacle_density": 0.0,
     },
+    "study_random_64.yaml": {
+        "kind": "random_obstacles",
+        "height": 64,
+        "width": 64,
+        "count": 30,
+        "min_manhattan": 24,
+        "obstacle_densities": (0.10, 0.20, 0.30),
+    },
     "study_random_128.yaml": {
         "kind": "random_obstacles",
         "height": 128,
@@ -251,4 +259,65 @@ def test_load_study_yaml_configs() -> None:
         for q in cfg.queries:
             md = abs(q.start[0] - q.goal[0]) + abs(q.start[1] - q.goal[1])
             assert md >= spec["min_manhattan"]
+
+
+_FOLLOWUP_SPECS = {
+    "study_maze_255.yaml": {
+        "kind": "maze",
+        "height": 255,
+        "width": 255,
+        "count": 30,
+        "min_manhattan": 120,
+        "runtime_repeats": 1,
+    },
+    "study_random_64_dense.yaml": {
+        "kind": "random_obstacles",
+        "height": 64,
+        "width": 64,
+        "count": 30,
+        "min_manhattan": 24,
+        "obstacle_densities": (0.30, 0.40, 0.45),
+        "runtime_repeats": 1,
+    },
+    "study_maze_127_timed.yaml": {
+        "kind": "maze",
+        "height": 127,
+        "width": 127,
+        "count": 30,
+        "min_manhattan": 60,
+        "runtime_repeats": 5,
+    },
+}
+
+
+def test_runtime_repeats_must_be_positive() -> None:
+    with pytest.raises(ValueError, match="runtime_repeats"):
+        config_from_dict(
+            {
+                "algorithm": "astar",
+                "runtime_repeats": 0,
+                "generator": {"kind": "open", "height": 2, "width": 2},
+                "queries": [{"start": [0, 0], "goal": [1, 1]}],
+            }
+        )
+
+
+def test_load_followup_yaml_configs() -> None:
+    followup_dir = Path(__file__).resolve().parents[2] / "configs" / "followup"
+    paths = sorted(followup_dir.glob("study_*.yaml"))
+    assert {p.name for p in paths} == set(_FOLLOWUP_SPECS)
+    for path in paths:
+        spec = _FOLLOWUP_SPECS[path.name]
+        cfg = load_config(path)
+        assert cfg.output_dir == "results/study"
+        assert set(cfg.algorithms) == {"astar", "sfbds_f2f", "sfbds_f2e"}
+        assert cfg.generator.kind == spec["kind"]
+        assert cfg.generator.height == spec["height"]
+        assert cfg.generator.width == spec["width"]
+        assert cfg.runtime_repeats == spec["runtime_repeats"]
+        if "obstacle_densities" in spec:
+            assert cfg.generator.obstacle_densities == spec["obstacle_densities"]
+        assert cfg.min_manhattan == spec["min_manhattan"]
+        assert len(cfg.queries) == spec["count"]
+
 

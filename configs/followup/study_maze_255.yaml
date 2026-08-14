@@ -1,0 +1,15 @@
+name: study_maze_255
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 150
+timeout_sec: 120
+output_dir: results/study
+generator:
+  kind: maze
+  height: 255
+  width: 255
+query_sample:
+  count: 30
+  min_manhattan: 120

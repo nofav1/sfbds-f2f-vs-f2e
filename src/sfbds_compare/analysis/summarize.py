@@ -36,7 +36,7 @@ def _group_key(row: dict[str, Any], group_type: str) -> Optional[str]:
     if group_type == "size":
         return str(row["size"])
     if group_type == "obstacle_count":
-        if row["map_family"] != "random":
+        if row["map_family"] != "random" or not row.get("nested_density"):
             return None
         return str(row["obstacle_count"])
     if group_type == "detour_bucket":
@@ -161,7 +161,9 @@ def summarize(paired: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
     planned_families.append(collect("map_family", exploratory=False))
     planned_families.append(collect("size", exploratory=False))
     planned_families.append(collect("obstacle_count", exploratory=False))
-    random_rows = [r for r in paired if r.get("map_family") == "random"]
+    random_rows = [
+        r for r in paired if r.get("map_family") == "random" and r.get("nested_density")
+    ]
     if random_rows:
         overall = {
             "group_type": "overall_random",

@@ -68,7 +68,9 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
     ax.set_title("Expansion saving % by map family")
     save(fig, "saving_by_family.png")
 
-    random_rows = [r for r in solved if r["map_family"] == "random"]
+    random_rows = [
+        r for r in solved if r["map_family"] == "random" and r.get("nested_density")
+    ]
     counts = sorted({r["obstacle_count"] for r in random_rows})
     fig, ax = plt.subplots()
     data = [
@@ -84,7 +86,7 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
     ax.axhline(0, color="black", linewidth=0.8)
     ax.set_xlabel("obstacle_count")
     ax.set_ylabel("Expansion saving %")
-    ax.set_title("Expansion saving % by obstacle_count (random)")
+    ax.set_title("Expansion saving % by obstacle_count (nested random)")
     save(fig, "saving_by_density.png")
 
     fig, ax = plt.subplots()

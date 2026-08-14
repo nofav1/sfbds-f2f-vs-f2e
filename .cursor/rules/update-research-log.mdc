@@ -1,0 +1,23 @@
+---
+description: Update docs/research_log.md when experiments, analysis, or locked decisions change
+alwaysApply: true
+---
+
+# Update the research log
+
+[`docs/research_log.md`](docs/research_log.md) is the living record of what we ran, locked, concluded, and will try next.
+
+In the same turn as any of these, edit the log (do not wait for the user to ask):
+
+- A methodology or stats decision is locked or revised
+- A new study config, experiment run, or analysis snapshot is added
+- Results change what we believe (headline finding, failed hypothesis, next question)
+- The user chooses the next experiment
+
+How to write it:
+
+- Add a dated timeline entry; revise **Locked methodology** only when that lock actually changes
+- Link the analysis folder; do not paste full tables (those belong in the generated run README)
+- Record the decision and the next open question, not a dump of CSV columns
+
+Do not finish a results or experiment task with only a chat summary. The log must reflect it.

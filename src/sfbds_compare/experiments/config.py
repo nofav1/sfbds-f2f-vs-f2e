@@ -38,6 +38,7 @@ class ExperimentConfig:
     output_dir: str
     timeout_sec: Optional[float] = None
     min_manhattan: Optional[int] = None
+    runtime_repeats: int = 1
 
     @property
     def algorithm(self) -> str:
@@ -179,6 +180,11 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
     if timeout_sec is not None and timeout_sec <= 0:
         raise ValueError("timeout_sec must be positive when set")
 
+    repeats_raw = data.get("runtime_repeats", 1)
+    runtime_repeats = int(repeats_raw)
+    if runtime_repeats < 1:
+        raise ValueError("runtime_repeats must be at least 1")
+
     seed = int(data.get("seed", 0))
     queries_raw = data.get("queries") or []
     sample_raw = data.get("query_sample")
@@ -219,6 +225,7 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
         output_dir=str(data.get("output_dir", "results")),
         timeout_sec=timeout_sec,
         min_manhattan=min_manhattan,
+        runtime_repeats=runtime_repeats,
     )
 
 

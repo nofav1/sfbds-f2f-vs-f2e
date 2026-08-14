@@ -49,8 +49,27 @@ def pair_rows(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
             continue
         astar = algos.get(_ASTAR)
         out.append(_paired_record(pid, f2f, f2e, astar))
+    _mark_nested_density(out)
     out.sort(key=lambda r: (r["experiment"], r["query_index"], r["obstacle_count"]))
     return out
+
+
+def _mark_nested_density(paired: list[dict[str, Any]]) -> None:
+    """Flag families that have more than one obstacle_count (nested prefixes).
+
+    Independent ``*_d10/d20/d30`` experiments have one density per family_id
+    and must not enter density-factor tests or plots.
+    """
+
+    counts_by_family: dict[str, set[int]] = defaultdict(set)
+    for row in paired:
+        if row.get("map_family") == "random":
+            counts_by_family[row["family_id"]].add(int(row["obstacle_count"]))
+    nested_families = {
+        fid for fid, counts in counts_by_family.items() if len(counts) > 1
+    }
+    for row in paired:
+        row["nested_density"] = row["family_id"] in nested_families
 
 
 def _cost_for_detour(

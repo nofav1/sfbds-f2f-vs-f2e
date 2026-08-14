@@ -11,4 +11,6 @@ build/
 venv/
 .coverage
 htmlcov/
-results/analysis/
+# Analysis CSVs and plots. Keep run READMEs (see results/analysis/README.md).
+results/analysis/**/*.csv
+results/analysis/**/*.png

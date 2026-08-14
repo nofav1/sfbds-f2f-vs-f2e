@@ -580,3 +580,59 @@ def test_nested_cli_skips_visual(tmp_path: Path) -> None:
     assert (tmp_path / "nested_cli.csv").is_file()
     assert (tmp_path / "nested_cli.json").is_file()
     assert not (tmp_path / "nested_cli_visual.txt").is_file()
+
+
+def test_runtime_repeats_keeps_expansions_and_skips_visual(tmp_path: Path) -> None:
+    from sfbds_compare.experiments.runner import main, run_experiment
+
+    cfg = config_from_dict(
+        {
+            "name": "timed_open",
+            "algorithms": ["astar"],
+            "seed": 1,
+            "timeout_sec": 5,
+            "runtime_repeats": 3,
+            "output_dir": str(tmp_path),
+            "generator": {"kind": "open", "height": 4, "width": 4},
+            "queries": [{"start": [0, 0], "goal": [3, 3]}],
+        }
+    )
+    once = config_from_dict(
+        {
+            "name": "once_open",
+            "algorithms": ["astar"],
+            "seed": 1,
+            "timeout_sec": 5,
+            "output_dir": str(tmp_path),
+            "generator": {"kind": "open", "height": 4, "width": 4},
+            "queries": [{"start": [0, 0], "goal": [3, 3]}],
+        }
+    )
+    repeated = run_experiment(cfg)
+    single = run_experiment(once)
+    assert repeated[0].expanded == single[0].expanded
+    assert repeated[0].success is True
+    cfg_path = tmp_path / "timed.yaml"
+    cfg_path.write_text(
+        "\n".join(
+            [
+                "name: timed_cli",
+                "algorithm: astar",
+                "seed: 1",
+                "runtime_repeats: 3",
+                f"output_dir: {tmp_path.as_posix()}",
+                "generator:",
+                "  kind: open",
+                "  height: 4",
+                "  width: 4",
+                "queries:",
+                "  - start: [0, 0]",
+                "    goal: [3, 3]",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    assert main(["--config", str(cfg_path)]) == 0
+    assert (tmp_path / "timed_cli.csv").is_file()
+    assert not (tmp_path / "timed_cli_visual.txt").is_file()
+

@@ -7,7 +7,8 @@ import random
 import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
+from statistics import median
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -175,6 +176,48 @@ def run_query(
         pool.shutdown(wait=False)
 
 
+def _write_visuals(config: ExperimentConfig) -> bool:
+    if config.generator.obstacle_densities:
+        return False
+    if config.runtime_repeats > 1:
+        return False
+    return config.generator.height * config.generator.width < 200 * 200
+
+
+def _run_query_repeated(
+    problem: GridProblem,
+    algorithm: str,
+    *,
+    config: ExperimentConfig,
+) -> SearchResult[GridState]:
+    """Run ``runtime_repeats`` times; keep first expansions, median times."""
+
+    n = config.runtime_repeats
+    results = [
+        run_query(problem, algorithm, timeout_sec=config.timeout_sec)
+        for _ in range(n)
+    ]
+    timed = [
+        r
+        for r in results
+        if r.metrics.timed_out
+        or r.termination_reason is TerminationReason.TIMEOUT
+    ]
+    if timed:
+        return timed[0]
+    first = results[0]
+    if n == 1:
+        return first
+    metrics = replace(
+        first.metrics,
+        runtime_sec=float(median([r.metrics.runtime_sec for r in results])),
+        heuristic_time_sec=float(
+            median([r.metrics.heuristic_time_sec for r in results])
+        ),
+    )
+    return replace(first, metrics=metrics)
+
+
 def _validate_sfbds_metrics(result: SearchResult[GridState]) -> None:
     """Export-time checks for SFBDS rows with recorded side counts."""
 
@@ -327,8 +370,8 @@ def run_experiment_with_frames(
             )
             algo_frames: list[AlgoFrame] = []
             for algorithm in config.algorithms:
-                result = run_query(
-                    problem, algorithm, timeout_sec=config.timeout_sec
+                result = _run_query_repeated(
+                    problem, algorithm, config=config
                 )
                 records.append(
                     _record_for(
@@ -401,7 +444,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             n_to = sum(1 for r in records if r.timed_out)
             print(f"wrote {csv_path}")
             print(f"wrote {json_path}")
-            if not config.generator.obstacle_densities:
+            if _write_visuals(config):
                 viz_path = write_visual(
                     Path(config.output_dir) / f"{config.name}_visual.txt",
                     config,

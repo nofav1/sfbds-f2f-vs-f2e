@@ -231,6 +231,78 @@ def test_all_ties_null_p() -> None:
     assert "n_untied=0" in note
 
 
+def test_independent_random_csvs_skip_density_claims() -> None:
+    raw = []
+    for experiment, count, seed in (
+        ("study_random_128_d10", 1638, 110),
+        ("study_random_128_d20", 3277, 120),
+        ("study_random_128_d30", 4915, 130),
+    ):
+        for q in range(12):
+            raw.extend(
+                _triple(
+                    q,
+                    f2f=1,
+                    f2e=2,
+                    experiment=experiment,
+                    obstacle_count=count,
+                    generator_kind="random_obstacles",
+                    seed=seed,
+                )
+            )
+    paired = pair_rows(raw)
+    assert len(paired) == 36
+    assert all(r["nested_density"] is False for r in paired)
+    summary = summarize(paired)
+    assert [r for r in summary if r["group_type"] == "obstacle_count"] == []
+    assert [r for r in summary if r["group_type"] == "overall_random"] == []
+    family = next(
+        r for r in summary if r["group_type"] == "map_family" and r["group"] == "random"
+    )
+    assert family["n_solved"] == 36
+    assert family["wilcoxon_p_raw"] is None
+
+
+def test_mixed_independent_and_nested_density_claims_only_nested() -> None:
+    raw = []
+    for q in range(12):
+        raw.extend(
+            _triple(
+                q,
+                f2f=1,
+                f2e=2,
+                experiment="study_random_128_d10",
+                obstacle_count=1638,
+                generator_kind="random_obstacles",
+                seed=110,
+            )
+        )
+        for count in (1638, 3277, 4915):
+            raw.extend(
+                _triple(
+                    q,
+                    f2f=3,
+                    f2e=4,
+                    experiment="study_random_128",
+                    obstacle_count=count,
+                    generator_kind="random_obstacles",
+                    seed=110,
+                )
+            )
+    paired = pair_rows(raw)
+    nested = [r for r in paired if r["experiment"] == "study_random_128"]
+    independent = [r for r in paired if r["experiment"] == "study_random_128_d10"]
+    assert all(r["nested_density"] is True for r in nested)
+    assert all(r["nested_density"] is False for r in independent)
+    summary = summarize(paired)
+    dens = [r for r in summary if r["group_type"] == "obstacle_count"]
+    assert {r["group"] for r in dens} == {"1638", "3277", "4915"}
+    assert all(r["n_solved"] == 12 for r in dens)
+    overall = next(r for r in summary if r["group_type"] == "overall_random")
+    assert overall["n_solved"] == 36
+    assert overall["n_test"] == 12
+
+
 def test_random_nested_not_stacked_in_map_family_test() -> None:
     raw = []
     for q in range(12):
@@ -263,6 +335,7 @@ def test_random_nested_not_stacked_in_map_family_test() -> None:
     assert len(dens) == 3
     assert all(r["n_solved"] == 12 for r in dens)
     assert all(r["n_test"] == 12 for r in dens)
+    assert all(r["nested_density"] is True for r in paired)
 
 
 def test_cli_no_plots(tmp_path: Path) -> None:
@@ -277,4 +350,82 @@ def test_cli_no_plots(tmp_path: Path) -> None:
     assert (out / "paired.csv").is_file()
     assert (out / "summary.csv").is_file()
     assert (out / "stats.csv").is_file()
+    readme = (out / "README.md").read_text(encoding="utf-8")
+    assert "generated" in readme.lower()
+    assert "F2F vs F2E" in readme
     assert list(out.glob("*.png")) == []
+
+
+def test_cli_experiment_filter(tmp_path: Path) -> None:
+    from sfbds_compare.analysis.__main__ import main
+
+    rows = []
+    for rec in _triple(0, f2f=3, f2e=5, experiment="keep_me"):
+        rows.append(rec)
+    for rec in _triple(0, f2f=1, f2e=2, experiment="drop_me"):
+        rows.append(rec)
+    write_csv(tmp_path / "raw.csv", rows)
+    out = tmp_path / "analysis"
+    assert (
+        main(
+            [
+                "--input-dir",
+                str(tmp_path),
+                "--out-dir",
+                str(out),
+                "--no-plots",
+                "--experiment",
+                "keep_me",
+            ]
+        )
+        == 0
+    )
+    paired = (out / "paired.csv").read_text(encoding="utf-8")
+    assert "keep_me" in paired
+    assert "drop_me" not in paired
+
+
+def test_readme_skips_density_claims_for_independent_random() -> None:
+    from sfbds_compare.analysis.report import render_readme
+
+    raw = []
+    for q in range(12):
+        raw.extend(
+            _triple(
+                q,
+                f2f=1,
+                f2e=2,
+                experiment="study_random_128_d10",
+                obstacle_count=1638,
+                generator_kind="random_obstacles",
+                seed=110,
+            )
+        )
+    paired = pair_rows(raw)
+    text = render_readme(paired, summarize(paired))
+    assert "study_random_128_d10" in text
+    assert "No nested-density experiments" in text
+    assert "density-eligible" not in text.split("study_random_128_d10")[1][:80]
+
+
+def test_readme_includes_nested_density_groups() -> None:
+    from sfbds_compare.analysis.report import render_readme
+
+    raw = []
+    for q in range(12):
+        for count in (10, 20, 30):
+            raw.extend(
+                _triple(
+                    q,
+                    f2f=1,
+                    f2e=2,
+                    obstacle_count=count,
+                    generator_kind="random_obstacles",
+                    seed=7,
+                )
+            )
+    paired = pair_rows(raw)
+    text = render_readme(paired, summarize(paired))
+    assert "10 obstacles" in text
+    assert "nested random families" in text
+    assert "Wilcoxon is skipped on this pooled group" in text
