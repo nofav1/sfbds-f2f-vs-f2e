@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import random
 from collections import deque
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from sfbds_compare.domain.grid import GridProblem, GridState
 from sfbds_compare.experiments.config import GeneratorConfig, QuerySpec
@@ -186,14 +186,15 @@ def ensure_connected_query(
     )
 
 
-def _sample_obstacles(
+def ranked_obstacle_cells(
     height: int,
     width: int,
-    density: float,
     *,
     seed: int,
     reserved: Iterable[GridState],
 ) -> list[GridState]:
+    """Deterministic shuffle of non-reserved cells (row-major, then shuffle)."""
+
     reserved_set = set(reserved)
     candidates = [
         GridState(r, c)
@@ -202,10 +203,33 @@ def _sample_obstacles(
         if GridState(r, c) not in reserved_set
     ]
     rng = random.Random(seed)
-    k = int(round(density * len(candidates)))
+    rng.shuffle(candidates)
+    return candidates
+
+
+def prefix_obstacles(
+    ranked: Sequence[GridState], density: float
+) -> list[GridState]:
+    """Take the nested prefix for ``density`` of a shuffled candidate list."""
+
+    k = int(round(density * len(ranked)))
     if k <= 0:
         return []
-    return rng.sample(candidates, k=min(k, len(candidates)))
+    return list(ranked[: min(k, len(ranked))])
+
+
+def _sample_obstacles(
+    height: int,
+    width: int,
+    density: float,
+    *,
+    seed: int,
+    reserved: Iterable[GridState],
+) -> list[GridState]:
+    ranked = ranked_obstacle_cells(
+        height, width, seed=seed, reserved=reserved
+    )
+    return prefix_obstacles(ranked, density)
 
 
 def _snap_to_room(state: GridState, height: int, width: int) -> GridState:

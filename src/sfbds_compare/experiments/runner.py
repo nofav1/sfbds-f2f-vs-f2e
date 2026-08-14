@@ -18,6 +18,8 @@ from sfbds_compare.experiments.generators import (
     build_problem,
     ensure_connected_query,
     map_fingerprint,
+    prefix_obstacles,
+    ranked_obstacle_cells,
     realized_obstacle_density,
 )
 from sfbds_compare.experiments.visualize import (
@@ -249,6 +251,60 @@ def _record_for(
     )
 
 
+def _problems_for_query(
+    config: ExperimentConfig,
+    query,
+    idx: int,
+) -> list[GridProblem]:
+    """One problem, or nested-density problems sharing endpoints."""
+
+    gen = config.generator
+    levels = gen.obstacle_densities
+    if not levels:
+        problem = build_problem(gen, query, seed=config.seed + idx)
+        if config.min_manhattan is not None:
+            problem = ensure_connected_query(
+                problem,
+                min_manhattan=config.min_manhattan,
+                rng=random.Random(config.seed + idx + 1_000_003),
+            )
+        return [problem]
+
+    start = GridState(query.start[0], query.start[1])
+    goal = GridState(query.goal[0], query.goal[1])
+    ranked = ranked_obstacle_cells(
+        gen.height,
+        gen.width,
+        seed=config.seed + idx,
+        reserved=(start, goal),
+    )
+    densest = max(levels)
+    dense = GridProblem(
+        gen.height,
+        gen.width,
+        start,
+        goal,
+        obstacles=prefix_obstacles(ranked, densest),
+    )
+    if config.min_manhattan is not None:
+        dense = ensure_connected_query(
+            dense,
+            min_manhattan=config.min_manhattan,
+            rng=random.Random(config.seed + idx + 1_000_003),
+        )
+    start, goal = dense.start_state, dense.goal_state
+    return [
+        GridProblem(
+            gen.height,
+            gen.width,
+            start,
+            goal,
+            obstacles=prefix_obstacles(ranked, density),
+        )
+        for density in levels
+    ]
+
+
 def run_experiment(config: ExperimentConfig) -> list[RunRecord]:
     """Run all algorithms on each query's resolved map (same instance)."""
 
@@ -264,53 +320,46 @@ def run_experiment_with_frames(
     records: list[RunRecord] = []
     frames: list[QueryFrame] = []
     for idx, query in enumerate(config.queries):
-        problem = build_problem(
-            config.generator, query, seed=config.seed + idx
-        )
-        if config.min_manhattan is not None:
-            problem = ensure_connected_query(
-                problem,
-                min_manhattan=config.min_manhattan,
-                rng=random.Random(config.seed + idx + 1_000_003),
+        problems = _problems_for_query(config, query, idx)
+        for problem in problems:
+            fingerprint = map_fingerprint(
+                problem, generator=config.generator, seed=config.seed + idx
             )
-        fingerprint = map_fingerprint(
-            problem, generator=config.generator, seed=config.seed + idx
-        )
-        algo_frames: list[AlgoFrame] = []
-        for algorithm in config.algorithms:
-            result = run_query(
-                problem, algorithm, timeout_sec=config.timeout_sec
-            )
-            records.append(
-                _record_for(
-                    config,
-                    algorithm=algorithm,
+            algo_frames: list[AlgoFrame] = []
+            for algorithm in config.algorithms:
+                result = run_query(
+                    problem, algorithm, timeout_sec=config.timeout_sec
+                )
+                records.append(
+                    _record_for(
+                        config,
+                        algorithm=algorithm,
+                        query_index=idx,
+                        problem=problem,
+                        map_hash=fingerprint,
+                        result=result,
+                    )
+                )
+                path = tuple(result.path) if result.path is not None else None
+                algo_frames.append(
+                    AlgoFrame(
+                        algorithm=algorithm,
+                        success=result.success,
+                        termination_reason=result.termination_reason.value,
+                        solution_cost=result.solution_cost,
+                        expanded=result.metrics.expanded,
+                        expanded_unit=_expanded_unit(algorithm),
+                        path=path,
+                    )
+                )
+            frames.append(
+                QueryFrame(
                     query_index=idx,
                     problem=problem,
                     map_hash=fingerprint,
-                    result=result,
+                    algorithms=tuple(algo_frames),
                 )
             )
-            path = tuple(result.path) if result.path is not None else None
-            algo_frames.append(
-                AlgoFrame(
-                    algorithm=algorithm,
-                    success=result.success,
-                    termination_reason=result.termination_reason.value,
-                    solution_cost=result.solution_cost,
-                    expanded=result.metrics.expanded,
-                    expanded_unit=_expanded_unit(algorithm),
-                    path=path,
-                )
-            )
-        frames.append(
-            QueryFrame(
-                query_index=idx,
-                problem=problem,
-                map_hash=fingerprint,
-                algorithms=tuple(algo_frames),
-            )
-        )
     return records, frames
 
 
@@ -348,16 +397,17 @@ def main(argv: Optional[list[str]] = None) -> int:
             config = load_config(path)
             records, frames = run_experiment_with_frames(config)
             csv_path, json_path = export_records(config, records)
-            viz_path = write_visual(
-                Path(config.output_dir) / f"{config.name}_visual.txt",
-                config,
-                frames,
-            )
             n_ok = sum(1 for r in records if r.success)
             n_to = sum(1 for r in records if r.timed_out)
             print(f"wrote {csv_path}")
             print(f"wrote {json_path}")
-            print(f"wrote {viz_path}")
+            if not config.generator.obstacle_densities:
+                viz_path = write_visual(
+                    Path(config.output_dir) / f"{config.name}_visual.txt",
+                    config,
+                    frames,
+                )
+                print(f"wrote {viz_path}")
             print(
                 f"{config.name}: {n_ok}/{len(records)} success, "
                 f"{n_to} timed out"

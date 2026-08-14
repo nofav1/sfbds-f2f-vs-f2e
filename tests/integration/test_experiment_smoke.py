@@ -510,3 +510,73 @@ def test_write_csv_empty(tmp_path: Path) -> None:
     path = tmp_path / "empty.csv"
     write_csv(path, [])
     assert path.read_text(encoding="utf-8") == ""
+
+
+def test_nested_densities_share_endpoints_and_hashes() -> None:
+    from sfbds_compare.experiments.generators import endpoints_connected
+
+    cfg = config_from_dict(
+        {
+            "name": "nested",
+            "algorithms": ["astar", "sfbds_f2f", "sfbds_f2e"],
+            "seed": 3,
+            "timeout_sec": 5,
+            "output_dir": "results",
+            "generator": {
+                "kind": "random_obstacles",
+                "height": 8,
+                "width": 8,
+                "obstacle_densities": [0.10, 0.20, 0.30],
+            },
+            "query_sample": {"count": 2, "min_manhattan": 2},
+        }
+    )
+    records, frames = run_experiment_with_frames(cfg)
+    assert len(records) == 18
+    for idx in (0, 1):
+        qrows = [r for r in records if r.query_index == idx]
+        counts = sorted({r.obstacle_count for r in qrows})
+        assert len(counts) == 3
+        assert counts[0] < counts[1] < counts[2]
+        starts = {(r.start_row, r.start_col) for r in qrows}
+        goals = {(r.goal_row, r.goal_col) for r in qrows}
+        assert len(starts) == 1 and len(goals) == 1
+        by_hash: dict[str, set[str]] = {}
+        for r in qrows:
+            by_hash.setdefault(r.map_hash, set()).add(r.algorithm)
+        assert all(algos == {"astar", "sfbds_f2f", "sfbds_f2e"} for algos in by_hash.values())
+        q_frames = [f for f in frames if f.query_index == idx]
+        q_frames.sort(key=lambda f: len(f.problem.obstacles))
+        assert len(q_frames) == 3
+        obs = [set(f.problem.obstacles) for f in q_frames]
+        assert obs[0] <= obs[1] <= obs[2]
+    assert all(endpoints_connected(frame.problem) for frame in frames)
+
+
+def test_nested_cli_skips_visual(tmp_path: Path) -> None:
+    from sfbds_compare.experiments.runner import main
+
+    cfg_path = tmp_path / "nested.yaml"
+    cfg_path.write_text(
+        "\n".join(
+            [
+                "name: nested_cli",
+                "algorithm: astar",
+                "seed: 1",
+                f"output_dir: {tmp_path.as_posix()}",
+                "generator:",
+                "  kind: random_obstacles",
+                "  height: 8",
+                "  width: 8",
+                "  obstacle_densities: [0.10, 0.20, 0.30]",
+                "query_sample:",
+                "  count: 1",
+                "  min_manhattan: 2",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    assert main(["--config", str(cfg_path)]) == 0
+    assert (tmp_path / "nested_cli.csv").is_file()
+    assert (tmp_path / "nested_cli.json").is_file()
+    assert not (tmp_path / "nested_cli_visual.txt").is_file()

@@ -179,29 +179,13 @@ _STUDY_SPECS = {
         "min_manhattan": 64,
         "obstacle_density": 0.0,
     },
-    "study_random_128_d10.yaml": {
+    "study_random_128.yaml": {
         "kind": "random_obstacles",
         "height": 128,
         "width": 128,
         "count": 30,
         "min_manhattan": 48,
-        "obstacle_density": 0.10,
-    },
-    "study_random_128_d20.yaml": {
-        "kind": "random_obstacles",
-        "height": 128,
-        "width": 128,
-        "count": 30,
-        "min_manhattan": 48,
-        "obstacle_density": 0.20,
-    },
-    "study_random_128_d30.yaml": {
-        "kind": "random_obstacles",
-        "height": 128,
-        "width": 128,
-        "count": 30,
-        "min_manhattan": 48,
-        "obstacle_density": 0.30,
+        "obstacle_densities": (0.10, 0.20, 0.30),
     },
     "study_maze_127.yaml": {
         "kind": "maze",
@@ -222,6 +206,23 @@ _STUDY_SPECS = {
 }
 
 
+def test_config_rejects_both_density_keys() -> None:
+    with pytest.raises(ValueError, match="not both"):
+        config_from_dict(
+            {
+                "algorithm": "astar",
+                "generator": {
+                    "kind": "random_obstacles",
+                    "height": 8,
+                    "width": 8,
+                    "obstacle_density": 0.1,
+                    "obstacle_densities": [0.1, 0.2],
+                },
+                "queries": [{"start": [0, 0], "goal": [1, 1]}],
+            }
+        )
+
+
 def test_load_study_yaml_configs() -> None:
     study_dir = (
         Path(__file__).resolve().parents[2] / "configs" / "study"
@@ -237,7 +238,12 @@ def test_load_study_yaml_configs() -> None:
         assert cfg.generator.kind == spec["kind"]
         assert cfg.generator.height == spec["height"]
         assert cfg.generator.width == spec["width"]
-        assert cfg.generator.obstacle_density == spec["obstacle_density"]
+        if "obstacle_densities" in spec:
+            assert cfg.generator.obstacle_densities == spec["obstacle_densities"]
+            assert cfg.generator.obstacle_density == 0.0
+        else:
+            assert cfg.generator.obstacle_density == spec["obstacle_density"]
+            assert cfg.generator.obstacle_densities == ()
         assert cfg.min_manhattan == spec["min_manhattan"]
         assert len(cfg.queries) == spec["count"]
         unordered = {tuple(sorted((q.start, q.goal))) for q in cfg.queries}

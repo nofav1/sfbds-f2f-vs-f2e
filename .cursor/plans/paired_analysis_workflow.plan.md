@@ -4,22 +4,22 @@ overview: Keep the current one-row-per-algorithm×query raw schema and searchers
 todos:
   - id: nested-obstacles
     content: Shuffle-prefix obstacles; connect ONCE on densest; reuse endpoints; skip visuals for nested densities; keep single-density pilots
-    status: pending
+    status: completed
   - id: analysis-pair
     content: "Analysis package: pair key = family + map_hash; A* detour; timeout-excluded win%/means; density via obstacle_count"
-    status: pending
+    status: completed
   - id: analysis-stats
     content: "Wilcoxon primary on expansions; sign confirmatory; no stacked nested densities; T+/T- rank-biserial; Holm per family"
-    status: pending
+    status: completed
   - id: analysis-plots
     content: matplotlib optional extra; CLI --no-plots; write results/analysis/; do not commit PNGs
-    status: pending
+    status: completed
   - id: study-yaml-tests
     content: One nested random YAML; update _STUDY_SPECS; mutual exclusion of density keys; do not delete old results
-    status: pending
+    status: completed
   - id: smoke-existing
     content: Run analysis on existing results/study CSVs; no full 128 re-run
-    status: pending
+    status: completed
 isProject: true
 ---
 

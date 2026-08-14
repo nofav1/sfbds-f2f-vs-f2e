@@ -25,6 +25,7 @@ class GeneratorConfig:
     height: int
     width: int
     obstacle_density: float = 0.0
+    obstacle_densities: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,15 +140,38 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
     width = int(gen_raw["width"])
     if height < 1 or width < 1:
         raise ValueError("generator height/width must be positive")
-    density = float(gen_raw.get("obstacle_density", 0.0))
-    if not 0.0 <= density < 1.0:
-        raise ValueError("obstacle_density must be in [0, 1)")
+
+    has_scalar = (
+        "obstacle_density" in gen_raw and gen_raw["obstacle_density"] is not None
+    )
+    has_list = bool(gen_raw.get("obstacle_densities"))
+    if has_scalar and has_list:
+        raise ValueError("set obstacle_density or obstacle_densities, not both")
+
+    densities: tuple[float, ...] = ()
+    density = 0.0
+    if has_list:
+        if kind != "random_obstacles":
+            raise ValueError("obstacle_densities requires kind random_obstacles")
+        raw_list = list(gen_raw["obstacle_densities"])
+        parsed = [float(x) for x in raw_list]
+        if len(parsed) != len(set(parsed)):
+            raise ValueError("obstacle_densities must be unique")
+        for item in parsed:
+            if not 0.0 <= item < 1.0:
+                raise ValueError("obstacle_densities values must be in [0, 1)")
+        densities = tuple(sorted(parsed))
+    else:
+        density = float(gen_raw.get("obstacle_density", 0.0))
+        if not 0.0 <= density < 1.0:
+            raise ValueError("obstacle_density must be in [0, 1)")
 
     generator = GeneratorConfig(
         kind=kind,
         height=height,
         width=width,
         obstacle_density=density,
+        obstacle_densities=densities,
     )
 
     timeout = data.get("timeout_sec")
