@@ -160,20 +160,23 @@ def ensure_connected_query(
         return problem
 
     cells = _largest_component(problem)
-    pairs = [
-        (a, b)
-        for i, a in enumerate(cells)
-        for b in cells[i + 1 :]
-        if _manhattan(a, b) >= min_manhattan
-    ]
-    if not pairs:
+    if len(cells) < 2:
         raise ValueError(
             f"no connected free pair with min_manhattan={min_manhattan} "
             f"on {problem.height}x{problem.width}"
         )
-    start, goal = pairs[rng.randrange(len(pairs))]
-    if rng.random() < 0.5:
-        start, goal = goal, start
+    start = goal = None
+    limit = max(10_000, len(cells) * 20)
+    for _ in range(limit):
+        a, b = rng.sample(cells, 2)
+        if _manhattan(a, b) >= min_manhattan:
+            start, goal = a, b
+            break
+    if start is None or goal is None:
+        raise ValueError(
+            f"could not sample a connected free pair with min_manhattan="
+            f"{min_manhattan} on {problem.height}x{problem.width}"
+        )
     return GridProblem(
         problem.height,
         problem.width,

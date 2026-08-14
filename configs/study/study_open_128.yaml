@@ -1,15 +1,15 @@
-name: study_open_32
+name: study_open_128
 algorithms:
   - astar
   - sfbds_f2f
   - sfbds_f2e
 seed: 100
-timeout_sec: 20
+timeout_sec: 60
 output_dir: results/study
 generator:
   kind: open
-  height: 32
-  width: 32
+  height: 128
+  width: 128
 query_sample:
-  count: 12
-  min_manhattan: 16
+  count: 30
+  min_manhattan: 64

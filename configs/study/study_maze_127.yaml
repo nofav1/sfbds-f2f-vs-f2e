@@ -1,15 +1,15 @@
-name: study_maze_21
+name: study_maze_127
 algorithms:
   - astar
   - sfbds_f2f
   - sfbds_f2e
 seed: 140
-timeout_sec: 20
+timeout_sec: 60
 output_dir: results/study
 generator:
   kind: maze
-  height: 21
-  width: 21
+  height: 127
+  width: 127
 query_sample:
-  count: 10
-  min_manhattan: 10
+  count: 30
+  min_manhattan: 60

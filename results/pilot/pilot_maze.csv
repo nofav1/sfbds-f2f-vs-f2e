@@ -1,0 +1,10 @@
+experiment,algorithm,seed,query_index,generator_kind,height,width,obstacle_density,obstacle_count,map_hash,start_row,start_col,goal_row,goal_col,success,termination_reason,solution_cost,runtime_sec,generated,expanded,expanded_unit,forward_expanded,backward_expanded,meeting_g_F,meeting_g_B,direction_switches,heuristic_evals,heuristic_time_sec,peak_open,peak_closed,stale_skipped,duplicates_discarded,timed_out
+pilot_maze,astar,30,0,maze,15,15,0.43555555555555553,98,0e2dfd233f5b094e,0,0,14,14,True,goal_found,48.0,0.000610499999311287,53,52,state,,,,,,54,2.6499976229388267e-05,2,52,0,0,False
+pilot_maze,sfbds_f2f,30,0,maze,15,15,0.43555555555555553,98,0e2dfd233f5b094e,0,0,14,14,True,goal_found,48.0,0.0015093999973032624,53,52,pair,52,0,48.0,0.0,0,54,2.820001100189984e-05,2,52,0,0,False
+pilot_maze,sfbds_f2e,30,0,maze,15,15,0.43555555555555553,98,0e2dfd233f5b094e,0,0,14,14,True,goal_found,48.0,0.0013818000006722286,53,52,pair,52,0,48.0,0.0,0,54,9.339999087387696e-05,2,52,0,0,False
+pilot_maze,astar,30,1,maze,15,15,0.43555555555555553,98,c5fdab1605d26c39,0,0,0,14,True,goal_found,58.0,0.0006894000034662895,62,61,state,,,,,,63,2.4599998141638935e-05,2,61,0,0,False
+pilot_maze,sfbds_f2f,30,1,maze,15,15,0.43555555555555553,98,c5fdab1605d26c39,0,0,0,14,True,goal_found,58.0,0.0010906000024988316,58,58,pair,42,16,42.0,16.0,1,59,2.2699969122186303e-05,1,58,0,0,False
+pilot_maze,sfbds_f2e,30,1,maze,15,15,0.43555555555555553,98,c5fdab1605d26c39,0,0,0,14,True,goal_found,58.0,0.001113500002247747,58,58,pair,42,16,42.0,16.0,1,59,5.8900011936202645e-05,1,58,0,0,False
+pilot_maze,astar,30,2,maze,15,15,0.4311111111111111,97,8b0ea976b9134da1,7,0,7,14,True,goal_found,32.0,0.0006150999979581684,61,58,state,,,,,,62,2.180001320084557e-05,4,58,0,0,False
+pilot_maze,sfbds_f2f,30,2,maze,15,15,0.4311111111111111,97,8b0ea976b9134da1,7,0,7,14,True,goal_found,32.0,0.0011378000053809956,61,58,pair,58,0,32.0,0.0,0,62,2.4299995857290924e-05,4,58,0,0,False
+pilot_maze,sfbds_f2e,30,2,maze,15,15,0.4311111111111111,97,8b0ea976b9134da1,7,0,7,14,True,goal_found,32.0,0.0013170999955036677,61,58,pair,58,0,32.0,0.0,0,62,6.669997674180195e-05,4,58,0,0,False

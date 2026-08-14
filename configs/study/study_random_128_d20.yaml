@@ -1,16 +1,16 @@
-name: study_random_d20
+name: study_random_128_d20
 algorithms:
   - astar
   - sfbds_f2f
   - sfbds_f2e
 seed: 120
-timeout_sec: 20
+timeout_sec: 60
 output_dir: results/study
 generator:
   kind: random_obstacles
-  height: 24
-  width: 24
+  height: 128
+  width: 128
   obstacle_density: 0.20
 query_sample:
-  count: 12
-  min_manhattan: 12
+  count: 30
+  min_manhattan: 48

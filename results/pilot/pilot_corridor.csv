@@ -1,0 +1,10 @@
+experiment,algorithm,seed,query_index,generator_kind,height,width,obstacle_density,obstacle_count,map_hash,start_row,start_col,goal_row,goal_col,success,termination_reason,solution_cost,runtime_sec,generated,expanded,expanded_unit,forward_expanded,backward_expanded,meeting_g_F,meeting_g_B,direction_switches,heuristic_evals,heuristic_time_sec,peak_open,peak_closed,stale_skipped,duplicates_discarded,timed_out
+pilot_corridor,astar,40,0,corridor,1,40,0.0,0,c9092a22312cd877,0,0,0,39,True,goal_found,39.0,0.00043310000182827935,39,39,state,,,,,,40,1.899998460430652e-05,1,39,0,0,False
+pilot_corridor,sfbds_f2f,40,0,corridor,1,40,0.0,0,c9092a22312cd877,0,0,0,39,True,goal_found,39.0,0.0007738999993307516,39,39,pair,39,0,39.0,0.0,0,40,1.619997783564031e-05,1,39,0,0,False
+pilot_corridor,sfbds_f2e,40,0,corridor,1,40,0.0,0,c9092a22312cd877,0,0,0,39,True,goal_found,39.0,0.00077860000601504,39,39,pair,39,0,39.0,0.0,0,40,4.4899992644786835e-05,1,39,0,0,False
+pilot_corridor,astar,40,1,corridor,1,40,0.0,0,520d9991c09a46b6,0,0,0,20,True,goal_found,20.0,0.0003400999994482845,20,20,state,,,,,,21,1.3500000932253897e-05,1,20,0,0,False
+pilot_corridor,sfbds_f2f,40,1,corridor,1,40,0.0,0,520d9991c09a46b6,0,0,0,20,True,goal_found,20.0,0.0008300999979837798,20,20,pair,20,0,20.0,0.0,0,21,3.1800009310245514e-05,1,20,0,0,False
+pilot_corridor,sfbds_f2e,40,1,corridor,1,40,0.0,0,520d9991c09a46b6,0,0,0,20,True,goal_found,20.0,0.0004611999975168146,20,20,pair,20,0,20.0,0.0,0,21,2.6900001103058457e-05,1,20,0,0,False
+pilot_corridor,astar,40,2,corridor,1,40,0.0,0,e42dbd043f955b97,0,5,0,35,True,goal_found,30.0,0.002393299997493159,31,30,state,,,,,,32,1.3399992894846946e-05,2,30,0,0,False
+pilot_corridor,sfbds_f2f,40,2,corridor,1,40,0.0,0,e42dbd043f955b97,0,5,0,35,True,goal_found,30.0,0.0005866999999852851,31,30,pair,30,0,30.0,0.0,0,32,1.300001167692244e-05,2,30,0,0,False
+pilot_corridor,sfbds_f2e,40,2,corridor,1,40,0.0,0,e42dbd043f955b97,0,5,0,35,True,goal_found,30.0,0.0006473000030382536,31,30,pair,30,0,30.0,0.0,0,32,3.189998824382201e-05,2,30,0,0,False

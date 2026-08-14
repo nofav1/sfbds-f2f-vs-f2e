@@ -9,7 +9,5 @@ build/
 .ruff_cache/
 .venv/
 venv/
-results/
-*.csv
 .coverage
 htmlcov/

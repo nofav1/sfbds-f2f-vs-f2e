@@ -1,0 +1,16 @@
+---
+description: Save Cursor-generated plans in the project .cursor/plans as well as the home Cursor plans folder
+alwaysApply: true
+---
+
+# Project copies of Cursor plans
+
+When you create or update a plan (CreatePlan, plan mode, or a `.plan.md` file):
+
+1. Write or copy it to **`.cursor/plans/` in this repo**, not only the user home Cursor plans directory (for example `%USERPROFILE%\.cursor\plans\`).
+2. Keep the home copy if Cursor writes one; the repo copy is required in addition.
+3. Use a stable kebab-case name such as `paired_analysis_workflow.plan.md`.
+4. Set `isProject: true` on the repo copy.
+5. If you later revise the plan, update the repo file in the same turn.
+
+Do not put plans under `.cursor/plans/` in the home folder only and leave the project without a copy.

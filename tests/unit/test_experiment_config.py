@@ -171,52 +171,52 @@ def test_config_query_sample_requires_count() -> None:
 
 
 _STUDY_SPECS = {
-    "study_open_32.yaml": {
+    "study_open_128.yaml": {
         "kind": "open",
-        "height": 32,
-        "width": 32,
-        "count": 12,
-        "min_manhattan": 16,
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 64,
         "obstacle_density": 0.0,
     },
-    "study_random_d10.yaml": {
+    "study_random_128_d10.yaml": {
         "kind": "random_obstacles",
-        "height": 24,
-        "width": 24,
-        "count": 12,
-        "min_manhattan": 12,
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 48,
         "obstacle_density": 0.10,
     },
-    "study_random_d20.yaml": {
+    "study_random_128_d20.yaml": {
         "kind": "random_obstacles",
-        "height": 24,
-        "width": 24,
-        "count": 12,
-        "min_manhattan": 12,
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 48,
         "obstacle_density": 0.20,
     },
-    "study_random_d30.yaml": {
+    "study_random_128_d30.yaml": {
         "kind": "random_obstacles",
-        "height": 24,
-        "width": 24,
-        "count": 12,
-        "min_manhattan": 12,
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 48,
         "obstacle_density": 0.30,
     },
-    "study_maze_21.yaml": {
+    "study_maze_127.yaml": {
         "kind": "maze",
-        "height": 21,
-        "width": 21,
-        "count": 10,
-        "min_manhattan": 10,
+        "height": 127,
+        "width": 127,
+        "count": 30,
+        "min_manhattan": 60,
         "obstacle_density": 0.0,
     },
-    "study_corridor_80.yaml": {
+    "study_corridor_512.yaml": {
         "kind": "corridor",
         "height": 1,
-        "width": 80,
-        "count": 8,
-        "min_manhattan": 20,
+        "width": 512,
+        "count": 30,
+        "min_manhattan": 128,
         "obstacle_density": 0.0,
     },
 }
