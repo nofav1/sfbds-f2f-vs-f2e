@@ -117,12 +117,34 @@ These are in force until we explicitly revise this section.
 
 ---
 
+### 2026-08-14 — Longer maze-127 queries and denser nested random
+
+**Folder:** [`results/analysis/2026-08-14-far-maze-and-dense-random/`](../results/analysis/2026-08-14-far-maze-and-dense-random/)
+
+**Configs:** [`configs/followup/study_maze_127_far.yaml`](../configs/followup/study_maze_127_far.yaml), [`study_random_64_d50.yaml`](../configs/followup/study_random_64_d50.yaml), [`study_random_128_dense.yaml`](../configs/followup/study_random_128_dense.yaml). Compared against existing `study_maze_127` (min_manhattan 60). Cache still off.
+
+**What we asked.** (1) At fixed 127×127 maze, does raising `min_manhattan` 60 → 90 increase F2F’s expansion advantage? (2) Do nested 64×64 prefixes at 40/45/50% and nested 128×128 at 30/40/45% yield `n_untied ≥ 10`?
+
+**Headline (see generated README for tables).** 240 paired rows, all solved, 0 timeouts, 0 cost mismatches.
+
+- **Maze query length:** `study_maze_127` (md ≥ 60): **21/30** F2F-fewer, 9 ties. `study_maze_127_far` (md ≥ 90, seed 141): **12/30** F2F-fewer, 18 ties. Longer queries did **not** raise the win rate; ties increased. Pooled maze 127 still F2F-fewer 33/60, Holm p ≈ 5.4e-7. No F2E-fewer maze pair.
+- **Nested 64 @ 40/45/50%** (seed 211, connect-once, 270/270): all three densities have `n_untied` 11–12. F2F-fewer 11, 11, 12 / 30; Holm p ≈ 0.003–0.002. 50% connected for all 30 families (obstacle counts 1638 / 1842 / 2047).
+- **Nested 128 @ 30/40/45%** (seed 220, 270/270): 30% and 40% still too tied (4 and 8 untied). **45%** reaches 11 F2F-fewer, Holm p ≈ 0.003. No F2E-fewer on this 128 dense set.
+
+**Decisions from this run.**
+
+1. Maze **size** (63→127→255) was the lever that increased F2F-fewer rate; **longer Manhattan at fixed 127** did not. Do not treat “harder query” as interchangeable with “larger maze.”
+2. Nested random: 64×64 is testable from **40% upward** (including 50%). On 128×128, start density claims at **45%**, not 30/40%.
+3. Cache still off.
+
+---
+
 ## Next experiment (not started)
 
 Cache stays off until instructor/scope lock. Nothing else is queued until we pick one of:
 
-1. **Longer maze queries** at fixed size (e.g. 127 with higher `min_manhattan`) — the size rung is done; query length is not.
-2. **Denser or larger nested random** — 64×64 @ 50% or nested 128 starting at 30/40/45% (expect harder connectivity).
-3. **Cache ablation** — only after instructor/scope lock; use maze 255 and/or 64@45% as the instance set, not a tweak of the baseline folder.
+1. **Maze braid / other generators** — query length at 127 did not help; size did. A different maze style is the remaining maze factor.
+2. **Nested 128 @ ≥ 45%** only (drop 30/40%) or 64×64 above 50% if we want a denser 64 slice.
+3. **Cache ablation** — only after instructor/scope lock; use maze 255 and/or 64@45–50% as the instance set.
 
 When we choose, add a YAML under `configs/followup/`, run into `results/study/` without deleting old CSVs, analyze into `results/analysis/YYYY-MM-DD-<slug>/` with `--experiment` filters, and add a row here plus in [`results/analysis/README.md`](../results/analysis/README.md).

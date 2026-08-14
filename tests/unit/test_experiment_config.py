@@ -287,6 +287,32 @@ _FOLLOWUP_SPECS = {
         "min_manhattan": 60,
         "runtime_repeats": 5,
     },
+    "study_maze_127_far.yaml": {
+        "kind": "maze",
+        "height": 127,
+        "width": 127,
+        "count": 30,
+        "min_manhattan": 90,
+        "runtime_repeats": 1,
+    },
+    "study_random_64_d50.yaml": {
+        "kind": "random_obstacles",
+        "height": 64,
+        "width": 64,
+        "count": 30,
+        "min_manhattan": 24,
+        "obstacle_densities": (0.40, 0.45, 0.50),
+        "runtime_repeats": 1,
+    },
+    "study_random_128_dense.yaml": {
+        "kind": "random_obstacles",
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 48,
+        "obstacle_densities": (0.30, 0.40, 0.45),
+        "runtime_repeats": 1,
+    },
 }
 
 

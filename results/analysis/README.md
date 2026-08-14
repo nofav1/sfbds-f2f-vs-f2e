@@ -22,3 +22,4 @@ python -m sfbds_compare.analysis --input-dir results/study --out-dir results/ana
 | [`2026-08-14-baseline-study`](2026-08-14-baseline-study/) | 2026-08-14 | all CSVs then in `results/study` | First paired F2F vs F2E analysis of the 64/128 grid study (open, maze, corridor, nested random, plus leftover independent random CSVs). |
 | [`2026-08-14-harder-followup`](2026-08-14-harder-followup/) | 2026-08-14 | maze 63/127/255 + `study_random_64_dense` | Harder maze size rung and denser nested 64×64 random (30/40/45%). |
 | [`2026-08-14-maze-runtime`](2026-08-14-maze-runtime/) | 2026-08-14 | `study_maze_127_timed` only | Maze 127 re-run with median of 5 wall-clock repeats; runtime slice on maps where expansions already differ. |
+| [`2026-08-14-far-maze-and-dense-random`](2026-08-14-far-maze-and-dense-random/) | 2026-08-14 | maze 127 vs 127-far; nested 64@40/45/50% and 128@30/40/45% | Query-length maze contrast plus denser nested random. |
