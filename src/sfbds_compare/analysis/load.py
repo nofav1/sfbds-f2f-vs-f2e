@@ -23,6 +23,46 @@ def _as_opt_int(value: Any) -> Optional[int]:
     return int(float(value))
 
 
+_ANALYSIS_CSV_STEMS = frozenset({"paired", "summary", "stats"})
+_RAW_REQUIRED = frozenset(
+    {
+        "experiment",
+        "algorithm",
+        "seed",
+        "query_index",
+        "generator_kind",
+        "height",
+        "width",
+        "obstacle_density",
+        "obstacle_count",
+        "map_hash",
+        "start_row",
+        "start_col",
+        "goal_row",
+        "goal_col",
+        "success",
+        "termination_reason",
+        "runtime_sec",
+        "generated",
+        "expanded",
+        "expanded_unit",
+        "heuristic_evals",
+        "heuristic_time_sec",
+        "peak_open",
+        "peak_closed",
+        "timed_out",
+    }
+)
+
+
+def _is_raw_study_csv(path: Path, fieldnames: Optional[list[str]]) -> bool:
+    if path.stem.lower() in _ANALYSIS_CSV_STEMS:
+        return False
+    if not fieldnames:
+        return False
+    return _RAW_REQUIRED.issubset(fieldnames)
+
+
 def coerce_raw_row(row: dict[str, str]) -> dict[str, Any]:
     """Parse exported CSV strings into typed fields used by pairing."""
 
@@ -62,7 +102,7 @@ def coerce_raw_row(row: dict[str, str]) -> dict[str, Any]:
 
 
 def load_raw_csvs(input_dir: str | Path) -> list[dict[str, Any]]:
-    """Read all ``*.csv`` files in ``input_dir`` (skips empty files)."""
+    """Read raw study ``*.csv`` files in ``input_dir`` (skips empty/analysis files)."""
 
     root = Path(input_dir)
     rows: list[dict[str, Any]] = []
@@ -71,6 +111,9 @@ def load_raw_csvs(input_dir: str | Path) -> list[dict[str, Any]]:
         if not text.strip():
             continue
         with path.open(encoding="utf-8", newline="") as fh:
-            for raw in csv.DictReader(fh):
+            reader = csv.DictReader(fh)
+            if not _is_raw_study_csv(path, reader.fieldnames):
+                continue
+            for raw in reader:
                 rows.append(coerce_raw_row(raw))
     return rows

@@ -168,6 +168,8 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
         density = float(gen_raw.get("obstacle_density", 0.0))
         if not 0.0 <= density < 1.0:
             raise ValueError("obstacle_density must be in [0, 1)")
+        if density != 0.0 and kind != "random_obstacles":
+            raise ValueError("obstacle_density requires kind random_obstacles")
 
     maze_braid = float(gen_raw.get("maze_braid", 0.0))
     if maze_braid != 0.0 and kind != "maze":

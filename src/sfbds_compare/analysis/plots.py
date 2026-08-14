@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from typing import Any, Sequence
 
+from sfbds_compare.analysis.summarize import nested_density_group_key
+
 
 def paired_xy(
     rows: Sequence[dict[str, Any]], x_key: str, y_key: str
@@ -71,22 +73,31 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
     random_rows = [
         r for r in solved if r["map_family"] == "random" and r.get("nested_density")
     ]
-    counts = sorted({r["obstacle_count"] for r in random_rows})
+
+    keys = sorted(
+        {nested_density_group_key(r) for r in random_rows} - {None},
+        key=str,
+    )
     fig, ax = plt.subplots()
     data = [
-        [r["expansion_saving_pct"] for r in random_rows if r["obstacle_count"] == c
-         and r.get("expansion_saving_pct") is not None]
-        for c in counts
+        [
+            r["expansion_saving_pct"]
+            for r in random_rows
+            if nested_density_group_key(r) == key
+            and r.get("expansion_saving_pct") is not None
+        ]
+        for key in keys
     ]
+    labels = [str(k).replace("::", "\n") for k in keys]
     if any(data):
         try:
-            ax.boxplot(data, tick_labels=[str(c) for c in counts])
+            ax.boxplot(data, tick_labels=labels)
         except TypeError:
-            ax.boxplot(data, labels=[str(c) for c in counts])
+            ax.boxplot(data, labels=labels)
     ax.axhline(0, color="black", linewidth=0.8)
-    ax.set_xlabel("obstacle_count")
+    ax.set_xlabel("experiment / size / obstacle_count")
     ax.set_ylabel("Expansion saving %")
-    ax.set_title("Expansion saving % by obstacle_count (nested random)")
+    ax.set_title("Expansion saving % by nested density group")
     save(fig, "saving_by_density.png")
 
     fig, ax = plt.subplots()

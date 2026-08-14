@@ -30,19 +30,39 @@ def _median(values: Sequence[Optional[float]]) -> Optional[float]:
     return median(data) if data else None
 
 
+def nested_density_group_key(row: dict[str, Any]) -> Optional[str]:
+    """Density test key: one nested experiment × grid size × obstacle_count."""
+
+    if row.get("map_family") != "random" or not row.get("nested_density"):
+        return None
+    return (
+        f"{row['experiment']}::{row['height']}x{row['width']}::"
+        f"{int(row['obstacle_count'])}"
+    )
+
+
 def _group_key(row: dict[str, Any], group_type: str) -> Optional[str]:
     if group_type == "map_family":
         return str(row["map_family"])
     if group_type == "size":
         return str(row["size"])
     if group_type == "obstacle_count":
-        if row["map_family"] != "random" or not row.get("nested_density"):
-            return None
-        return str(row["obstacle_count"])
+        return nested_density_group_key(row)
     if group_type == "detour_bucket":
         bucket = row.get("detour_bucket")
         return None if bucket is None else str(bucket)
     raise ValueError(f"unknown group_type: {group_type}")
+
+
+def _skip_pooled_random_tests(rows: Sequence[dict[str, Any]]) -> bool:
+    """Skip map_family=random Wilcoxon when nested+independent mix or collapsed n."""
+
+    solved = [r for r in rows if r.get("solved")]
+    flags = {bool(r.get("nested_density")) for r in solved}
+    if flags == {True, False}:
+        return True
+    n_maps = sum(1 for r in solved if r.get("expansion_diff") is not None)
+    return len(collapse_random_diffs(solved)) != n_maps
 
 
 def _describe(
@@ -50,19 +70,19 @@ def _describe(
     *,
     exploratory: bool,
     skip_tests: bool = False,
+    skip_reason: Optional[str] = None,
 ) -> dict[str, Any]:
     solved = [r for r in rows if r.get("solved")]
     n_timeout = sum(1 for r in rows if r.get("timed_out"))
-    diffs = [float(r["expansion_diff"]) for r in solved if r.get("expansion_diff") is not None]
-    n_f2f, n_f2e, n_tie = expansion_win_counts(diffs)
     n_solved = len(solved)
-    pct = lambda c: None if n_solved == 0 else 100.0 * c / n_solved
     test_diffs = collapse_random_diffs(solved)
     n_test = len(test_diffs)
-    n_f2f_t, n_f2e_t, n_tie_t = expansion_win_counts(test_diffs)
-    n_untied = n_f2f_t + n_f2e_t
+    n_f2f, n_f2e, n_tie = expansion_win_counts(test_diffs)
+    n_untied = n_f2f + n_f2e
+    n_for_pct = n_test if n_test else n_solved
+    pct = lambda c: None if n_for_pct == 0 else 100.0 * c / n_for_pct
     notes: list[str] = []
-    if any(r.get("map_family") == "random" for r in solved) and n_test != len(diffs):
+    if any(r.get("map_family") == "random" for r in solved) and n_test != n_solved:
         notes.append(
             f"Wilcoxon n_test={n_test} collapsed family_ids; descriptives n_solved={n_solved}"
         )
@@ -70,7 +90,8 @@ def _describe(
         w_stat = w_p = s_p = None
         r_rb = None
         notes.append(
-            "Wilcoxon skipped on pooled nested random; see overall_random and obstacle_count"
+            skip_reason
+            or "Wilcoxon skipped on pooled nested random; see overall_random and obstacle_count"
         )
     else:
         w_stat, w_p, w_note = wilcoxon_signed_rank(test_diffs)
@@ -144,7 +165,9 @@ def summarize(paired: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
             buckets[key].append(row)
         family_rows: list[dict[str, Any]] = []
         for key in sorted(buckets, key=str):
-            skip_tests = group_type == "map_family" and key == "random"
+            skip_tests = False
+            if group_type == "map_family" and key == "random":
+                skip_tests = _skip_pooled_random_tests(buckets[key])
             rec = {
                 "group_type": group_type,
                 "group": key,
@@ -160,15 +183,32 @@ def summarize(paired: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
 
     planned_families.append(collect("map_family", exploratory=False))
     planned_families.append(collect("size", exploratory=False))
-    planned_families.append(collect("obstacle_count", exploratory=False))
+    density_rows = collect("obstacle_count", exploratory=False)
+    density_by_experiment: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for rec in density_rows:
+        experiment = str(rec["group"]).split("::", 1)[0]
+        density_by_experiment[experiment].append(rec)
+    for experiment in sorted(density_by_experiment):
+        planned_families.append(density_by_experiment[experiment])
     random_rows = [
         r for r in paired if r.get("map_family") == "random" and r.get("nested_density")
     ]
     if random_rows:
+        n_exps = len({str(r["experiment"]) for r in random_rows})
         overall = {
             "group_type": "overall_random",
             "group": "random",
-            **_describe(random_rows, exploratory=False),
+            **_describe(
+                random_rows,
+                exploratory=False,
+                skip_tests=n_exps > 1,
+                skip_reason=(
+                    "Wilcoxon skipped across multiple nested experiments; "
+                    "use per-experiment density rows"
+                    if n_exps > 1
+                    else None
+                ),
+            ),
         }
         planned_families.append([overall])
         out.append(overall)

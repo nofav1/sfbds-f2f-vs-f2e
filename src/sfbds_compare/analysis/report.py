@@ -6,6 +6,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, Sequence
 
+from sfbds_compare.analysis.summarize import nested_density_group_key
+
 
 def _fmt_int(value: Any) -> str:
     if value is None or value == "":
@@ -149,20 +151,28 @@ def _maze_runtime_slice(paired: Sequence[dict[str, Any]]) -> str:
     )
 
 
-def _density_label(paired: Sequence[dict[str, Any]], obstacle_count: str) -> str:
-    count = int(obstacle_count)
-    matches = [r for r in paired if int(r["obstacle_count"]) == count and _as_bool(r.get("nested_density"))]
+def _density_label(paired: Sequence[dict[str, Any]], group: str) -> str:
+    matches = [
+        r
+        for r in paired
+        if nested_density_group_key(r) == group
+    ]
     if not matches:
-        return obstacle_count
+        return group
     row = matches[0]
+    count = int(row["obstacle_count"])
     label = row.get("obstacle_density_label")
     size = row.get("size")
+    experiment = row.get("experiment")
+    prefix = f"{experiment}: " if experiment else ""
     if label is None or size is None:
-        return f"{count} obstacles"
-    return f"{count} obstacles (~{float(label):.2f} on {size}×{size})"
+        return f"{prefix}{count} obstacles"
+    return f"{prefix}{count} obstacles (~{float(label):.2f} on {size}×{size})"
 
 
-def _headline(summary: Sequence[dict[str, Any]]) -> list[str]:
+def _headline(
+    summary: Sequence[dict[str, Any]], paired: Sequence[dict[str, Any]]
+) -> list[str]:
     bullets: list[str] = []
     for rec in _groups(summary, "map_family"):
         name = rec["group"]
@@ -171,12 +181,15 @@ def _headline(summary: Sequence[dict[str, Any]]) -> list[str]:
         n_f2f = int(rec.get("n_f2f_fewer") or 0)
         n_f2e = int(rec.get("n_f2e_fewer") or 0)
         if name == "random":
-            bullets.append(
-                f"**Random (all files):** {n_solved} solved pairs; "
-                f"{n_f2f} F2F-fewer, {n_f2e} F2E-fewer, {n_tie} ties. "
-                "Wilcoxon is skipped on this pooled group; use nested density rows below."
-            )
-            continue
+            note = str(rec.get("note") or "")
+            if "skipped" in note.lower():
+                bullets.append(
+                    f"**Random (all files):** {n_solved} solved pairs; "
+                    f"{n_f2f} F2F-fewer, {n_f2e} F2E-fewer, {n_tie} ties "
+                    f"(n_test={_fmt_int(rec.get('n_test'))}). "
+                    "Wilcoxon is skipped on this pooled group; use nested density rows below."
+                )
+                continue
         if n_tie == n_solved and n_solved:
             bullets.append(
                 f"**{name.capitalize()}:** F2F and F2E tied on all {n_solved} solved pairs "
@@ -197,7 +210,9 @@ def _headline(summary: Sequence[dict[str, Any]]) -> list[str]:
     if dens:
         eligible = [r for r in dens if int(r.get("n_untied") or 0) >= 10]
         if eligible:
-            names = ", ".join(str(r["group"]) for r in eligible)
+            names = ", ".join(
+                _density_label(paired, str(r["group"])) for r in eligible
+            )
             bullets.append(
                 f"**Nested density tests with n_untied ≥ 10:** obstacle_count {{{names}}}. "
                 "Other density levels had too many ties for a p-value."
@@ -214,6 +229,11 @@ def _headline(summary: Sequence[dict[str, Any]]) -> list[str]:
             f"**Overall nested random:** { _fmt_int(rec.get('n_solved')) } maps from "
             f"{ _fmt_int(rec.get('n_test')) } families (median expansion_diff per family). "
             f"Untied={_fmt_int(rec.get('n_untied'))}."
+            + (
+                " Do not cite a pooled p here; use the per-experiment density table."
+                if "multiple nested experiments" in str(rec.get("note") or "")
+                else ""
+            )
         )
     return bullets
 
@@ -230,7 +250,7 @@ def render_readme(
     n_nested = sum(1 for r in paired if _as_bool(r.get("nested_density")))
     n_mismatch = sum(1 for r in paired if _as_bool(r.get("cost_mismatch")))
     families = sorted({str(r["map_family"]) for r in paired})
-    bullets = "\n".join(f"- {b}" for b in _headline(summary))
+    bullets = "\n".join(f"- {b}" for b in _headline(summary, paired))
 
     family_table = _md_table(
         _RESULT_HEADERS,
@@ -304,11 +324,11 @@ Coverage of this run: **{n_paired}** paired instances, **{n_solved}** solved, **
 
 - **Pair expansions only.** A* `expanded` is states; SFBDS `expanded` is pairs. Saving % is `(F2E − F2F) / F2E × 100`. Positive means F2F expanded fewer pairs.
 - **Solved pair** = both SFBDS succeeded and neither timed out. Timeouts stay in `paired.csv` with null diffs; they are excluded from means, win %, and tests.
-- **`n_solved`** = descriptive sample. **`n_test`** = Wilcoxon sample after collapsing nested `family_id`s (median `expansion_diff` per family). If they differ, densities of the same query were not treated as independent n.
+- **`n_solved`** = descriptive sample. **`n_test`** = Wilcoxon sample after collapsing nested `family_id`s (median `expansion_diff` per family). If they differ, densities of the same query were not treated as independent n. **F2F fewer / F2E fewer / ties** in the tables are counted on the same units as `n_test` (families after collapse, maps otherwise).
 - **Primary test:** two-sided Wilcoxon on `expansion_diff = F2E − F2F`. **Confirmatory:** sign test on who expanded fewer, ties dropped. If `n_untied < 10`, p is **null** (not a missing file). That is expected when F2F and F2E almost always tie (open, corridor).
 - **Rank-biserial** > 0 means F2F fewer expansions on the untied pairs.
-- **Holm** is within a planned family (map families together; density counts together). Detour buckets are exploratory: raw p only.
-- **Nested density:** nested random experiments share start/goal across density prefixes. Independent `*_d10/d20/d30` CSVs are kept for F2F vs F2E pairing but **do not** enter `obstacle_count` tests, `overall_random`, or `saving_by_density.png`.
+- **Holm** is within a planned family (map families together; nested density groups within one experiment; size groups together). Detour buckets are exploratory: raw p only.
+- **Nested density:** nested random experiments share start/goal across density prefixes. Independent `*_d10/d20/d30` CSVs are kept for F2F vs F2E pairing but **do not** enter `obstacle_count` tests, `overall_random`, or `saving_by_density.png`. Density tests are keyed by experiment, grid size, and `obstacle_count` so two configs that share a prefix count are not pooled.
 
 ## Experiments in this run
 

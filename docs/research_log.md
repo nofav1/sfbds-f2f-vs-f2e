@@ -37,7 +37,7 @@ These are in force until we explicitly revise this section.
 **Nested random maps**
 
 - `obstacle_density` XOR `obstacle_densities` (random only). Shuffle non-reserved cells once; prefix `round(d * n_candidates)` so `obs10 ⊆ obs20 ⊆ obs30`.
-- `ensure_connected_query` **once** on the densest map; reuse relocated S/G at lower densities.
+- `ensure_connected_query` **once** on the densest map; reuse relocated S/G at lower densities. If the current pair is already connected, that component is tried first; otherwise every free component is tried (largest first), not only the largest blob.
 - Optional YAML `query_sample.skip_unconnected` (default false): if connect-once cannot place a pair at `min_manhattan`, skip that query instead of aborting. `query_index` may have gaps; realized n may be `< count`. Use only when the scientific plan is “accept fewer queries,” not as a silent default.
 - Skip ASCII visuals when `obstacle_densities` is set.
 - Independent `*_d10/d20/d30` CSVs (old non-nested sampling) may still sit in `results/study/`. They pair F2F vs F2E but **must not** enter nested `obstacle_count` tests, `overall_random`, or `saving_by_density.png`.
@@ -49,11 +49,11 @@ These are in force until we explicitly revise this section.
 - Solved pair = both SFBDS success and not timed out. Timeouts stay in `paired.csv` with null ratios; win % / means / tests use solved only.
 - Detour = solution cost / Manhattan, using **A* cost** when A* succeeded.
 - Saving % = `(F2E − F2F) / F2E × 100`. Primary test: two-sided Wilcoxon on `expansion_diff`, `zero_method="wilcox"`, exact if `n_untied ≤ 25`, **p = null if `n_untied < 10`**.
-- Do **not** stack nested densities as independent n. Wilcoxon for overall nested random = **one median `expansion_diff` per `family_id`**. Per-density tests stay uncollapsed.
+- Do **not** stack nested densities as independent n. Wilcoxon for overall nested random = **one median `expansion_diff` per `family_id`**. Per-density tests stay uncollapsed and are keyed by **experiment × grid size × `obstacle_count`**. Holm for density is within one nested config, not across experiments or sizes. Table F2F-fewer / F2E-fewer / ties match `n_test` (collapsed families when nested). Skip `overall_random` Wilcoxon when the run mixes more than one nested experiment; use the per-experiment density table.
 - Confirmatory: sign/binomial (F2F-fewer vs F2E-fewer, ties dropped). Holm Wilcoxon and Holm sign in **separate** families. Detour buckets exploratory (raw p only).
 - Rank-biserial from **T+/T−**, not scipy’s `statistic`. Positive ⇒ F2F fewer expansions.
 - Runtime must not drive the claim.
-- Optional YAML `runtime_repeats` (default 1): median `runtime_sec` and `heuristic_time_sec` across repeats; expansions/path from the first successful run. Skip ASCII visuals when repeats > 1, nested densities are set, or the grid is ≥ 200×200.
+- Optional YAML `runtime_repeats` (default 1): median `runtime_sec` and `heuristic_time_sec` across **successful** repeats; expansions/path from the first successful run. TIMEOUT only if every repeat times out. Skip ASCII visuals when repeats > 1, nested densities are set, or the grid is ≥ 200×200.
 
 ---
 
@@ -152,7 +152,7 @@ These are in force until we explicitly revise this section.
 **Headline.** 240 paired rows, all solved, 0 timeouts.
 
 - **Braid:** same 30 start/goal pairs as perfect maze 127. Obstacle count drops ~7936 → ~5952. F2F-fewer **21/30 → 11/30**; ties 9 → 19. No F2E-fewer. Loops made F2F and F2E agree more often, not less.
-- **64×64 @ 50/51/52%** needed `min_manhattan` 16 (24 at ≥55% could not connect 30/30). All three densities stay too tied (`n_untied` 7). Going above 50% at 64 did not help.
+- **64×64 @ 50/51/52%** needed `min_manhattan` 16 (24 at ≥55% could not connect 30/30). All three densities stay too tied (`n_untied` 7, 7, and **8** at 52% = 7 F2F-fewer + 1 F2E-fewer). Going above 50% at 64 did not help.
 - **128×128 @ 45/47.5/50%** needed `min_manhattan` 28 (48 at 50–55% could not connect). This is the strong slice: F2F-fewer **13 / 17 / 17** of 30; Holm p ≈ 2e-4 to 5e-5. No F2E-fewer.
 
 **Decisions from this run.**
@@ -182,6 +182,23 @@ These are in force until we explicitly revise this section.
 1. Braid × size: loops increase ties at **both** 127 and 255. The maze result to keep is **perfect** (unbraided) mazes; larger perfect mazes raise the F2F-fewer rate, braid knocks it back down.
 2. Nested 128 @ 45–50% with md 48 is connectivity-limited. Accepting fewer queries is valid descriptively (no F2E-fewer) but does not meet the locked `n_untied ≥ 10` rule. Do not treat the pooled 47-row density tests in this snapshot as an md-48 result.
 3. Cache still off. Strongest confirmatory sets remain perfect maze 255 and nested 128 @ 45–50% **with md 28** (full n=30).
+
+---
+
+### 2026-08-14 — Stats/protocol fixes (density grouping, connect-once, repeats)
+
+**Folder:** [`results/analysis/2026-08-14-density-by-experiment/`](../results/analysis/2026-08-14-density-by-experiment/)  
+**Input:** same experiment subset as [`2026-08-14-maze255-braid-and-128-md48`](../results/analysis/2026-08-14-maze255-braid-and-128-md48/) (old snapshot kept). No new study CSVs.
+
+**What changed in code (locked methodology revised above).**
+
+1. Nested `obstacle_count` tests are keyed by experiment × size × count; Holm is within one nested config. The previous snapshot’s density headline pooled md-28 (n=30) with md-48 (n=17) at the same prefix counts.
+2. `ensure_connected_query` tries every free component (current first if already connected, then largest-first), not only the largest blob. Existing CSVs were **not** re-sampled; the 13/30 md-48 skips still reflect largest-only connect-once.
+3. `runtime_repeats`: median times over successful repeats; TIMEOUT only if all repeats time out. Published `study_maze_127_timed` had 0 timeouts, so those numbers are unchanged.
+
+**Headline after unpooling.** Maze 127/255 ± braid counts are unchanged. Nested 128 @ 45–50% **md 28** (30 families) still has `n_untied ≥ 10` at all three densities. Nested 128 **md 48** (17 families) stays `n_untied` 6–8 at every density → p null. That is the md-48 result; do not read a pooled n=47 test. The overall nested-random row in that README still stacks md-28 + md-48 families — do not cite its p-value.
+
+Display/CLI leftovers from the same review (no new study CSVs, no new analysis slug): `map_family=random` Wilcoxon runs when the bucket is independent-only; table F2F-fewer counts follow `n_test`; `--out-dir` refuses the analysis index and a non-empty slug unless `--force`; maze YAML `obstacle_density` is rejected. Leftover `results/analysis/paired.csv` at the index root was removed. Read density from [`2026-08-14-density-by-experiment`](../results/analysis/2026-08-14-density-by-experiment/).
 
 ---
 

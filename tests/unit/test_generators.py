@@ -78,3 +78,27 @@ def test_maze_braid_opens_extra_walls_and_stays_connected() -> None:
     assert braided.start_state == perfect.start_state
     assert braided.goal_state == perfect.goal_state
 
+
+def test_ensure_connected_query_uses_smaller_component_with_span() -> None:
+    free = {(r, c) for r in range(3) for c in range(3)}
+    free |= {(7, c) for c in range(6)}
+    obstacles = [
+        GridState(r, c)
+        for r in range(8)
+        for c in range(8)
+        if (r, c) not in free
+    ]
+    problem = GridProblem(
+        8, 8, GridState(0, 0), GridState(2, 2), obstacles=obstacles
+    )
+    assert endpoints_connected(problem)
+    fixed = ensure_connected_query(
+        problem, min_manhattan=5, rng=random.Random(0)
+    )
+    assert endpoints_connected(fixed)
+    assert set(fixed.obstacles) == set(problem.obstacles)
+    assert fixed.start_state.row == 7
+    assert fixed.goal_state.row == 7
+    md = abs(fixed.start_state.col - fixed.goal_state.col)
+    assert md >= 5
+

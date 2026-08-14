@@ -14,6 +14,8 @@ from sfbds_compare.analysis.plots import write_plots
 from sfbds_compare.analysis.report import write_readme
 from sfbds_compare.analysis.summarize import summarize
 
+_ANALYSIS_INDEX_MARKER = "index of snapshots"
+
 
 def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -26,6 +28,32 @@ def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
         writer.writeheader()
         for row in rows:
             writer.writerow(row)
+
+
+def _is_analysis_index_dir(path: Path) -> bool:
+    resolved = path.resolve()
+    if resolved.name == "analysis" and resolved.parent.name == "results":
+        return True
+    readme = resolved / "README.md"
+    if readme.is_file():
+        text = readme.read_text(encoding="utf-8", errors="replace").lower()
+        if _ANALYSIS_INDEX_MARKER in text:
+            return True
+    return False
+
+
+def _refuse_out_dir(path: Path, *, force: bool) -> Optional[str]:
+    if _is_analysis_index_dir(path):
+        return (
+            f"--out-dir {path} is the analysis index; use a dated slug "
+            f"(results/analysis/YYYY-MM-DD-short-slug)"
+        )
+    if path.exists() and any(path.iterdir()) and not force:
+        return (
+            f"--out-dir {path} already exists and is not empty; "
+            "pick a new slug or pass --force"
+        )
+    return None
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -43,8 +71,18 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="Only include this experiment name (repeatable). Default: all CSVs in --input-dir.",
     )
     parser.add_argument("--no-plots", action="store_true")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite an existing non-empty --out-dir (never the analysis index).",
+    )
     args = parser.parse_args(argv)
 
+    out = Path(args.out_dir)
+    refused = _refuse_out_dir(out, force=args.force)
+    if refused:
+        print(refused, file=sys.stderr)
+        return 1
     raw = load_raw_csvs(args.input_dir)
     if args.experiments:
         allow = set(args.experiments)
@@ -54,7 +92,6 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 1
     paired = pair_rows(raw)
     summary = summarize(paired)
-    out = Path(args.out_dir)
     paired_path = out / "paired.csv"
     summary_path = out / "summary.csv"
     stats_path = out / "stats.csv"

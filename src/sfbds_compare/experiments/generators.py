@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import random
 from collections import deque
-from typing import Iterable, Sequence
+from typing import Iterable, Optional, Sequence
 
 from sfbds_compare.domain.grid import GridProblem, GridState
 from sfbds_compare.experiments.config import GeneratorConfig, QuerySpec
@@ -126,9 +126,11 @@ def endpoints_connected(problem: GridProblem) -> bool:
     return problem.goal_state in reachable_from(problem, problem.start_state)
 
 
-def _largest_component(problem: GridProblem) -> list[GridState]:
+def _free_components(problem: GridProblem) -> list[list[GridState]]:
+    """All free 4-connected components, largest first."""
+
     seen: set[GridState] = set()
-    best: list[GridState] = []
+    comps: list[list[GridState]] = []
     for r in range(problem.height):
         for c in range(problem.width):
             cell = GridState(r, c)
@@ -136,9 +138,33 @@ def _largest_component(problem: GridProblem) -> list[GridState]:
                 continue
             comp = reachable_from(problem, cell)
             seen |= comp
-            if len(comp) > len(best):
-                best = sorted(comp, key=lambda s: (s.row, s.col))
-    return best
+            comps.append(sorted(comp, key=lambda s: (s.row, s.col)))
+    comps.sort(key=lambda cells: (-len(cells), cells[0].row, cells[0].col))
+    return comps
+
+
+def _largest_component(problem: GridProblem) -> list[GridState]:
+    comps = _free_components(problem)
+    return comps[0] if comps else []
+
+
+def _pair_meeting_manhattan(
+    cells: Sequence[GridState],
+    min_manhattan: int,
+    rng: random.Random,
+) -> Optional[tuple[GridState, GridState]]:
+    if len(cells) < 2:
+        return None
+    limit = max(10_000, len(cells) * 20)
+    for _ in range(limit):
+        a, b = rng.sample(list(cells), 2)
+        if _manhattan(a, b) >= min_manhattan:
+            return a, b
+    for i, a in enumerate(cells):
+        for b in cells[i + 1 :]:
+            if _manhattan(a, b) >= min_manhattan:
+                return a, b
+    return None
 
 
 def ensure_connected_query(
@@ -152,6 +178,10 @@ def ensure_connected_query(
     Used after ``build_problem`` for ``query_sample`` so random-obstacle maps
     are not scored as solver failures when the sampled cells are separated.
     Explicit YAML queries are left unchanged (caller skips this helper).
+
+    If the current pair is already connected, that component is tried first;
+    otherwise components are tried largest-first until a pair meets
+    ``min_manhattan``.
     """
 
     if (
@@ -160,30 +190,41 @@ def ensure_connected_query(
     ):
         return problem
 
-    cells = _largest_component(problem)
-    if len(cells) < 2:
+    comps = _free_components(problem)
+    if not any(len(c) >= 2 for c in comps):
         raise ValueError(
             f"no connected free pair with min_manhattan={min_manhattan} "
             f"on {problem.height}x{problem.width}"
         )
-    start = goal = None
-    limit = max(10_000, len(cells) * 20)
-    for _ in range(limit):
-        a, b = rng.sample(cells, 2)
-        if _manhattan(a, b) >= min_manhattan:
-            start, goal = a, b
-            break
-    if start is None or goal is None:
-        raise ValueError(
-            f"could not sample a connected free pair with min_manhattan="
-            f"{min_manhattan} on {problem.height}x{problem.width}"
+    ordered: list[list[GridState]] = []
+    seen: set[frozenset[GridState]] = set()
+    if endpoints_connected(problem):
+        current = sorted(
+            reachable_from(problem, problem.start_state),
+            key=lambda s: (s.row, s.col),
         )
-    return GridProblem(
-        problem.height,
-        problem.width,
-        start,
-        goal,
-        obstacles=problem.obstacles,
+        ordered.append(current)
+        seen.add(frozenset(current))
+    for comp in comps:
+        key = frozenset(comp)
+        if key not in seen:
+            ordered.append(comp)
+            seen.add(key)
+
+    for cells in ordered:
+        pair = _pair_meeting_manhattan(cells, min_manhattan, rng)
+        if pair is not None:
+            start, goal = pair
+            return GridProblem(
+                problem.height,
+                problem.width,
+                start,
+                goal,
+                obstacles=problem.obstacles,
+            )
+    raise ValueError(
+        f"could not sample a connected free pair with min_manhattan="
+        f"{min_manhattan} on {problem.height}x{problem.width}"
     )
 
 

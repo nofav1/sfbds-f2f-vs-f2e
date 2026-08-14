@@ -392,6 +392,22 @@ def test_runtime_repeats_must_be_positive() -> None:
         )
 
 
+def test_maze_rejects_obstacle_density() -> None:
+    with pytest.raises(ValueError, match="obstacle_density"):
+        config_from_dict(
+            {
+                "algorithm": "astar",
+                "generator": {
+                    "kind": "maze",
+                    "height": 5,
+                    "width": 5,
+                    "obstacle_density": 0.2,
+                },
+                "queries": [{"start": [0, 0], "goal": [4, 4]}],
+            }
+        )
+
+
 def test_maze_braid_requires_maze_kind() -> None:
     with pytest.raises(ValueError, match="maze_braid"):
         config_from_dict(

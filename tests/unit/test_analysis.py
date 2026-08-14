@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from sfbds_compare.analysis.load import load_raw_csvs
 from sfbds_compare.analysis.metrics import detour_ratio
 from sfbds_compare.analysis.pair import pair_rows
 from sfbds_compare.analysis.stats import holm_adjust, rank_biserial, sign_test_p, wilcoxon_signed_rank
@@ -260,7 +261,9 @@ def test_independent_random_csvs_skip_density_claims() -> None:
         r for r in summary if r["group_type"] == "map_family" and r["group"] == "random"
     )
     assert family["n_solved"] == 36
-    assert family["wilcoxon_p_raw"] is None
+    assert family["n_test"] == 36
+    assert family["n_f2f_fewer"] == 36
+    assert family["wilcoxon_p_raw"] is not None
 
 
 def test_mixed_independent_and_nested_density_claims_only_nested() -> None:
@@ -296,7 +299,11 @@ def test_mixed_independent_and_nested_density_claims_only_nested() -> None:
     assert all(r["nested_density"] is False for r in independent)
     summary = summarize(paired)
     dens = [r for r in summary if r["group_type"] == "obstacle_count"]
-    assert {r["group"] for r in dens} == {"1638", "3277", "4915"}
+    assert {r["group"] for r in dens} == {
+        "study_random_128::16x16::1638",
+        "study_random_128::16x16::3277",
+        "study_random_128::16x16::4915",
+    }
     assert all(r["n_solved"] == 12 for r in dens)
     overall = next(r for r in summary if r["group_type"] == "overall_random")
     assert overall["n_solved"] == 36
@@ -331,6 +338,7 @@ def test_random_nested_not_stacked_in_map_family_test() -> None:
     assert overall["n_solved"] == 36
     assert overall["n_test"] == 12
     assert overall["n_untied"] == 12
+    assert overall["n_f2f_fewer"] == 12
     dens = [r for r in summary if r["group_type"] == "obstacle_count"]
     assert len(dens) == 3
     assert all(r["n_solved"] == 12 for r in dens)
@@ -429,3 +437,124 @@ def test_readme_includes_nested_density_groups() -> None:
     assert "10 obstacles" in text
     assert "nested random families" in text
     assert "Wilcoxon is skipped on this pooled group" in text
+
+
+def test_cli_refuses_analysis_index_and_nonempty_slug(tmp_path: Path) -> None:
+    from sfbds_compare.analysis.__main__ import main
+
+    rows = _triple(0, f2f=3, f2e=5)
+    write_csv(tmp_path / "raw.csv", rows)
+    index = tmp_path / "results" / "analysis"
+    index.mkdir(parents=True)
+    (index / "README.md").write_text(
+        "This directory is an **index of snapshots**.\n", encoding="utf-8"
+    )
+    assert (
+        main(
+            [
+                "--input-dir",
+                str(tmp_path),
+                "--out-dir",
+                str(index),
+                "--no-plots",
+            ]
+        )
+        == 1
+    )
+    assert not (index / "paired.csv").exists()
+    slug = tmp_path / "2026-08-14-slug"
+    slug.mkdir()
+    (slug / "stale.txt").write_text("x", encoding="utf-8")
+    assert (
+        main(
+            [
+                "--input-dir",
+                str(tmp_path),
+                "--out-dir",
+                str(slug),
+                "--no-plots",
+            ]
+        )
+        == 1
+    )
+    assert (
+        main(
+            [
+                "--input-dir",
+                str(tmp_path),
+                "--out-dir",
+                str(slug),
+                "--no-plots",
+                "--force",
+            ]
+        )
+        == 0
+    )
+    assert (slug / "paired.csv").is_file()
+    assert (
+        main(
+            [
+                "--input-dir",
+                str(tmp_path),
+                "--out-dir",
+                str(index),
+                "--no-plots",
+                "--force",
+            ]
+        )
+        == 1
+    )
+
+
+def test_density_groups_do_not_pool_experiments() -> None:
+    raw = []
+    for experiment, seed in (("study_a", 1), ("study_b", 2)):
+        for q in range(12):
+            for count in (7372, 7781, 8191):
+                raw.extend(
+                    _triple(
+                        q,
+                        f2f=1,
+                        f2e=2,
+                        experiment=experiment,
+                        obstacle_count=count,
+                        generator_kind="random_obstacles",
+                        seed=seed,
+                        height=128,
+                        width=128,
+                    )
+                )
+    paired = pair_rows(raw)
+    summary = summarize(paired)
+    dens = [r for r in summary if r["group_type"] == "obstacle_count"]
+    assert len(dens) == 6
+    assert all(r["n_solved"] == 12 for r in dens)
+    groups = {r["group"] for r in dens}
+    assert "study_a::128x128::7372" in groups
+    assert "study_b::128x128::7372" in groups
+    a_p = [r["wilcoxon_p_holm"] for r in dens if r["group"].startswith("study_a::")]
+    b_p = [r["wilcoxon_p_holm"] for r in dens if r["group"].startswith("study_b::")]
+    assert None not in a_p and None not in b_p
+    assert len(a_p) == 3 and len(b_p) == 3
+    overall = next(r for r in summary if r["group_type"] == "overall_random")
+    assert overall["n_test"] == 24
+    assert overall["n_f2f_fewer"] == 24
+    assert overall["wilcoxon_p_raw"] is None
+    assert "multiple nested experiments" in overall["note"]
+
+
+def test_load_raw_csvs_skips_analysis_stems(tmp_path: Path) -> None:
+    rows = _triple(0, f2f=3, f2e=5)
+    write_csv(tmp_path / "study_open.csv", rows)
+    (tmp_path / "paired.csv").write_text(
+        "pair_id,family_id,experiment\nx,y,z\n", encoding="utf-8"
+    )
+    (tmp_path / "summary.csv").write_text(
+        "group_type,group\nmap_family,maze\n", encoding="utf-8"
+    )
+    (tmp_path / "stats.csv").write_text(
+        "group_type,group\nmap_family,maze\n", encoding="utf-8"
+    )
+    loaded = load_raw_csvs(tmp_path)
+    assert len(loaded) == 3
+    assert {r["algorithm"] for r in loaded} == {"astar", "sfbds_f2f", "sfbds_f2e"}

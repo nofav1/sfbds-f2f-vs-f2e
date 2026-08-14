@@ -637,6 +637,108 @@ def test_runtime_repeats_keeps_expansions_and_skips_visual(tmp_path: Path) -> No
     assert not (tmp_path / "timed_cli_visual.txt").is_file()
 
 
+def test_runtime_repeats_median_of_successes_ignores_timeout(monkeypatch) -> None:
+    from sfbds_compare.experiments import runner as runner_mod
+
+    def _result(*, expanded: int, runtime: float, heuristic_time: float, timed_out: bool):
+        return SearchResult(
+            success=not timed_out,
+            termination_reason=(
+                TerminationReason.TIMEOUT if timed_out else TerminationReason.GOAL_FOUND
+            ),
+            solution_cost=None if timed_out else 6.0,
+            metrics=MetricsSnapshot(
+                runtime_sec=runtime,
+                generated=expanded,
+                expanded=expanded,
+                heuristic_evals=expanded,
+                heuristic_time_sec=heuristic_time,
+                peak_open=1,
+                peak_closed=expanded,
+                stale_skipped=0,
+                duplicates_discarded=0,
+                success=not timed_out,
+                timed_out=timed_out,
+            ),
+        )
+
+    seq = [
+        _result(expanded=10, runtime=1.0, heuristic_time=0.10, timed_out=False),
+        _result(expanded=99, runtime=9.0, heuristic_time=0.90, timed_out=True),
+        _result(expanded=20, runtime=3.0, heuristic_time=0.30, timed_out=False),
+    ]
+    calls = {"i": 0}
+
+    def fake_run_query(problem, algorithm, timeout_sec=None, search_impl=None):
+        i = calls["i"]
+        calls["i"] += 1
+        return seq[i]
+
+    monkeypatch.setattr(runner_mod, "run_query", fake_run_query)
+    cfg = ExperimentConfig(
+        name="mix",
+        algorithms=("astar",),
+        seed=0,
+        generator=GeneratorConfig(kind="open", height=4, width=4),
+        queries=(QuerySpec(start=(0, 0), goal=(3, 3)),),
+        output_dir="results",
+        timeout_sec=1.0,
+        runtime_repeats=3,
+    )
+    out = runner_mod._run_query_repeated(
+        GridProblem(4, 4, GridState(0, 0), GridState(3, 3)),
+        "astar",
+        config=cfg,
+    )
+    assert out.success is True
+    assert out.metrics.expanded == 10
+    assert out.metrics.runtime_sec == 2.0
+    assert out.metrics.heuristic_time_sec == pytest.approx(0.20)
+    assert out.metrics.timed_out is False
+
+
+def test_runtime_repeats_timeout_only_if_all_fail(monkeypatch) -> None:
+    from sfbds_compare.experiments import runner as runner_mod
+
+    timed = SearchResult(
+        success=False,
+        termination_reason=TerminationReason.TIMEOUT,
+        metrics=MetricsSnapshot(
+            runtime_sec=1.0,
+            generated=1,
+            expanded=1,
+            heuristic_evals=1,
+            heuristic_time_sec=0.1,
+            peak_open=1,
+            peak_closed=1,
+            stale_skipped=0,
+            duplicates_discarded=0,
+            success=False,
+            timed_out=True,
+        ),
+    )
+    monkeypatch.setattr(
+        runner_mod, "run_query", lambda *args, **kwargs: timed
+    )
+    cfg = ExperimentConfig(
+        name="all_to",
+        algorithms=("astar",),
+        seed=0,
+        generator=GeneratorConfig(kind="open", height=4, width=4),
+        queries=(QuerySpec(start=(0, 0), goal=(3, 3)),),
+        output_dir="results",
+        timeout_sec=0.01,
+        runtime_repeats=3,
+    )
+    out = runner_mod._run_query_repeated(
+        GridProblem(4, 4, GridState(0, 0), GridState(3, 3)),
+        "astar",
+        config=cfg,
+    )
+    assert out.success is False
+    assert out.metrics.timed_out is True
+    assert out.termination_reason is TerminationReason.TIMEOUT
+
 def test_skip_unconnected_drops_queries_without_a_far_pair() -> None:
     from sfbds_compare.experiments.runner import _connect_query
 

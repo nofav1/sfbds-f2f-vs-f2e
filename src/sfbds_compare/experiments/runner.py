@@ -184,35 +184,40 @@ def _write_visuals(config: ExperimentConfig) -> bool:
     return config.generator.height * config.generator.width < 200 * 200
 
 
+def _is_timeout_result(result: SearchResult[GridState]) -> bool:
+    return (
+        result.metrics.timed_out
+        or result.termination_reason is TerminationReason.TIMEOUT
+    )
+
+
 def _run_query_repeated(
     problem: GridProblem,
     algorithm: str,
     *,
     config: ExperimentConfig,
 ) -> SearchResult[GridState]:
-    """Run ``runtime_repeats`` times; keep first expansions, median times."""
+    """Run ``runtime_repeats`` times; keep first success, median of success times.
+
+    TIMEOUT is returned only when every repeat timed out.
+    """
 
     n = config.runtime_repeats
     results = [
         run_query(problem, algorithm, timeout_sec=config.timeout_sec)
         for _ in range(n)
     ]
-    timed = [
-        r
-        for r in results
-        if r.metrics.timed_out
-        or r.termination_reason is TerminationReason.TIMEOUT
-    ]
-    if timed:
-        return timed[0]
-    first = results[0]
-    if n == 1:
+    ok = [r for r in results if not _is_timeout_result(r)]
+    if not ok:
+        return next(r for r in results if _is_timeout_result(r))
+    first = ok[0]
+    if len(ok) == 1:
         return first
     metrics = replace(
         first.metrics,
-        runtime_sec=float(median([r.metrics.runtime_sec for r in results])),
+        runtime_sec=float(median([r.metrics.runtime_sec for r in ok])),
         heuristic_time_sec=float(
-            median([r.metrics.heuristic_time_sec for r in results])
+            median([r.metrics.heuristic_time_sec for r in ok])
         ),
     )
     return replace(first, metrics=metrics)
