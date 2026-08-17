@@ -329,6 +329,14 @@ _OPT_FOLLOWUP_STEMS = (
     "study_maze_255",
     "study_random_64_dense",
     "study_random_128_dense",
+    "study_maze_127_far",
+    "study_maze_127_braid",
+    "study_maze_127_timed",
+    "study_maze_255_braid",
+    "study_random_64_d50",
+    "study_random_64_d52",
+    "study_random_128_d45",
+    "study_random_128_d45_md48",
 )
 
 
@@ -348,6 +356,8 @@ def test_opt_followup_yamls_match_pre_fix_seeds_and_queries() -> None:
         assert new.output_dir == old.output_dir
         assert new.timeout_sec == old.timeout_sec
         assert new.algorithms == old.algorithms
+        assert new.runtime_repeats == old.runtime_repeats
+        assert new.skip_unconnected == old.skip_unconnected
 
 
 _FOLLOWUP_SPECS = {
@@ -376,6 +386,77 @@ _FOLLOWUP_SPECS = {
         "min_manhattan": 48,
         "obstacle_densities": (0.30, 0.40, 0.45),
         "runtime_repeats": 1,
+    },
+    "study_maze_127_far_opt.yaml": {
+        "kind": "maze",
+        "height": 127,
+        "width": 127,
+        "count": 30,
+        "min_manhattan": 90,
+        "runtime_repeats": 1,
+    },
+    "study_maze_127_braid_opt.yaml": {
+        "kind": "maze",
+        "height": 127,
+        "width": 127,
+        "count": 30,
+        "min_manhattan": 60,
+        "maze_braid": 0.5,
+        "runtime_repeats": 1,
+    },
+    "study_maze_127_timed_opt.yaml": {
+        "kind": "maze",
+        "height": 127,
+        "width": 127,
+        "count": 30,
+        "min_manhattan": 60,
+        "runtime_repeats": 5,
+    },
+    "study_maze_255_braid_opt.yaml": {
+        "kind": "maze",
+        "height": 255,
+        "width": 255,
+        "count": 30,
+        "min_manhattan": 120,
+        "maze_braid": 0.5,
+        "runtime_repeats": 1,
+    },
+    "study_random_64_d50_opt.yaml": {
+        "kind": "random_obstacles",
+        "height": 64,
+        "width": 64,
+        "count": 30,
+        "min_manhattan": 24,
+        "obstacle_densities": (0.40, 0.45, 0.50),
+        "runtime_repeats": 1,
+    },
+    "study_random_64_d52_opt.yaml": {
+        "kind": "random_obstacles",
+        "height": 64,
+        "width": 64,
+        "count": 30,
+        "min_manhattan": 16,
+        "obstacle_densities": (0.50, 0.51, 0.52),
+        "runtime_repeats": 1,
+    },
+    "study_random_128_d45_opt.yaml": {
+        "kind": "random_obstacles",
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 28,
+        "obstacle_densities": (0.45, 0.475, 0.50),
+        "runtime_repeats": 1,
+    },
+    "study_random_128_d45_md48_opt.yaml": {
+        "kind": "random_obstacles",
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 48,
+        "obstacle_densities": (0.45, 0.475, 0.50),
+        "runtime_repeats": 1,
+        "skip_unconnected": True,
     },
 }
 

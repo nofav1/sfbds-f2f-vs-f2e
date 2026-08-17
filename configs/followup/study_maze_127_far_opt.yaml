@@ -1,0 +1,17 @@
+# Official reopen F2E rerun of study_maze_127_far (same seed/queries).
+# Writes study_maze_127_far_opt.csv; do not overwrite study_maze_127_far.csv.
+name: study_maze_127_far_opt
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 141
+timeout_sec: 60
+output_dir: results/study/pair-bound
+generator:
+  kind: maze
+  height: 127
+  width: 127
+query_sample:
+  count: 30
+  min_manhattan: 90
