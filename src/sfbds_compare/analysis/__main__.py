@@ -69,15 +69,27 @@ def _mixed_opt_and_prefix(raw: Sequence[Mapping[str, Any]]) -> Optional[str]:
 def _incomplete_official_opt(
     raw: Sequence[Mapping[str, Any]], *, allow_subset: bool
 ) -> Optional[str]:
-    """Official reopen baseline is all five ``*_opt`` stems unless subset is allowed."""
+    """Official reopen baseline is exactly the five ``*_opt`` stems.
 
-    if allow_subset:
-        return None
+    ``--allow-opt-subset`` permits a follow-up-only ``*_opt`` slice. It does not
+    permit mixing those five with extras, or a partial official set plus a
+    follow-up.
+    """
+
     names = {r.get("experiment") for r in raw}
     opt = {n for n in names if isinstance(n, str) and n.endswith("_opt")}
     if not opt:
         return None
-    if opt != OFFICIAL_OPT_EXPERIMENTS:
+    official = opt & OFFICIAL_OPT_EXPERIMENTS
+    if official and opt != OFFICIAL_OPT_EXPERIMENTS:
+        return (
+            "refusing mixed official *_opt baseline with a follow-up or partial "
+            "official set; analyze the five official _opt stems alone, or pass "
+            "--allow-opt-subset for a follow-up-only slice"
+        )
+    if opt == OFFICIAL_OPT_EXPERIMENTS:
+        return None
+    if not allow_subset:
         return (
             "refusing partial *_opt analysis of the official reopen baseline; "
             "pass --experiment for all five official _opt names, or --allow-opt-subset"
@@ -118,8 +130,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         "--allow-opt-subset",
         action="store_true",
         help=(
-            "Allow an analysis of some but not all official *_opt stems "
-            "(required for a maze-only or follow-up *_opt slice)."
+            "Allow a follow-up-only *_opt slice (not the five official stems). "
+            "Does not allow mixing the official five with follow-up *_opt names."
         ),
     )
     parser.add_argument(
@@ -177,6 +189,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         out,
         input_dir=args.input_dir,
         experiments=tuple(args.experiments) if args.experiments else None,
+        allow_opt_subset=args.allow_opt_subset,
     )
     print(f"wrote {readme_path}")
     if not args.no_plots:

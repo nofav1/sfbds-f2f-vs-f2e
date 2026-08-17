@@ -42,6 +42,7 @@ That now hits the mix-refuse on `results/study/pair-bound/` (ten CSVs).
 - Thread `input_dir`, `out_dir`, and the filtered experiment names (the `--experiment` list actually used, or the distinct names in `paired` if unfiltered) into `render_readme` / `write_readme`.
 - Emit those `--experiment` flags when the run was filtered. If unfiltered, keep a command without `--experiment`, plus one sentence: select only `*_opt` names or only pre-fix names when the folder contains both.
 - Prefer the CLI’s `--experiment` values over “names present in paired.csv” so a filter that matched nothing is not silently rewritten (empty already exits 1).
+- Also emit `--allow-opt-subset` when that flag was used (follow-up `*_opt` slices). Do not emit it on the five-stem official baseline.
 
 **Tests**
 
@@ -57,6 +58,7 @@ The mix check only forbids mixing suffix and non-suffix. `--experiment study_maz
 - Frozen set of the five official stems: `study_corridor_512_opt`, `study_maze_127_opt`, `study_open_128_opt`, `study_random_64_opt`, `study_random_128_opt`.
 - After `--experiment` filter: if **any** remaining name ends with `_opt` and `--allow-opt-subset` is not set, require that the `_opt` names in the run **equal** that set (all five present, no extra `*_opt`).
 - `--allow-opt-subset` is the documented escape for a later maze-only or maze-255 `*_opt` slice. Default off.
+- Later lock: `--allow-opt-subset` is follow-up-only. If the run intersects the official five and is not exactly that set (five + extras, or a partial official set), refuse even with the flag. Maze-255 live configs are `study_*_opt.yaml`; non-`_opt` follow-ups are in `configs/followup/retired/`.
 
 **Tests**
 

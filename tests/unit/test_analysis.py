@@ -414,7 +414,7 @@ def test_cli_opt_experiment_filter_drops_prefix(tmp_path: Path) -> None:
 
     rows = []
     rows.extend(_triple(0, f2f=3, f2e=5, experiment="study_maze_127"))
-    rows.extend(_triple(0, f2f=4, f2e=6, experiment="study_maze_127_opt"))
+    rows.extend(_triple(0, f2f=4, f2e=6, experiment="study_maze_255_opt"))
     write_csv(tmp_path / "raw.csv", rows)
     out = tmp_path / "analysis"
     assert (
@@ -426,7 +426,7 @@ def test_cli_opt_experiment_filter_drops_prefix(tmp_path: Path) -> None:
                 str(out),
                 "--no-plots",
                 "--experiment",
-                "study_maze_127_opt",
+                "study_maze_255_opt",
                 "--allow-opt-subset",
             ]
         )
@@ -436,9 +436,10 @@ def test_cli_opt_experiment_filter_drops_prefix(tmp_path: Path) -> None:
 
     with (out / "paired.csv").open(encoding="utf-8", newline="") as fh:
         experiments = {row["experiment"] for row in csv.DictReader(fh)}
-    assert experiments == {"study_maze_127_opt"}
+    assert experiments == {"study_maze_255_opt"}
     readme = (out / "README.md").read_text(encoding="utf-8")
-    assert "--experiment study_maze_127_opt" in readme
+    assert "--experiment study_maze_255_opt" in readme
+    assert "--allow-opt-subset" in readme
     assert "--experiment study_maze_127\n" not in readme
 
 
@@ -465,6 +466,49 @@ def test_cli_refuses_partial_official_opt_without_subset_flag(tmp_path: Path) ->
     assert not (out / "paired.csv").is_file()
 
 
+def test_cli_refuses_partial_official_opt_even_with_subset_flag(tmp_path: Path) -> None:
+    from sfbds_compare.analysis.__main__ import main
+
+    rows = _triple(0, f2f=3, f2e=5, experiment="study_maze_127_opt")
+    write_csv(tmp_path / "raw.csv", rows)
+    out = tmp_path / "analysis"
+    assert (
+        main(
+            [
+                "--input-dir",
+                str(tmp_path),
+                "--out-dir",
+                str(out),
+                "--no-plots",
+                "--experiment",
+                "study_maze_127_opt",
+                "--allow-opt-subset",
+            ]
+        )
+        == 1
+    )
+    assert not (out / "paired.csv").is_file()
+
+
+def test_cli_refuses_official_opt_mixed_with_followup_even_with_subset_flag(
+    tmp_path: Path,
+) -> None:
+    from sfbds_compare.analysis.__main__ import OFFICIAL_OPT_EXPERIMENTS, main
+
+    rows = []
+    for name in sorted(OFFICIAL_OPT_EXPERIMENTS):
+        rows.extend(_triple(0, f2f=3, f2e=5, experiment=name))
+    rows.extend(_triple(0, f2f=3, f2e=5, experiment="study_maze_255_opt"))
+    write_csv(tmp_path / "raw.csv", rows)
+    out = tmp_path / "analysis"
+    argv = ["--input-dir", str(tmp_path), "--out-dir", str(out), "--no-plots"]
+    for name in sorted(OFFICIAL_OPT_EXPERIMENTS):
+        argv.extend(["--experiment", name])
+    argv.extend(["--experiment", "study_maze_255_opt", "--allow-opt-subset"])
+    assert main(argv) == 1
+    assert not (out / "paired.csv").is_file()
+
+
 def test_cli_accepts_all_five_official_opt(tmp_path: Path) -> None:
     from sfbds_compare.analysis.__main__ import OFFICIAL_OPT_EXPERIMENTS, main
 
@@ -480,6 +524,7 @@ def test_cli_accepts_all_five_official_opt(tmp_path: Path) -> None:
     readme = (out / "README.md").read_text(encoding="utf-8")
     for name in OFFICIAL_OPT_EXPERIMENTS:
         assert f"--experiment {name}" in readme
+    assert "--allow-opt-subset" not in readme
 
 
 def test_render_readme_includes_experiment_flags() -> None:
@@ -502,7 +547,24 @@ def test_render_readme_includes_experiment_flags() -> None:
     )
     assert "--experiment study_maze_127_opt" in text
     assert "--out-dir results/analysis/pair-bound/2026-08-17-reopen-opt" in text
+    assert "--allow-opt-subset" not in text
     assert "the CLI refuses a mix" not in text
+
+
+def test_render_readme_includes_allow_opt_subset_flag() -> None:
+    from sfbds_compare.analysis.report import render_readme
+
+    paired = pair_rows(_triple(0, f2f=3, f2e=5, experiment="study_maze_255_opt"))
+    text = render_readme(
+        paired,
+        summarize(paired),
+        input_dir="results/study/pair-bound",
+        out_dir="results/analysis/pair-bound/2026-08-17-harder-opt",
+        experiments=("study_maze_255_opt",),
+        allow_opt_subset=True,
+    )
+    assert "--experiment study_maze_255_opt" in text
+    assert "--allow-opt-subset" in text
 
 
 def test_readme_skips_density_claims_for_independent_random() -> None:

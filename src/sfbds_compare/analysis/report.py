@@ -272,6 +272,7 @@ def format_analysis_command(
     input_dir: str | Path | None = None,
     out_dir: str | Path | None = None,
     experiments: Sequence[str] | None = None,
+    allow_opt_subset: bool = False,
 ) -> str:
     """Reproduce the analysis CLI for this run."""
 
@@ -283,6 +284,8 @@ def format_analysis_command(
     if experiments:
         for name in experiments:
             parts.append(f"--experiment {name}")
+    if allow_opt_subset:
+        parts.append("--allow-opt-subset")
     return " ".join(parts)
 
 
@@ -293,6 +296,7 @@ def render_readme(
     input_dir: str | Path | None = None,
     out_dir: str | Path | None = None,
     experiments: Sequence[str] | None = None,
+    allow_opt_subset: bool = False,
 ) -> str:
     """Markdown report for one analysis run."""
 
@@ -347,7 +351,10 @@ def render_readme(
     pooled_random_note = _pooled_random_skip_sentence(summary)
     pooled_random_block = f"\n{pooled_random_note}\n" if pooled_random_note else ""
     command = format_analysis_command(
-        input_dir=input_dir, out_dir=out_dir, experiments=experiments
+        input_dir=input_dir,
+        out_dir=out_dir,
+        experiments=experiments,
+        allow_opt_subset=allow_opt_subset,
     )
     mix_note = ""
     if not experiments:
@@ -438,6 +445,7 @@ def write_readme(
     *,
     input_dir: str | Path | None = None,
     experiments: Sequence[str] | None = None,
+    allow_opt_subset: bool = False,
 ) -> Path:
     path = Path(out_dir) / "README.md"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -448,6 +456,7 @@ def write_readme(
             input_dir=input_dir,
             out_dir=out_dir,
             experiments=experiments,
+            allow_opt_subset=allow_opt_subset,
         ),
         encoding="utf-8",
     )
