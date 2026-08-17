@@ -197,6 +197,29 @@ Same eight CSVs. Generated headline is per experiment; mixed maze/size skip Wilc
 
 ---
 
-## Next experiment (not started)
+### 2026-08-17 — Offline eval-cost sensitivity (Option 3A)
 
-**Cache ablation** only after instructor/scope lock. Late-stop remains Option C.
+**Folder:** [`2026-08-17-eval-cost-sensitivity/`](2026-08-17-eval-cost-sensitivity/)  
+Existing `study_maze_127_opt`, `study_maze_255_opt`, and nested 64@30% rows from `study_random_64_opt` (`obstacle_count == 1228`). Offline `T_β = rest + β · heuristic_evals`. No new search.
+
+**Headline.** No crossover to F2E. Median `T_F2F / T_F2E` stays `< 1` on all three families from `β = 0` through `10⁶×` observed Manhattan eval cost. Secondary only.
+
+---
+
+### 2026-08-17 — Eval-cost invariant test and `--force`
+
+Script refuses a non-empty slug unless `--force`. Pytest locks 30 pairs × 3 families, `rest ≥ 0`, 0 F2E-fewer evals. Snapshot unchanged.
+
+---
+
+## Experiment freeze (2026-08-17)
+
+Experimental phase is frozen for the report.
+
+**Authoritative:** reopen `*_opt` only. Maze 127 / nested 64@30% → `2026-08-17-reopen-opt`. Maze 255 / dense nested → `2026-08-17-harder-opt`. Far/braid/timed/denser nested → `2026-08-17-far-braid-by-experiment`. This eval-cost folder is secondary.
+
+**Main claims:** maze F2F-fewer expansions (127: 22/30; 255: 26/30), cost-clean; open/corridor ties; nested weaker and not pooled across seeds; braid reduces maze wins. Runtime is not co-primary. Late-stop remains Option C.
+
+**Secondary:** eval-cost sweep (no crossover); maze 127 timed wall-clock.
+
+**Future work (not done):** pair/result cache after instructor lock; Late-stop proof; incumbent stop; online expensive-`h` re-search.

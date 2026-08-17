@@ -441,9 +441,53 @@ python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir 
 
 ---
 
-## Next experiment (not started)
+### 2026-08-17 — Offline eval-cost sensitivity (Option 3A)
 
-Cache stays off unless the instructor locks a cache ablation. Pair-bound living notes: [`results/analysis/pair-bound/research_log.md`](../results/analysis/pair-bound/research_log.md).
+**Folder:** [`results/analysis/pair-bound/2026-08-17-eval-cost-sensitivity/`](../results/analysis/pair-bound/2026-08-17-eval-cost-sensitivity/)  
+**Input:** existing reopen `study_maze_127_opt`, `study_maze_255_opt`, and `study_random_64_opt` rows with `obstacle_count == 1228`. No new search. Script: [`scripts/eval_cost_sensitivity.py`](../scripts/eval_cost_sensitivity.py).
 
-1. **Cache ablation** only after instructor/scope lock.
-2. Option A Late-stop proof or Option B incumbent stop only after separate approval.
+**What we asked.** How sensitive is the F2F-vs-F2E cost ranking to the assumed cost of heuristic evaluation?
+
+**Model.** `T_β = (runtime_sec − heuristic_time_sec) + β · heuristic_evals`. Sweep `β` as `0, 0.1×, …, 10⁶×` the observed Manhattan seconds/eval.
+
+**Headline.** **No crossover** to F2E. Median `T_F2F / T_F2E` stays below 1 on maze 127, maze 255, and nested 64@30% for every tested `β ≥ 0`. F2E never had fewer heuristic evals than F2F on these pairs. Mazes plateau near 0.96; nested median approaches 1 because of eval ties, while total-`T` still favours F2F.
+
+**Decisions.** Secondary/sensitivity only. Experiments freeze here. Do not cite this folder for pair-expansion geography.
+
+---
+
+### 2026-08-17 — Eval-cost invariant test and `--force`
+
+`scripts/eval_cost_sensitivity.py` refuses a non-empty freeze slug unless `--force`. `--check-only` and `tests/unit/test_eval_cost_sensitivity.py` lock 30 pairs × 3 families, `rest ≥ 0`, and **0** F2E-fewer-eval maps on the frozen `*_opt` CSVs. Snapshot numbers unchanged.
+
+---
+
+## Experiment freeze (2026-08-17)
+
+Experimental phase is frozen for the report. Do not add map families, cache, incumbent stop, or a Late-stop proof unless a later scope lock says so.
+
+**Authoritative (official reopen F2E, `*_opt` only)**
+
+- Maze 127 / nested 64@30% (seed 110): [`2026-08-17-reopen-opt`](../results/analysis/pair-bound/2026-08-17-reopen-opt/)
+- Maze 255 / dense nested 30/40/45%: [`2026-08-17-harder-opt`](../results/analysis/pair-bound/2026-08-17-harder-opt/)
+- Maze 127 far/braid/timed, maze 255 braid, denser nested: [`2026-08-17-far-braid-by-experiment`](../results/analysis/pair-bound/2026-08-17-far-braid-by-experiment/) (per-experiment table; timed-only runtime)
+- NoReopen maze figures only from [`2026-08-17-cost-clean-plots`](../results/analysis/pair-bound/2026-08-17-cost-clean-plots/), labelled as NoReopen
+
+**Main claims (safe)**
+
+- On unit-grid mazes, F2F expands fewer pairs than official reopen F2E (127: 22/30; 255: 26/30), cost-clean vs A*.
+- Open and corridor are all ties.
+- Nested random is weaker and seed-specific; cite per experiment/density, do not pool `study_random_64_opt` with `study_random_64_dense_opt`.
+- Braid reduces the maze win count (127-braid 12/30; 255-braid 11/30).
+- Runtime is not co-primary. Late-stop remains Option C (empirical, not a general proof).
+
+**Secondary / sensitivity**
+
+- This eval-cost sweep: no crossover to F2E as assumed eval cost grows.
+- Maze 127 timed wall-clock: 22/22 F2F faster among expansion-untied queries; median ratio ≈ 0.885.
+
+**Future work (explicitly not done)**
+
+- Pair/result cache (needs instructor/scope lock).
+- Late-stop optimality proof; incumbent/lower-bound stopping rule.
+- Online re-search with a genuinely expensive heuristic (this sweep only rescales recorded evals).
