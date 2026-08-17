@@ -1,0 +1,17 @@
+# Official reopen F2E rerun of study_maze_255 (same seed/queries).
+# Writes study_maze_255_opt.csv; do not overwrite study_maze_255.csv.
+name: study_maze_255_opt
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 150
+timeout_sec: 120
+output_dir: results/study/pair-bound
+generator:
+  kind: maze
+  height: 255
+  width: 255
+query_sample:
+  count: 30
+  min_manhattan: 120
