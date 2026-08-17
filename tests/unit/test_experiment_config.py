@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 
 from sfbds_compare.experiments.config import (
     config_from_dict,
@@ -324,7 +325,61 @@ def test_opt_study_yamls_match_pre_fix_seeds_and_queries() -> None:
         assert new.algorithms == old.algorithms
 
 
+_OPT_FOLLOWUP_STEMS = (
+    "study_maze_255",
+    "study_random_64_dense",
+    "study_random_128_dense",
+)
+
+
+def test_opt_followup_yamls_match_pre_fix_seeds_and_queries() -> None:
+    followup_dir = Path(__file__).resolve().parents[2] / "configs" / "followup"
+    retired_dir = followup_dir / "retired"
+    for stem in _OPT_FOLLOWUP_STEMS:
+        old_raw = yaml.safe_load(
+            (retired_dir / f"{stem}.yaml").read_text(encoding="utf-8")
+        )
+        old = config_from_dict(old_raw)
+        new = load_config(followup_dir / f"{stem}_opt.yaml")
+        assert new.name == f"{stem}_opt"
+        assert new.seed == old.seed
+        assert new.queries == old.queries
+        assert new.generator == old.generator
+        assert new.output_dir == old.output_dir
+        assert new.timeout_sec == old.timeout_sec
+        assert new.algorithms == old.algorithms
+
+
 _FOLLOWUP_SPECS = {
+    "study_maze_255_opt.yaml": {
+        "kind": "maze",
+        "height": 255,
+        "width": 255,
+        "count": 30,
+        "min_manhattan": 120,
+        "runtime_repeats": 1,
+    },
+    "study_random_64_dense_opt.yaml": {
+        "kind": "random_obstacles",
+        "height": 64,
+        "width": 64,
+        "count": 30,
+        "min_manhattan": 24,
+        "obstacle_densities": (0.30, 0.40, 0.45),
+        "runtime_repeats": 1,
+    },
+    "study_random_128_dense_opt.yaml": {
+        "kind": "random_obstacles",
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 48,
+        "obstacle_densities": (0.30, 0.40, 0.45),
+        "runtime_repeats": 1,
+    },
+}
+
+_RETIRED_FOLLOWUP_SPECS = {
     "study_maze_255.yaml": {
         "kind": "maze",
         "height": 255,
@@ -487,25 +542,43 @@ def test_maze_braid_requires_maze_kind() -> None:
         )
 
 
+def _assert_followup_matches_spec(cfg, spec: dict) -> None:
+    assert cfg.output_dir == "results/study/pair-bound"
+    assert set(cfg.algorithms) == {"astar", "sfbds_f2f", "sfbds_f2e"}
+    assert cfg.generator.kind == spec["kind"]
+    assert cfg.generator.height == spec["height"]
+    assert cfg.generator.width == spec["width"]
+    assert cfg.runtime_repeats == spec["runtime_repeats"]
+    if "obstacle_densities" in spec:
+        assert cfg.generator.obstacle_densities == spec["obstacle_densities"]
+    assert cfg.generator.maze_braid == spec.get("maze_braid", 0.0)
+    assert cfg.min_manhattan == spec["min_manhattan"]
+    assert cfg.skip_unconnected == spec.get("skip_unconnected", False)
+    assert len(cfg.queries) == spec["count"]
+
+
 def test_load_followup_yaml_configs() -> None:
     followup_dir = Path(__file__).resolve().parents[2] / "configs" / "followup"
     paths = sorted(followup_dir.glob("study_*.yaml"))
     assert {p.name for p in paths} == set(_FOLLOWUP_SPECS)
     for path in paths:
+        assert path.stem.endswith("_opt")
         spec = _FOLLOWUP_SPECS[path.name]
-        cfg = load_config(path)
-        assert cfg.output_dir == "results/study/pair-bound"
-        assert set(cfg.algorithms) == {"astar", "sfbds_f2f", "sfbds_f2e"}
-        assert cfg.generator.kind == spec["kind"]
-        assert cfg.generator.height == spec["height"]
-        assert cfg.generator.width == spec["width"]
-        assert cfg.runtime_repeats == spec["runtime_repeats"]
-        if "obstacle_densities" in spec:
-            assert cfg.generator.obstacle_densities == spec["obstacle_densities"]
-        assert cfg.generator.maze_braid == spec.get("maze_braid", 0.0)
-        assert cfg.min_manhattan == spec["min_manhattan"]
-        assert cfg.skip_unconnected == spec.get("skip_unconnected", False)
-        assert len(cfg.queries) == spec["count"]
+        _assert_followup_matches_spec(load_config(path), spec)
+
+
+def test_retired_followup_yamls_are_not_runnable() -> None:
+    retired_dir = (
+        Path(__file__).resolve().parents[2] / "configs" / "followup" / "retired"
+    )
+    paths = sorted(retired_dir.glob("study_*.yaml"))
+    assert {p.name for p in paths} == set(_RETIRED_FOLLOWUP_SPECS)
+    for path in paths:
+        with pytest.raises(ValueError, match="_opt suffix"):
+            load_config(path)
+        spec = _RETIRED_FOLLOWUP_SPECS[path.name]
+        cfg = config_from_dict(yaml.safe_load(path.read_text(encoding="utf-8")))
+        _assert_followup_matches_spec(cfg, spec)
 
 
 def test_refuses_frozen_legacy_output_dir() -> None:

@@ -61,7 +61,7 @@ These are in force until we explicitly revise this section.
 
 - Official `sfbds_f2e` **bound** is `F2EPairLowerBound`: on unit grids, `lb = g_F+g_B` when `u=v`, else `lb = max(g_F+MD(u,G), g_B+MD(S,v), g_F+g_B+1)`. SFBDS still stores remaining cost via `h_gap = max(0, lb − g_F − g_B)`.
 - Official `sfbds_f2e` **search** is `official_f2e_searcher()`: that bound plus `f2e_policies()` (`BetterGReopenPolicy`: strictly better CLOSED `g` → remove then push). `SFBDSSearcher(F2EPairLowerBound())` is MVP NoReopen and is **not** official F2E. F2F stays `default_policies()` / `NoReopenPolicy`. Reopen is the hypothesized repair for the demonstrated pair-key inconsistency; empirically accepted on the frozen mismatch-row gate. Not a general proof of Late-stop optimality.
-- Pair-bound CSVs **without** `_opt` (`study_maze_127.csv`, …) are **NoReopen** F2E. Stems **with** `_opt` are reopen F2E. Cite reopen results from [`results/analysis/pair-bound/2026-08-17-reopen-opt/`](../results/analysis/pair-bound/2026-08-17-reopen-opt/). Cite pre-fix maze figures from [`2026-08-17-cost-clean-plots`](../results/analysis/pair-bound/2026-08-17-cost-clean-plots/) only as NoReopen. Analysis of `results/study/pair-bound/` must pass `--experiment` so the two are not mixed (the CLI refuses a mix). A run that includes any `*_opt` name must include all five official `_opt` stems unless `--allow-opt-subset`. Generated READMEs emit the `--experiment` flags used for that run.
+- Pair-bound CSVs **without** `_opt` (`study_maze_127.csv`, …) are **NoReopen** F2E. Stems **with** `_opt` are reopen F2E. Cite the 64/128 reopen baseline from [`results/analysis/pair-bound/2026-08-17-reopen-opt/`](../results/analysis/pair-bound/2026-08-17-reopen-opt/). Cite maze 255 / dense nested from [`2026-08-17-harder-opt`](../results/analysis/pair-bound/2026-08-17-harder-opt/). Cite pre-fix maze figures from [`2026-08-17-cost-clean-plots`](../results/analysis/pair-bound/2026-08-17-cost-clean-plots/) only as NoReopen. Do not cite legacy gap maze 255. Analysis of `results/study/pair-bound/` must pass `--experiment` so the two are not mixed (the CLI refuses a mix). A run that includes any official `_opt` stem must be exactly the five official stems; `--allow-opt-subset` is for a follow-up-only `*_opt` slice and does not mix those five with extras. Live follow-up YAMLs are `configs/followup/study_*_opt.yaml`; non-`_opt` follow-ups are retired. Generated READMEs emit the `--experiment` flags used for that run (and `--allow-opt-subset` when it was passed).
 - Every study CSV and analysis snapshot **before this lock** used the project-choice gap `max(|MD(x,G)−MD(y,G)|, |MD(S,x)−MD(S,y)|)` (now `LegacyFixedEndpointGapHeuristic`, tests only). Those results are **legacy F2E**, not the pair bound. They live under `results/study/legacy/`, `results/pilot/legacy/`, and `results/analysis/legacy/`. Do not cite them as corrected F2E. New pair-bound output goes to the matching `pair-bound/` folders. Regenerate study CSVs only after approval.
 
 ---
@@ -378,10 +378,38 @@ Follow-ups (maze 255 / denser random): keep the `_opt` suffix and pass `--experi
 
 ---
 
+### 2026-08-17 — Maze 255 / denser nested random (`*_opt`)
+
+**Folder:** [`results/analysis/pair-bound/2026-08-17-harder-opt/`](../results/analysis/pair-bound/2026-08-17-harder-opt/)  
+**Input:** `study_maze_255_opt`, `study_random_64_dense_opt`, `study_random_128_dense_opt` (same seeds/queries as the matching `configs/followup/` YAMLs). Official reopen F2E. Pre-fix and five-stem `*_opt` CSVs kept.
+
+```bash
+python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir results/analysis/pair-bound/2026-08-17-harder-opt --experiment study_maze_255_opt --experiment study_random_64_dense_opt --experiment study_random_128_dense_opt --allow-opt-subset
+```
+
+**What we asked.** On a larger maze and denser nested random maps, with official reopen F2E, does F2F still expand fewer pairs, and do costs match A*?
+
+**Headline.**
+
+- **210** paired, **210** solved, **0** timeouts, **0** cost mismatches.
+- **Maze 255:** 26/30 F2F-fewer, 0 F2E-fewer, Holm p ≈ 2.98e-08, median saving 3.8%. Stronger win count than maze 127 (22/30) at the same median saving. Cite this folder, not legacy gap-F2E maze 255.
+- **Nested 64 dense (seed 210, not the baseline 64 family):** 40% (1638 obstacles) 16/30 F2F-fewer, Holm p ≈ 6.10e-05, median saving 4.9%; 45% (1842) 14 F2F-fewer and **1** F2E-fewer, Holm p ≈ 0.0001; 30% (1228) 6/30, `n_untied < 10` → p null. Do not pool with `study_random_64_opt`.
+- **Nested 128 dense:** 45% (7372 obstacles) 11/30 F2F-fewer, Holm p ≈ 0.0010; 30% and 40% p null. Overall nested-random Wilcoxon stays skipped (two experiments).
+
+**Decisions.** Maze remains the regime where F2F separates; the 255 rung widens the win count. Denser nested random yields cost-clean density tests with `n_untied ≥ 10` at 64@40/45% and 128@45%. One F2E-fewer map at 64@45% does not reverse the maze claim. Late-stop is still Option C.
+
+---
+
+### 2026-08-17 — Retire non-`_opt` follow-ups; official+follow-up mix refuse
+
+Non-`_opt` YAMLs under `configs/followup/` moved to [`configs/followup/retired/`](../configs/followup/retired/). `load_config` refuses those paths (official F2E is reopen; a `study_maze_255` write would look like NoReopen). `--allow-opt-subset` no longer bypasses a mix of the five official stems with follow-up `*_opt` names. Citation lock: maze 127 / nested 64@30% from `2026-08-17-reopen-opt`; maze 255 / dense nested from `2026-08-17-harder-opt`.
+
+---
+
 ## Next experiment (not started)
 
 Cache stays off. Pair-bound living notes: [`results/analysis/pair-bound/research_log.md`](../results/analysis/pair-bound/research_log.md).
 
-1. **Maze 255 / denser nested random** under reopen F2E (`*_opt` or new follow-up stems), into `results/study/pair-bound/` without deleting existing CSVs. Analyze with `--experiment` (and `--allow-opt-subset` if not the five official `_opt` stems).
+1. Remaining follow-ups under reopen F2E: copy from [`configs/followup/retired/`](../configs/followup/retired/), new `*_opt` stems, `--allow-opt-subset` (follow-up-only; do not mix with the five official stems). Maze 127 far / braid / timed, maze 255 braid, nested 64@50–52% and 128@45–50%. Do not overwrite existing CSVs.
 2. **Cache ablation** only after instructor/scope lock.
 3. Option A Late-stop proof or Option B incumbent stop only after separate approval.

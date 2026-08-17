@@ -21,7 +21,7 @@ Legacy gap-F2E results are **not** recorded here. See [`docs/research_log.md`](.
 python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir results/analysis/pair-bound/YYYY-MM-DD-short-slug
 ```
 
-Follow-up experiments get **new YAML** under `configs/followup/` (or `configs/study/`), new CSVs under `results/study/pair-bound/`, then a **new analysis folder** here. Use `--experiment` to select a subset.
+Follow-up experiments get **new `*_opt` YAML** under `configs/followup/` (copy seeds from [`configs/followup/retired/`](../../../configs/followup/retired/) if needed), new CSVs under `results/study/pair-bound/`, then a **new analysis folder** here. Use `--experiment` for a follow-up-only slice (`--allow-opt-subset`); do not mix with the five official stems.
 
 ---
 
@@ -62,7 +62,7 @@ These are in force until we explicitly revise this section. Same locks as [`docs
 
 - Official `sfbds_f2e` **bound** is `F2EPairLowerBound`: on unit grids, `lb = g_F+g_B` when `u=v`, else `lb = max(g_F+MD(u,G), g_B+MD(S,v), g_F+g_B+1)`. SFBDS still stores remaining cost via `h_gap = max(0, lb − g_F − g_B)`.
 - Official `sfbds_f2e` **search** is `official_f2e_searcher()`: that bound plus `f2e_policies()` (`BetterGReopenPolicy`: strictly better CLOSED `g` → remove then push). `SFBDSSearcher(F2EPairLowerBound())` is MVP NoReopen and is **not** official F2E. F2F stays `default_policies()` / `NoReopenPolicy`. Reopen is the hypothesized repair for the demonstrated pair-key inconsistency; empirically accepted on the frozen mismatch-row gate. Not a general proof of Late-stop optimality.
-- Pair-bound CSVs **without** `_opt` are **NoReopen** F2E. Stems **with** `_opt` are reopen F2E. Cite reopen results from [`2026-08-17-reopen-opt/`](2026-08-17-reopen-opt/). Cite pre-fix maze figures from [`2026-08-17-cost-clean-plots/`](2026-08-17-cost-clean-plots/) only as NoReopen. The analysis CLI refuses a mix. A run that includes any `*_opt` name must include all five official `_opt` stems unless `--allow-opt-subset`. Generated READMEs emit the `--experiment` flags used for that run.
+- Pair-bound CSVs **without** `_opt` are **NoReopen** F2E. Stems **with** `_opt` are reopen F2E. Cite the 64/128 reopen baseline from [`2026-08-17-reopen-opt/`](2026-08-17-reopen-opt/). Cite maze 255 / dense nested from [`2026-08-17-harder-opt/`](2026-08-17-harder-opt/). Cite pre-fix maze figures from [`2026-08-17-cost-clean-plots/`](2026-08-17-cost-clean-plots/) only as NoReopen. Do not cite legacy gap maze 255. The analysis CLI refuses a mix. A run that includes any official `_opt` stem must be exactly the five official stems; `--allow-opt-subset` is for a follow-up-only `*_opt` slice and does not mix those five with extras. Live follow-up YAMLs are `configs/followup/study_*_opt.yaml`. Generated READMEs emit the `--experiment` flags used for that run (and `--allow-opt-subset` when it was passed).
 - Do not cite `results/study/legacy/` or `results/analysis/legacy/` as corrected F2E.
 
 ---
@@ -166,6 +166,21 @@ Generated READMEs emit the `--experiment` flags used for the run. Partial offici
 
 ---
 
+### 2026-08-17 — Maze 255 / denser nested random (`*_opt`)
+
+**Folder:** [`2026-08-17-harder-opt/`](2026-08-17-harder-opt/)  
+**Input:** `study_maze_255_opt`, `study_random_64_dense_opt`, `study_random_128_dense_opt`; `--experiment` × 3 and `--allow-opt-subset`. Same seeds as the matching follow-up YAMLs. Pre-fix and five-stem `*_opt` CSVs kept.
+
+**Headline.** 210/210 solved, **0** cost mismatches. Maze 255: 26/30 F2F-fewer, Holm p ≈ 2.98e-08, median saving 3.8%. Nested density tests with `n_untied ≥ 10`: 64@40% (16/30), 64@45% (14 F2F-fewer, 1 F2E-fewer), 128@45% (11/30). Different seed than `study_random_64_opt`; do not pool.
+
+---
+
+### 2026-08-17 — Retire non-`_opt` follow-ups; official+follow-up mix refuse
+
+Non-`_opt` follow-up YAMLs moved to [`configs/followup/retired/`](../../../configs/followup/retired/). `load_config` refuses them. `--allow-opt-subset` is follow-up-only and does not mix the official five with extras. Cite maze 127 / nested 64@30% from `2026-08-17-reopen-opt`; maze 255 / dense nested from this `2026-08-17-harder-opt` folder.
+
+---
+
 ## Next experiment (not started)
 
-Maze 255 / denser nested random under reopen F2E (`--experiment`, and `--allow-opt-subset` if not the five official stems). Cache stays off. Late-stop remains Option C.
+Remaining follow-ups under reopen F2E: copy from `configs/followup/retired/`, new `*_opt` stems, `--allow-opt-subset` (not mixed with the five official stems). Maze 127 far/braid/timed, maze 255 braid, denser nested 64@50–52% and 128@45–50%. Cache stays off. Late-stop remains Option C.

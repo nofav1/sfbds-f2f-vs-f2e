@@ -19,7 +19,7 @@ Each analysis pass writes a **new folder**. Do not overwrite a previous run.
 python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir results/analysis/pair-bound/YYYY-MM-DD-short-slug
 ```
 
-Follow-up configs live under `configs/followup/`. Select a subset of CSVs with repeated `--experiment NAME`.
+Follow-up configs live under `configs/followup/` (`study_*_opt.yaml` only). Select a subset of CSVs with repeated `--experiment NAME` (plus `--allow-opt-subset` for a follow-up-only slice).
 
 That writes a generated `README.md` plus `paired.csv`, `summary.csv`, `stats.csv`, and plots inside that folder. Re-run after new study CSVs into a **new** slug; do not edit a generated analysis README by hand.
 

@@ -20,7 +20,7 @@ python -m sfbds_compare.analysis --input-dir results/study/legacy --out-dir resu
 ```
 
 - **New experiment or new analysis pass → new folder** under the matching formula directory. Never overwrite a previous slug.
-- Follow-up maps or configs → new YAMLs under `configs/followup/` (or `configs/study/`), new CSVs under `results/study/pair-bound/` (keep `legacy/`), then a new analysis folder under `pair-bound/`. Use `--experiment` to select a subset instead of mixing CSVs from both formula trees.
+- Follow-up maps or configs → new `*_opt` YAMLs under `configs/followup/` (copy seeds from [`configs/followup/retired/`](../../configs/followup/retired/) if needed), new CSVs under `results/study/pair-bound/` (keep `legacy/`), then a new analysis folder under `pair-bound/`. Use `--experiment` to select a subset; `--allow-opt-subset` is follow-up-only and does not mix the five official `*_opt` stems with extras.
 - Update this table and [`docs/research_log.md`](../../docs/research_log.md) when you add a run.
 
 ## Runs (legacy gap F2E)
@@ -45,3 +45,4 @@ Pre-fix snapshots (through `2026-08-17-cost-clean-plots`) use **NoReopen** pair-
 | [`pair-bound/2026-08-17-cost-clean-tests`](pair-bound/2026-08-17-cost-clean-tests/) | 2026-08-17 | same CSVs | Re-analysis: expansion tests drop `cost_mismatch` / A* disagreement. Maze 22/30 stays; 64@30% `n_untied` is 9 → p null. **Plots in this folder still include the 12 mismatches.** |
 | [`pair-bound/2026-08-17-cost-clean-plots`](pair-bound/2026-08-17-cost-clean-plots/) | 2026-08-17 | same CSVs | Same tables as cost-clean-tests; plots now omit `cost_mismatch` rows. Cite this folder for **NoReopen** figures. |
 | [`pair-bound/2026-08-17-reopen-opt`](pair-bound/2026-08-17-reopen-opt/) | 2026-08-17 | `study_*_opt` CSVs (`--experiment` × 5) | Official reopen F2E on the same seeds/queries. 270/270 solved, **0** cost mismatches. Maze 22/30; nested 64@30% now cost-clean with 13 F2F-fewer. |
+| [`pair-bound/2026-08-17-harder-opt`](pair-bound/2026-08-17-harder-opt/) | 2026-08-17 | maze 255 + nested 64/128 dense `_opt` (`--allow-opt-subset`) | Reopen F2E harder follow-up. 210/210 solved, **0** mismatches. Maze 255: 26/30 F2F-fewer. Nested 64@40/45% and 128@45% have `n_untied ≥ 10`. |

@@ -27,6 +27,21 @@ def refuse_frozen_legacy_output(output_dir: str | Path) -> None:
         )
 
 
+def refuse_stale_followup_config(path: str | Path, name: str) -> None:
+    """Non-``_opt`` follow-up YAMLs are retired; official F2E is reopen."""
+
+    parts = [p.lower() for p in Path(path).resolve().parts]
+    if "configs" not in parts or "followup" not in parts:
+        return
+    if name.endswith("_opt"):
+        return
+    raise ValueError(
+        f"refusing follow-up config {name!r} without _opt suffix; "
+        "official F2E is reopen; use the matching *_opt YAML "
+        "(retired non-_opt follow-ups are in configs/followup/retired/)"
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class QuerySpec:
     start: tuple[int, int]
@@ -260,8 +275,10 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
 
 
 def load_config(path: str | Path) -> ExperimentConfig:
-    text = Path(path).read_text(encoding="utf-8")
+    config_path = Path(path)
+    text = config_path.read_text(encoding="utf-8")
     data = yaml.safe_load(text)
     if not isinstance(data, Mapping):
         raise ValueError("config root must be a mapping")
+    refuse_stale_followup_config(config_path, str(data.get("name", "run")))
     return config_from_dict(data)
