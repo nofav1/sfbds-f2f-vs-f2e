@@ -3,6 +3,7 @@
 Living document for **what we ran, what we locked, what we concluded, and what to try next**. Update it when a decision is locked or an analysis folder is added. Do not paste full tables here — those live in each generated analysis README.
 
 - Analysis snapshots: [`results/analysis/README.md`](../results/analysis/README.md)
+- Pair-bound living notes: [`results/analysis/pair-bound/research_log.md`](../results/analysis/pair-bound/research_log.md)
 - Project definition (scope, Idea A/B): [`project_definition.md`](project_definition.md)
 - Locked pairing/stats plan: [`.cursor/plans/paired_analysis_workflow.plan.md`](../.cursor/plans/paired_analysis_workflow.plan.md)
 
@@ -10,16 +11,16 @@ Living document for **what we ran, what we locked, what we concluded, and what t
 
 | Kind | Where | Rule |
 | --- | --- | --- |
-| Raw study CSVs / JSON | `results/study/` | Keep old files. New configs get new stems. |
-| Analysis pass | `results/analysis/YYYY-MM-DD-short-slug/` | **New pass → new folder.** Never overwrite. |
-| This log | `docs/research_log.md` | Hand-edited. Record decisions and next questions. |
+| Raw study CSVs / JSON | `results/study/pair-bound/` (new) or `results/study/legacy/` (frozen gap F2E) | Keep old files. New configs get new stems. Never write new runs into `legacy/`. |
+| Analysis pass | `results/analysis/pair-bound/YYYY-MM-DD-short-slug/` (or `.../legacy/...` for gap re-analysis) | **New pass → new folder.** Never overwrite. Never mix formulas in one `--input-dir`. |
+| This log | `docs/research_log.md` | Hand-edited master log. Pair-bound-only notes: [`results/analysis/pair-bound/research_log.md`](../results/analysis/pair-bound/research_log.md). |
 | Generated tables | `<run>/README.md` | Machine-written. Do not edit by hand. |
 
 ```bash
-python -m sfbds_compare.analysis --input-dir results/study --out-dir results/analysis/YYYY-MM-DD-short-slug
+python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir results/analysis/pair-bound/YYYY-MM-DD-short-slug
 ```
 
-Follow-up experiments (new maps, densities, query lengths, cache settings) get **new YAML** under `configs/study/` (or a dated `configs/` subfolder), new CSVs, then a **new analysis folder**. Point `--input-dir` at all of `results/study` only if mixing old and new files is intentional.
+Follow-up experiments (new maps, densities, query lengths, cache settings) get **new YAML** under `configs/study/` (or a dated `configs/` subfolder), new CSVs under `results/study/pair-bound/`, then a **new analysis folder** under `results/analysis/pair-bound/`. Point `--input-dir` at `results/study/legacy` only when re-analyzing the frozen gap CSVs. Do not pass the parent `results/study/` (the glob is non-recursive and would mix formulas if it were not).
 
 ---
 
@@ -40,13 +41,14 @@ These are in force until we explicitly revise this section.
 - `ensure_connected_query` **once** on the densest map; reuse relocated S/G at lower densities. If the current pair is already connected, that component is tried first; otherwise every free component is tried (largest first), not only the largest blob.
 - Optional YAML `query_sample.skip_unconnected` (default false): if connect-once cannot place a pair at `min_manhattan`, skip that query instead of aborting. `query_index` may have gaps; realized n may be `< count`. Use only when the scientific plan is “accept fewer queries,” not as a silent default.
 - Skip ASCII visuals when `obstacle_densities` is set.
-- Independent `*_d10/d20/d30` CSVs (old non-nested sampling) may still sit in `results/study/`. They pair F2F vs F2E but **must not** enter nested `obstacle_count` tests, `overall_random`, or `saving_by_density.png`.
+- Independent `*_d10/d20/d30` CSVs (old non-nested sampling) may still sit in `results/study/legacy/`. They pair F2F vs F2E but **must not** enter nested `obstacle_count` tests, `overall_random`, or `saving_by_density.png`.
 - Optional YAML `maze_braid` in `[0, 1)` (maze only, default 0): after the perfect spanning tree, open that fraction of leftover inter-room walls. Same seed + queries as a `maze_braid: 0` run share endpoints; the braided map has extra openings.
 
 **Pairing and stats**
 
 - `family_id = experiment:generator_kind:h×w:seed:query_index`; `pair_id = family_id:map_hash`.
 - Solved pair = both SFBDS success and not timed out. Timeouts stay in `paired.csv` with null ratios; win % / means / tests use solved only.
+- **`cost_mismatch`** = F2F, F2E, or successful A* disagree on solution cost. Those rows stay in `paired.csv` but are excluded from Wilcoxon, sign, F2F-fewer / F2E-fewer / ties, expansion saving %, **and plots**.
 - Detour = solution cost / Manhattan, using **A* cost** when A* succeeded.
 - Saving % = `(F2E − F2F) / F2E × 100`. Primary test: two-sided Wilcoxon on `expansion_diff`, `zero_method="wilcox"`, exact if `n_untied ≤ 25`, **p = null if `n_untied < 10`**.
 - Do **not** stack nested densities as independent n. Wilcoxon for overall nested random = **one median `expansion_diff` per `family_id`**. Per-density tests stay uncollapsed and are keyed by **experiment × grid size × `obstacle_count`**. Holm for density is within one nested config, not across experiments or sizes. Table F2F-fewer / F2E-fewer / ties match `n_test` (collapsed families when nested). Skip `overall_random` Wilcoxon when the run mixes more than one nested experiment; use the per-experiment density table.
@@ -58,7 +60,7 @@ These are in force until we explicitly revise this section.
 **SFBDS-F2E pair bound (locked 2026-08-17)**
 
 - Official `sfbds_f2e` is `F2EPairLowerBound`: on unit grids, `lb = g_F+g_B` when `u=v`, else `lb = max(g_F+MD(u,G), g_B+MD(S,v), g_F+g_B+1)`. SFBDS still stores remaining cost via `h_gap = max(0, lb − g_F − g_B)`.
-- Every study CSV and analysis snapshot **before this lock** used the project-choice gap `max(|MD(x,G)−MD(y,G)|, |MD(S,x)−MD(S,y)|)` (now `LegacyFixedEndpointGapHeuristic`, tests only). Those results are **legacy F2E**, not the pair bound. Do not cite them as corrected F2E. Regenerate study CSVs only after approval — not in the 2026-08-17 code pass.
+- Every study CSV and analysis snapshot **before this lock** used the project-choice gap `max(|MD(x,G)−MD(y,G)|, |MD(S,x)−MD(S,y)|)` (now `LegacyFixedEndpointGapHeuristic`, tests only). Those results are **legacy F2E**, not the pair bound. They live under `results/study/legacy/`, `results/pilot/legacy/`, and `results/analysis/legacy/`. Do not cite them as corrected F2E. New pair-bound output goes to the matching `pair-bound/` folders. Regenerate study CSVs only after approval.
 
 ---
 
@@ -66,8 +68,8 @@ These are in force until we explicitly revise this section.
 
 ### 2026-08-14 — Baseline grid study (64 / 128)
 
-**Folder:** [`results/analysis/2026-08-14-baseline-study/`](../results/analysis/2026-08-14-baseline-study/)  
-**Input:** all CSVs then in `results/study/` (corridor 256/512, maze 63/127, open 64/128, nested random 64/128, plus leftover independent random `*_d10/d20/d30`).
+**Folder:** [`results/analysis/legacy/2026-08-14-baseline-study/`](../results/analysis/legacy/2026-08-14-baseline-study/)  
+**Input:** all CSVs then in `results/study/` (now `results/study/legacy/`; corridor 256/512, maze 63/127, open 64/128, nested random 64/128, plus leftover independent random `*_d10/d20/d30`).
 
 **What we asked.** On these grids, does F2F expand fewer pairs than F2E, and does that depend on map family, nested obstacle density, size, or detour?
 
@@ -100,8 +102,8 @@ These are in force until we explicitly revise this section.
 ### 2026-08-14 — Harder maze, denser nested random, maze timing
 
 **Folders:**
-- Expansions / density: [`results/analysis/2026-08-14-harder-followup/`](../results/analysis/2026-08-14-harder-followup/)
-- Runtime protocol: [`results/analysis/2026-08-14-maze-runtime/`](../results/analysis/2026-08-14-maze-runtime/)
+- Expansions / density: [`results/analysis/legacy/2026-08-14-harder-followup/`](../results/analysis/legacy/2026-08-14-harder-followup/)
+- Runtime protocol: [`results/analysis/legacy/2026-08-14-maze-runtime/`](../results/analysis/legacy/2026-08-14-maze-runtime/)
 
 **Configs (new stems; old CSVs kept):** [`configs/followup/`](../configs/followup/) — `study_maze_255.yaml`, `study_random_64_dense.yaml`, `study_maze_127_timed.yaml`.
 
@@ -126,7 +128,7 @@ These are in force until we explicitly revise this section.
 
 ### 2026-08-14 — Longer maze-127 queries and denser nested random
 
-**Folder:** [`results/analysis/2026-08-14-far-maze-and-dense-random/`](../results/analysis/2026-08-14-far-maze-and-dense-random/)
+**Folder:** [`results/analysis/legacy/2026-08-14-far-maze-and-dense-random/`](../results/analysis/legacy/2026-08-14-far-maze-and-dense-random/)
 
 **Configs:** [`configs/followup/study_maze_127_far.yaml`](../configs/followup/study_maze_127_far.yaml), [`study_random_64_d50.yaml`](../configs/followup/study_random_64_d50.yaml), [`study_random_128_dense.yaml`](../configs/followup/study_random_128_dense.yaml). Compared against existing `study_maze_127` (min_manhattan 60). Cache still off.
 
@@ -148,7 +150,7 @@ These are in force until we explicitly revise this section.
 
 ### 2026-08-14 — Braided maze 127 and denser nested random
 
-**Folder:** [`results/analysis/2026-08-14-braid-and-denser-nested/`](../results/analysis/2026-08-14-braid-and-denser-nested/)
+**Folder:** [`results/analysis/legacy/2026-08-14-braid-and-denser-nested/`](../results/analysis/legacy/2026-08-14-braid-and-denser-nested/)
 
 **Configs:** [`study_maze_127_braid.yaml`](../configs/followup/study_maze_127_braid.yaml) (`maze_braid: 0.5`, same seed/queries as `study_maze_127`), [`study_random_64_d52.yaml`](../configs/followup/study_random_64_d52.yaml), [`study_random_128_d45.yaml`](../configs/followup/study_random_128_d45.yaml).
 
@@ -170,7 +172,7 @@ These are in force until we explicitly revise this section.
 
 ### 2026-08-14 — Maze 255 braid and nested 128 @ 45–50% with `min_manhattan` 48
 
-**Folder:** [`results/analysis/2026-08-14-maze255-braid-and-128-md48/`](../results/analysis/2026-08-14-maze255-braid-and-128-md48/)
+**Folder:** [`results/analysis/legacy/2026-08-14-maze255-braid-and-128-md48/`](../results/analysis/legacy/2026-08-14-maze255-braid-and-128-md48/)
 
 **Configs:** [`study_maze_255_braid.yaml`](../configs/followup/study_maze_255_braid.yaml) (`maze_braid: 0.5`, same seed/queries as `study_maze_255`), [`study_random_128_d45_md48.yaml`](../configs/followup/study_random_128_d45_md48.yaml) (same densities and seed 221 as `study_random_128_d45`, `min_manhattan` 48, `skip_unconnected: true`). Compared against existing maze 127 / 127-braid / 255 and nested 128 d45 (md 28). Cache still off.
 
@@ -192,8 +194,8 @@ These are in force until we explicitly revise this section.
 
 ### 2026-08-14 — Stats/protocol fixes (density grouping, connect-once, repeats)
 
-**Folder:** [`results/analysis/2026-08-14-density-by-experiment/`](../results/analysis/2026-08-14-density-by-experiment/)  
-**Input:** same experiment subset as [`2026-08-14-maze255-braid-and-128-md48`](../results/analysis/2026-08-14-maze255-braid-and-128-md48/) (old snapshot kept). No new study CSVs.
+**Folder:** [`results/analysis/legacy/2026-08-14-density-by-experiment/`](../results/analysis/legacy/2026-08-14-density-by-experiment/)  
+**Input:** same experiment subset as [`2026-08-14-maze255-braid-and-128-md48`](../results/analysis/legacy/2026-08-14-maze255-braid-and-128-md48/) (old snapshot kept). No new study CSVs.
 
 **What changed in code (locked methodology revised above).**
 
@@ -203,7 +205,7 @@ These are in force until we explicitly revise this section.
 
 **Headline after unpooling.** Maze 127/255 ± braid counts are unchanged. Nested 128 @ 45–50% **md 28** (30 families) still has `n_untied ≥ 10` at all three densities. Nested 128 **md 48** (17 families) stays `n_untied` 6–8 at every density → p null. That is the md-48 result; do not read a pooled n=47 test. The overall nested-random row in that README still stacks md-28 + md-48 families — do not cite its p-value.
 
-Display/CLI leftovers from the same review (no new study CSVs, no new analysis slug): `map_family=random` Wilcoxon runs when the bucket is independent-only; table F2F-fewer counts follow `n_test`; `--out-dir` refuses the analysis index and a non-empty slug unless `--force`; maze YAML `obstacle_density` is rejected. Leftover `results/analysis/paired.csv` at the index root was removed. Read density from [`2026-08-14-density-by-experiment`](../results/analysis/2026-08-14-density-by-experiment/).
+Display/CLI leftovers from the same review (no new study CSVs, no new analysis slug): `map_family=random` Wilcoxon runs when the bucket is independent-only; table F2F-fewer counts follow `n_test`; `--out-dir` refuses the analysis index and a non-empty slug unless `--force`; maze YAML `obstacle_density` is rejected. Leftover `results/analysis/paired.csv` at the index root was removed. Read density from [`2026-08-14-density-by-experiment`](../results/analysis/legacy/2026-08-14-density-by-experiment/).
 
 ---
 
@@ -230,11 +232,81 @@ Code: `F2EPairLowerBound.lower_bound` is the source of truth; `evaluate` returns
 
 ---
 
+### 2026-08-17 — Split legacy vs pair-bound result folders
+
+Moved frozen gap-F2E artifacts so they cannot mix with official pair-bound output. Analysis `--input-dir` is non-recursive.
+
+| Tree | Legacy (gap) | New (pair bound) |
+| --- | --- | --- |
+| Study CSVs | `results/study/legacy/` | `results/study/pair-bound/` |
+| Pilots | `results/pilot/legacy/` | `results/pilot/pair-bound/` |
+| Analysis | `results/analysis/legacy/<slug>/` | `results/analysis/pair-bound/<slug>/` |
+
+Study / follow-up / pilot YAML `output_dir` now points at the pair-bound folders. Do not write new runs into `legacy/`. Do not pass `--input-dir results/study` (parent).
+
+---
+
+### 2026-08-17 — Pair-bound baseline study (64 / 128 matrix)
+
+**Folder:** [`results/analysis/pair-bound/2026-08-17-baseline-study/`](../results/analysis/pair-bound/2026-08-17-baseline-study/)  
+**Log:** [`results/analysis/pair-bound/research_log.md`](../results/analysis/pair-bound/research_log.md)  
+**Input:** `configs/study/` → `results/study/pair-bound/` (`study_corridor_512`, `study_maze_127`, `study_open_128`, `study_random_64`, `study_random_128`). 810/810 success, 0 timeouts.
+
+**What we asked.** Same question as the 2026-08-14 baseline, with official pair-bound F2E instead of the gap.
+
+**Headline (see generated README for tables).**
+
+- **270** paired instances, all solved, **0** timeouts. (Legacy baseline was 540 because it also loaded leftover smaller/independent CSVs.)
+- **Open and corridor:** all ties.
+- **Maze 127:** 22/30 F2F-fewer (0 F2E-fewer), Holm p ≈ 4.8e-07, rank-biserial 1.00. Costs agree with A*. Legacy gap on this config was 21/30.
+- **Nested random:** the published 64×64 @ ~30% row in this snapshot (13 F2F-fewer, Holm p ≈ 0.0002) **includes 4 cost-mismatch maps**. Do not cite that p-value. See the cost-clean re-analysis below.
+- **12 cost mismatches** on nested random: F2E cost above A* and F2F. Maze/open/corridor are clean.
+
+**Decisions.** Maze expansion result is still the claim to keep, and it is cost-clean. Do not cite nested-random p-values from this snapshot. Do not cite legacy analysis READMEs as pair-bound results.
+
+---
+
+### 2026-08-17 — Cost-clean expansion tests and F2E mismatch diagnosis
+
+**Folder:** [`results/analysis/pair-bound/2026-08-17-cost-clean-tests/`](../results/analysis/pair-bound/2026-08-17-cost-clean-tests/)  
+**Input:** same `results/study/pair-bound/` CSVs (stats-code fix; old snapshot kept).
+
+**What changed.** `cost_mismatch` is F2F / F2E / successful A* disagreement. Those rows stay in `paired.csv` but are dropped from Wilcoxon, sign, and F2F-fewer counts.
+
+**Headline.**
+
+- **Maze 127 unchanged:** 22/30 F2F-fewer, Holm p ≈ 4.8e-07, 0 mismatches.
+- **Nested 64 @ 30% cost-clean:** `n_untied = 9` (was 13). p is **null**. 9 F2F-fewer among the cost-clean maps; do not treat this as a confirmatory density test.
+- No nested-density group now has `n_untied ≥ 10`.
+- Generated README skip sentence for pooled random is “collapses nested densities,” not a false independent-file mix.
+
+**Diagnosis (study_random_64 q=20, 1228 obstacles, hash `d604ed0b69115ce9`).** A* and F2F cost 53; F2E cost 57 (450 vs 2881 pairs). F2E discarded **230** better-`g` CLOSED pairs. Cause is **NoReopen + remaining-cost adapter**, not a swapped-`g` wiring bug. A strict xfail locks F2E=A* on this map until reopen or a consistent adapter is locked.
+
+**Decisions.** Keep maze. Do not cite nested-random expansion p-values until F2E is solution-optimal vs A* or we pre-register a cost-clean protocol with `n_untied ≥ 10`. Do not cite plots in this folder as mismatch-free.
+
+---
+
+### 2026-08-17 — Cost-clean plots, diagnosis test, and legacy write refuse
+
+**Folder:** [`results/analysis/pair-bound/2026-08-17-cost-clean-plots/`](../results/analysis/pair-bound/2026-08-17-cost-clean-plots/)  
+**Input:** same `results/study/pair-bound/` CSVs (plot filter; previous snapshots kept).
+
+**What changed.**
+
+1. Plots use the same cost-clean rows as Wilcoxon (`expansion_test_rows`). Cite this folder’s figures, not `2026-08-17-cost-clean-tests`.
+2. Diagnosis test no longer asserts F2E cost 57; the strict xfail remains the optimality lock. A* cost 53, F2F matches A*, fingerprint, and better-`g` discard count stay.
+3. Runner / `load_config` refuse `output_dir` under `results/*/legacy/`. Old-stem pilots live in `configs/pilot/retired/` and are not picked up by `--config-dir configs/pilot`.
+
+**Headline.** Tables unchanged: maze 22/30; nested 64@30% `n_untied=9` → p null.
+
+---
+
 ## Next experiment (not started)
 
-Cache stays off until instructor/scope lock. Nothing else is queued until we pick one of:
+Cache stays off until instructor/scope lock. Pair-bound living notes: [`results/analysis/pair-bound/research_log.md`](../results/analysis/pair-bound/research_log.md).
 
-1. **More queries at nested 128 @ 45–50% md 48** (larger `query_sample.count` + `skip_unconnected`) if we want `n_untied ≥ 10` at the original Manhattan floor. Do not lower md again.
-2. **Cache ablation** — only after instructor/scope lock; strongest instance sets so far are perfect maze 255 and nested 128 @ 45–50% (md 28).
+1. **Fix F2E suboptimality** (reopen on better CLOSED `g`, or a consistent remaining-cost mapping) so the xfail on q=20 can be removed.
+2. **Maze 255 / denser nested random** under pair-bound, only after costs match A* or cost-clean `n_untied ≥ 10` is pre-registered.
+3. **Cache ablation** — only after instructor/scope lock.
 
-When we choose, add a YAML under `configs/followup/`, run into `results/study/` without deleting old CSVs, analyze into `results/analysis/YYYY-MM-DD-<slug>/` with `--experiment` filters, and add a row here plus in [`results/analysis/README.md`](../results/analysis/README.md).
+When we choose, add a YAML under `configs/followup/` if needed, run into `results/study/pair-bound/` without deleting `results/study/legacy/`, analyze into `results/analysis/pair-bound/YYYY-MM-DD-<slug>/` with `--experiment` filters, and add a row here plus in [`results/analysis/README.md`](../results/analysis/README.md) and the pair-bound log.
