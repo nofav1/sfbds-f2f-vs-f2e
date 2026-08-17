@@ -5,7 +5,7 @@ algorithms:
   - sfbds_f2e
 seed: 212
 timeout_sec: 60
-output_dir: results/study
+output_dir: results/study/pair-bound
 generator:
   kind: random_obstacles
   height: 64

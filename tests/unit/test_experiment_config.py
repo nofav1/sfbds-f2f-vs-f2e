@@ -240,7 +240,7 @@ def test_load_study_yaml_configs() -> None:
     for path in paths:
         spec = _STUDY_SPECS[path.name]
         cfg = load_config(path)
-        assert cfg.output_dir == "results/study"
+        assert cfg.output_dir == "results/study/pair-bound"
         assert set(cfg.algorithms) == {"astar", "sfbds_f2f", "sfbds_f2e"}
         assert cfg.timeout_sec is not None
         assert cfg.generator.kind == spec["kind"]
@@ -431,7 +431,7 @@ def test_load_followup_yaml_configs() -> None:
     for path in paths:
         spec = _FOLLOWUP_SPECS[path.name]
         cfg = load_config(path)
-        assert cfg.output_dir == "results/study"
+        assert cfg.output_dir == "results/study/pair-bound"
         assert set(cfg.algorithms) == {"astar", "sfbds_f2f", "sfbds_f2e"}
         assert cfg.generator.kind == spec["kind"]
         assert cfg.generator.height == spec["height"]
@@ -443,5 +443,68 @@ def test_load_followup_yaml_configs() -> None:
         assert cfg.min_manhattan == spec["min_manhattan"]
         assert cfg.skip_unconnected == spec.get("skip_unconnected", False)
         assert len(cfg.queries) == spec["count"]
+
+
+def test_refuses_frozen_legacy_output_dir() -> None:
+    from sfbds_compare.experiments.config import refuse_frozen_legacy_output
+    from sfbds_compare.experiments.runner import export_records
+
+    refuse_frozen_legacy_output("results/pilot/pair-bound")
+    refuse_frozen_legacy_output("results/study/pair-bound")
+    with pytest.raises(ValueError, match="legacy"):
+        refuse_frozen_legacy_output("results/pilot/legacy")
+    with pytest.raises(ValueError, match="legacy"):
+        refuse_frozen_legacy_output("results/study/legacy")
+    with pytest.raises(ValueError, match="legacy"):
+        config_from_dict(
+            {
+                "name": "t",
+                "algorithm": "astar",
+                "seed": 1,
+                "generator": {"kind": "open", "height": 2, "width": 2},
+                "queries": [{"start": [0, 0], "goal": [1, 1]}],
+                "output_dir": "results/pilot/legacy",
+            }
+        )
+    cfg = config_from_dict(
+        {
+            "name": "t",
+            "algorithm": "astar",
+            "seed": 1,
+            "generator": {"kind": "open", "height": 2, "width": 2},
+            "queries": [{"start": [0, 0], "goal": [1, 1]}],
+            "output_dir": "results/pilot/pair-bound",
+        }
+    )
+    from dataclasses import replace
+
+    with pytest.raises(ValueError, match="legacy"):
+        export_records(replace(cfg, output_dir="results/study/legacy"), [])
+
+
+def test_active_pilot_yamls_are_pair_bound_only() -> None:
+    pilot_dir = Path(__file__).resolve().parents[2] / "configs" / "pilot"
+    names = {p.name for p in pilot_dir.glob("*.yaml")}
+    assert names == {
+        "pilot_corridor_lb_f2e.yaml",
+        "pilot_maze_lb_f2e.yaml",
+        "pilot_open_lb_f2e.yaml",
+        "pilot_random_lb_f2e.yaml",
+    }
+    for name in names:
+        cfg = load_config(pilot_dir / name)
+        assert cfg.output_dir == "results/pilot/pair-bound"
+    retired = {
+        p.name for p in (pilot_dir / "retired").glob("pilot_*.yaml")
+    }
+    assert retired == {
+        "pilot_corridor.yaml",
+        "pilot_maze.yaml",
+        "pilot_open.yaml",
+        "pilot_random.yaml",
+    }
+    for path in sorted((pilot_dir / "retired").glob("pilot_*.yaml")):
+        with pytest.raises(ValueError, match="legacy"):
+            load_config(path)
 
 

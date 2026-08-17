@@ -6,7 +6,7 @@ algorithms:
 seed: 140
 timeout_sec: 60
 runtime_repeats: 5
-output_dir: results/study
+output_dir: results/study/pair-bound
 generator:
   kind: maze
   height: 127

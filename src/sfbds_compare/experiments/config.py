@@ -13,6 +13,20 @@ ALGORITHMS = frozenset({"astar", "sfbds_f2f", "sfbds_f2e"})
 GENERATOR_KINDS = frozenset({"open", "random_obstacles", "corridor", "maze"})
 
 
+def refuse_frozen_legacy_output(output_dir: str | Path) -> None:
+    """Block writes under ``results/.../legacy`` (frozen gap-F2E trees)."""
+
+    parts = [p.lower() for p in Path(output_dir).parts]
+    if "results" not in parts:
+        return
+    rest = parts[parts.index("results") + 1 :]
+    if "legacy" in rest:
+        raise ValueError(
+            f"refusing to write into frozen legacy folder {output_dir!r}; "
+            "use results/study/pair-bound or results/pilot/pair-bound"
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class QuerySpec:
     start: tuple[int, int]
@@ -228,6 +242,8 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
     else:
         raise ValueError("config must set queries or query_sample")
     _validate_queries(queries, generator)
+    output_dir = str(data.get("output_dir", "results"))
+    refuse_frozen_legacy_output(output_dir)
 
     return ExperimentConfig(
         name=str(data.get("name", "run")),
@@ -235,7 +251,7 @@ def config_from_dict(data: Mapping[str, Any]) -> ExperimentConfig:
         seed=seed,
         generator=generator,
         queries=queries,
-        output_dir=str(data.get("output_dir", "results")),
+        output_dir=output_dir,
         timeout_sec=timeout_sec,
         min_manhattan=min_manhattan,
         runtime_repeats=runtime_repeats,

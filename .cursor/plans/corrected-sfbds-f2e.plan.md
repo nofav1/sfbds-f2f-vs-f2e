@@ -19,7 +19,7 @@ isProject: true
 
 # Corrected SFBDS F2E
 
-Do not overwrite [`results/study/`](results/study/) or existing [`results/pilot/`](results/pilot/) filenames. Do not run the 64/128 study matrix.
+Do not overwrite [`results/study/legacy/`](results/study/legacy/) or existing [`results/pilot/legacy/`](results/pilot/legacy/) filenames. Do not run the 64/128 study matrix. New pair-bound output goes to `results/study/pair-bound/` and `results/pilot/pair-bound/`.
 
 ## What is wrong today
 
@@ -107,7 +107,7 @@ flowchart LR
 ## Do not
 
 - Run or overwrite the study matrix; do not treat existing analysis READMEs as corrected-F2E results.
-- Put analysis CSVs at `results/analysis/` root.
+- Put analysis CSVs at `results/analysis/` root (or at `results/analysis/legacy/` / `results/analysis/pair-bound/` without a dated slug).
 
 ## Judge (2026-08-17)
 

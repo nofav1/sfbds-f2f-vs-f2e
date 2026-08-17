@@ -1,5 +1,5 @@
 ---
-description: Keep results/study and results/analysis in snapshot folders; never overwrite a previous run
+description: Keep results/study and results/analysis in formula-specific snapshot folders; never overwrite a previous run
 alwaysApply: true
 ---
 
@@ -7,15 +7,20 @@ alwaysApply: true
 
 Raw study output and analysis snapshots are append-only. Index: [`results/analysis/README.md`](results/analysis/README.md). Notes: [`docs/research_log.md`](docs/research_log.md).
 
+**Do not mix F2E formulas.** Gap-heuristic files stay under `legacy/`. Official pair-bound files stay under `pair-bound/`.
+
 **Study CSVs / JSON**
 
-- Write to `results/study/` (or `results/pilot/` for pilots)
+- Write new runs to `results/study/pair-bound/` (or `results/pilot/pair-bound/` for pilots)
+- Frozen gap-F2E CSVs live in `results/study/legacy/` and `results/pilot/legacy/` — do not write new runs there
 - New config → new filename stem. Do not delete or overwrite older CSVs
 
 **Analysis**
 
-- Each pass is `results/analysis/YYYY-MM-DD-short-slug/`
-- `--out-dir` must be that run folder, never `results/analysis/`
+- Pair-bound pass: `results/analysis/pair-bound/YYYY-MM-DD-short-slug/`
+- Legacy (gap) re-analysis: `results/analysis/legacy/YYYY-MM-DD-short-slug/`
+- `--out-dir` must be that run folder, never `results/analysis/`, `results/analysis/legacy/`, or `results/analysis/pair-bound/`
+- `--input-dir` must be one formula folder (`results/study/pair-bound` or `results/study/legacy`), never the parent `results/study/`
 - New experiment, re-analysis, or stats-code fix → **new slug**. Never overwrite a previous folder
 - Do not place `paired.csv`, plots, or generated READMEs in `results/analysis/` itself
 - Do not edit a generated `<run>/README.md` by hand (except fixing a relocated `--out-dir` line)
@@ -25,7 +30,7 @@ Raw study output and analysis snapshots are append-only. Index: [`results/analys
 python -m sfbds_compare.analysis --input-dir results/study --out-dir results/analysis
 
 # GOOD
-python -m sfbds_compare.analysis --input-dir results/study --out-dir results/analysis/2026-08-20-harder-maze
+python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir results/analysis/pair-bound/2026-08-20-harder-maze
 ```
 
 When you add a run folder, add a row to `results/analysis/README.md` and a timeline entry in `docs/research_log.md`.

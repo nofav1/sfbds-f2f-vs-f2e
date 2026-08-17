@@ -1,4 +1,4 @@
-"""python -m sfbds_compare.analysis --input-dir results/study --out-dir results/analysis/<run-name>"""
+"""python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir results/analysis/pair-bound/<run-name>"""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ def _refuse_out_dir(path: Path, *, force: bool) -> Optional[str]:
     if _is_analysis_index_dir(path):
         return (
             f"--out-dir {path} is the analysis index; use a dated slug "
-            f"(results/analysis/YYYY-MM-DD-short-slug)"
+            f"(results/analysis/pair-bound/YYYY-MM-DD-short-slug)"
         )
     if path.exists() and any(path.iterdir()) and not force:
         return (
@@ -62,7 +62,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument(
         "--out-dir",
         required=True,
-        help="Run folder for this analysis pass (e.g. results/analysis/YYYY-MM-DD-slug). Do not reuse a previous folder.",
+        help="Run folder for this analysis pass (e.g. results/analysis/pair-bound/YYYY-MM-DD-slug). Do not reuse a previous folder.",
     )
     parser.add_argument(
         "--experiment",
@@ -88,7 +88,16 @@ def main(argv: Optional[list[str]] = None) -> int:
         allow = set(args.experiments)
         raw = [r for r in raw if r.get("experiment") in allow]
     if not raw:
-        print(f"no CSV rows in {args.input_dir}", file=sys.stderr)
+        hint = f"no CSV rows in {args.input_dir}"
+        root = Path(args.input_dir)
+        if root.is_dir():
+            subdirs = [p.name for p in sorted(root.iterdir()) if p.is_dir()]
+            if subdirs:
+                hint += (
+                    f" (non-recursive glob; pass one subdirectory as --input-dir, "
+                    f"not a mix: {', '.join(subdirs)})"
+                )
+        print(hint, file=sys.stderr)
         return 1
     paired = pair_rows(raw)
     summary = summarize(paired)

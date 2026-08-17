@@ -1,3 +1,5 @@
+# Historical gap-F2E stem. Not runnable: output_dir is results/pilot/legacy
+# and the runner refuses writes there. Live pilots: configs/pilot/*_lb_f2e.yaml
 name: pilot_maze
 algorithms:
   - astar
@@ -5,7 +7,7 @@ algorithms:
   - sfbds_f2e
 seed: 30
 timeout_sec: 10
-output_dir: results/pilot
+output_dir: results/pilot/legacy
 generator:
   kind: maze
   height: 15

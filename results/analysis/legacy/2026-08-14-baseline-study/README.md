@@ -3,7 +3,7 @@
 This file is **generated** by `python -m sfbds_compare.analysis`. Re-run analysis to refresh it. Do not edit by hand.
 
 ```bash
-python -m sfbds_compare.analysis --input-dir results/study --out-dir results/analysis/2026-08-14-baseline-study
+python -m sfbds_compare.analysis --input-dir results/study/legacy --out-dir results/analysis/legacy/2026-08-14-baseline-study
 ```
 
 ## Headline

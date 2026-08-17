@@ -5,7 +5,7 @@ algorithms:
   - sfbds_f2e
 seed: 40
 timeout_sec: 5
-output_dir: results/pilot
+output_dir: results/pilot/pair-bound
 generator:
   kind: corridor
   height: 1

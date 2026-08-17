@@ -3,17 +3,17 @@
 This file is **generated** by `python -m sfbds_compare.analysis`. Re-run analysis to refresh it. Do not edit by hand.
 
 ```bash
-python -m sfbds_compare.analysis --input-dir results/study --out-dir results/analysis/<run-name>
+python -m sfbds_compare.analysis --input-dir results/study/legacy --out-dir results/analysis/legacy/<run-name>
 ```
 
 ## Headline
 
-- **Maze:** F2F expanded fewer pairs on 69/120 solved maps (57.5%); Holm p=5.21e-13.
-- **Random (all files):** 141 solved pairs; 68 F2F-fewer, 0 F2E-fewer, 73 ties. Wilcoxon is skipped on this pooled group; use nested density rows below.
+- **Maze:** F2F expanded fewer pairs on 32/60 solved maps (53.3%); Holm p=7.95e-07.
+- **Random (all files):** 180 solved pairs; 68 F2F-fewer, 1 F2E-fewer, 111 ties. Wilcoxon is skipped on this pooled group; use nested density rows below.
 - **Nested density tests with n_untied ≥ 10:** obstacle_count {7372, 7781, 8191}. Other density levels had too many ties for a p-value.
-- **Overall nested random:** 141 maps from 47 families (median expansion_diff per family). Untied=24.
+- **Overall nested random:** 180 maps from 60 families (median expansion_diff per family). Untied=24.
 
-Coverage of this run: **261** paired instances, **261** solved, **0** timed out, **141** nested-density rows, map families maze, random. Cost mismatches (F2F vs F2E solution cost): **0**.
+Coverage of this run: **240** paired instances, **240** solved, **0** timed out, **180** nested-density rows, map families maze, random. Cost mismatches (F2F vs F2E solution cost): **0**.
 
 ## What the files are
 
@@ -44,17 +44,15 @@ Coverage of this run: **261** paired instances, **261** solved, **0** timed out,
 | --- | --- | --- | --- |
 | study_maze_127 | 30 | maze | no |
 | study_maze_127_braid | 30 | maze | no |
-| study_maze_255 | 30 | maze | no |
-| study_maze_255_braid | 30 | maze | no |
 | study_random_128_d45 | 90 | random | yes (density-eligible) |
-| study_random_128_d45_md48 | 51 | random | yes (density-eligible) |
+| study_random_64_d52 | 90 | random | yes (density-eligible) |
 
 ## Map family
 
 | group | n_solved | n_test | F2F fewer | F2E fewer | ties | median saving % | p (Holm if planned) | rank-biserial | read as |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| maze | 120 | 120 | 69 | 0 | 51 | 0.3% | 5.21e-13 | 1.00 | F2F fewer expansions; p=5.21e-13 |
-| random | 141 | 47 | 68 | 0 | 73 | 0.0% | null | — | tests skipped (see note) |
+| maze | 60 | 60 | 32 | 0 | 28 | 0.2% | 7.95e-07 | 1.00 | F2F fewer expansions; p=7.95e-07 |
+| random | 180 | 60 | 68 | 1 | 111 | 0.0% | null | — | tests skipped (see note) |
 
 Pooled `random` mixes nested and independent files, so tests are skipped there on purpose.
 
@@ -62,23 +60,26 @@ Pooled `random` mixes nested and independent files, so tests are skipped there o
 
 | group | n_solved | n_test | F2F fewer | F2E fewer | ties | median saving % | p (Holm if planned) | rank-biserial | read as |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 7372 obstacles (~0.45 on 128×128) | 47 | 47 | 19 | 0 | 28 | 0.0% | 3.81e-06 | 1.00 | F2F fewer expansions; p=3.81e-06 |
-| 7781 obstacles (~0.47 on 128×128) | 47 | 47 | 24 | 0 | 23 | 1.2% | 2.38e-07 | 1.00 | F2F fewer expansions; p=1.19e-07 |
-| 8191 obstacles (~0.50 on 128×128) | 47 | 47 | 25 | 0 | 22 | 1.2% | 1.79e-07 | 1.00 | F2F fewer expansions; p=5.96e-08 |
+| 2047 obstacles (~0.50 on 64×64) | 30 | 30 | 7 | 0 | 23 | 0.0% | null | 1.00 | p null (too few untied pairs) |
+| 2088 obstacles (~0.51 on 64×64) | 30 | 30 | 7 | 0 | 23 | 0.0% | null | 1.00 | p null (too few untied pairs) |
+| 2129 obstacles (~0.52 on 64×64) | 30 | 30 | 7 | 1 | 22 | 0.0% | null | 0.94 | p null (too few untied pairs) |
+| 7372 obstacles (~0.45 on 128×128) | 30 | 30 | 13 | 0 | 17 | 0.0% | 0.0002 | 1.00 | F2F fewer expansions; p=0.0002 |
+| 7781 obstacles (~0.47 on 128×128) | 30 | 30 | 17 | 0 | 13 | 3.3% | 4.58e-05 | 1.00 | F2F fewer expansions; p=1.53e-05 |
+| 8191 obstacles (~0.50 on 128×128) | 30 | 30 | 17 | 0 | 13 | 3.4% | 4.58e-05 | 1.00 | F2F fewer expansions; p=1.53e-05 |
 
 ### Overall nested random (one median per family)
 
 | group | n_solved | n_test | F2F fewer | F2E fewer | ties | median saving % | p (Holm if planned) | rank-biserial | read as |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| nested random families | 141 | 47 | 68 | 0 | 73 | 0.0% | 1.19e-07 | 1.00 | F2F fewer expansions; p=1.19e-07 |
+| nested random families | 180 | 60 | 68 | 1 | 111 | 0.0% | 1.19e-07 | 1.00 | F2F fewer expansions; p=1.19e-07 |
 
 ## Size
 
 | group | n_solved | n_test | F2F fewer | F2E fewer | ties | median saving % | p (Holm if planned) | rank-biserial | read as |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 127 | 60 | 60 | 32 | 0 | 28 | 0.2% | 7.95e-07 | 1.00 | F2F fewer expansions; p=7.95e-07 |
-| 128 | 141 | 47 | 68 | 0 | 73 | 0.0% | 3.42e-07 | 1.00 | F2F fewer expansions; p=1.19e-07 |
-| 255 | 60 | 60 | 37 | 0 | 23 | 0.3% | 3.42e-07 | 1.00 | F2F fewer expansions; p=1.14e-07 |
+| 127 | 60 | 60 | 32 | 0 | 28 | 0.2% | 1.59e-06 | 1.00 | F2F fewer expansions; p=7.95e-07 |
+| 128 | 90 | 30 | 47 | 0 | 43 | 1.8% | 1.53e-05 | 1.00 | F2F fewer expansions; p=1.53e-05 |
+| 64 | 90 | 30 | 21 | 1 | 68 | 0.0% | null | 1.00 | p null (too few untied pairs) |
 
 Size groups that mix nested random maps collapse `family_id` before testing (`n_test` < `n_solved`).
 
@@ -88,9 +89,9 @@ Only maze pairs where F2F and F2E **already differ in expansions**. Do not treat
 
 These rows are **exploratory**. Expansions remain the primary claim; runtime is noisy. `runtime_ratio` is F2F / F2E (values **< 1** mean F2F was faster).
 
-- Untied maze pairs with both times: **69**
-- F2F faster wall-clock: **55**; F2E faster: **14**; equal: **0**
-- Median runtime_ratio: **0.942**; mean: **0.939**
+- Untied maze pairs with both times: **32**
+- F2F faster wall-clock: **26**; F2E faster: **6**; equal: **0**
+- Median runtime_ratio: **0.929**; mean: **0.897**
 
 ## Detour buckets (exploratory)
 
@@ -98,7 +99,7 @@ Detour = solution cost / Manhattan (A* cost when A* succeeded). Not Holm-adjuste
 
 | group | n_solved | n_test | F2F fewer | F2E fewer | ties | median saving % | p (Holm if planned) | rank-biserial | read as |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [1, 1.1) | 91 | 65 | 28 | 0 | 63 | 0.0% | 1.91e-06 | 1.00 | F2F fewer expansions; p=1.91e-06 |
-| [1.1, 1.5) | 101 | 43 | 59 | 0 | 42 | 3.8% | 5.59e-06 | 1.00 | F2F fewer expansions; p=5.59e-06 |
-| [1.5, 2) | 9 | 4 | 3 | 0 | 6 | 0.0% | null | 1.00 | p null (too few untied pairs) |
-| [2, inf) | 60 | 60 | 47 | 0 | 13 | 0.6% | 1.42e-14 | 1.00 | F2F fewer expansions; p=1.42e-14 |
+| [1, 1.1) | 92 | 47 | 21 | 0 | 71 | 0.0% | 0.0005 | 1.00 | F2F fewer expansions; p=0.0005 |
+| [1.1, 1.5) | 108 | 42 | 57 | 1 | 50 | 1.9% | 1.19e-07 | 1.00 | F2F fewer expansions; p=1.19e-07 |
+| [1.5, 2) | 7 | 3 | 1 | 0 | 6 | 0.0% | null | 1.00 | p null (too few untied pairs) |
+| [2, inf) | 33 | 31 | 21 | 0 | 12 | 0.3% | 9.54e-07 | 1.00 | F2F fewer expansions; p=9.54e-07 |

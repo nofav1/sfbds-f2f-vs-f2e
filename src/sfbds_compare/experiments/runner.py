@@ -13,7 +13,11 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from sfbds_compare.domain.grid import GridProblem, GridState
-from sfbds_compare.experiments.config import ExperimentConfig, load_config
+from sfbds_compare.experiments.config import (
+    ExperimentConfig,
+    load_config,
+    refuse_frozen_legacy_output,
+)
 from sfbds_compare.experiments.export import write_csv, write_json
 from sfbds_compare.experiments.generators import (
     build_problem,
@@ -443,6 +447,7 @@ def run_experiment_with_frames(
 def export_records(
     config: ExperimentConfig, records: list[RunRecord]
 ) -> tuple[Path, Path]:
+    refuse_frozen_legacy_output(config.output_dir)
     out_dir = Path(config.output_dir)
     stem = config.name
     rows = [r.to_dict() for r in records]

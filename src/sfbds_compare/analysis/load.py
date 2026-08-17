@@ -102,7 +102,11 @@ def coerce_raw_row(row: dict[str, str]) -> dict[str, Any]:
 
 
 def load_raw_csvs(input_dir: str | Path) -> list[dict[str, Any]]:
-    """Read raw study ``*.csv`` files in ``input_dir`` (skips empty/analysis files)."""
+    """Read raw study ``*.csv`` files in ``input_dir`` (skips empty/analysis files).
+
+    Non-recursive: pass ``results/study/pair-bound`` or ``results/study/legacy``,
+    never the parent ``results/study`` folder.
+    """
 
     root = Path(input_dir)
     rows: list[dict[str, Any]] = []

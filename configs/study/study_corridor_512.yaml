@@ -5,7 +5,7 @@ algorithms:
   - sfbds_f2e
 seed: 150
 timeout_sec: 30
-output_dir: results/study
+output_dir: results/study/pair-bound
 generator:
   kind: corridor
   height: 1
