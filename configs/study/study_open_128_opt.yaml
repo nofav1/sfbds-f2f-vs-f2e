@@ -1,0 +1,17 @@
+# Official reopen F2E rerun of study_open_128 (same seed/queries).
+# Writes study_open_128_opt.csv; do not overwrite study_open_128.csv.
+name: study_open_128_opt
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 100
+timeout_sec: 60
+output_dir: results/study/pair-bound
+generator:
+  kind: open
+  height: 128
+  width: 128
+query_sample:
+  count: 30
+  min_manhattan: 64

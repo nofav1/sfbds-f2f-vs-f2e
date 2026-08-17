@@ -1,0 +1,17 @@
+# Official reopen F2E rerun of study_corridor_512 (same seed/queries).
+# Writes study_corridor_512_opt.csv; do not overwrite study_corridor_512.csv.
+name: study_corridor_512_opt
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 150
+timeout_sec: 30
+output_dir: results/study/pair-bound
+generator:
+  kind: corridor
+  height: 1
+  width: 512
+query_sample:
+  count: 30
+  min_manhattan: 128

@@ -261,9 +261,38 @@ def _pooled_random_skip_sentence(summary: Sequence[dict[str, Any]]) -> str:
     return ""
 
 
+def _cli_path(value: str | Path | None, default: str) -> str:
+    if value is None:
+        return default
+    return Path(value).as_posix()
+
+
+def format_analysis_command(
+    *,
+    input_dir: str | Path | None = None,
+    out_dir: str | Path | None = None,
+    experiments: Sequence[str] | None = None,
+) -> str:
+    """Reproduce the analysis CLI for this run."""
+
+    parts = [
+        "python -m sfbds_compare.analysis",
+        f"--input-dir {_cli_path(input_dir, 'results/study/pair-bound')}",
+        f"--out-dir {_cli_path(out_dir, 'results/analysis/pair-bound/<run-name>')}",
+    ]
+    if experiments:
+        for name in experiments:
+            parts.append(f"--experiment {name}")
+    return " ".join(parts)
+
+
 def render_readme(
     paired: Sequence[dict[str, Any]],
     summary: Sequence[dict[str, Any]],
+    *,
+    input_dir: str | Path | None = None,
+    out_dir: str | Path | None = None,
+    experiments: Sequence[str] | None = None,
 ) -> str:
     """Markdown report for one analysis run."""
 
@@ -317,14 +346,24 @@ def render_readme(
     maze_runtime = _maze_runtime_slice(paired)
     pooled_random_note = _pooled_random_skip_sentence(summary)
     pooled_random_block = f"\n{pooled_random_note}\n" if pooled_random_note else ""
+    command = format_analysis_command(
+        input_dir=input_dir, out_dir=out_dir, experiments=experiments
+    )
+    mix_note = ""
+    if not experiments:
+        mix_note = (
+            "\n\nIf `--input-dir` contains both pre-fix and `*_opt` CSVs, pass "
+            "`--experiment` for only `*_opt` names or only pre-fix names "
+            "(the CLI refuses a mix)."
+        )
 
     return f"""# Analysis results (F2F vs F2E)
 
 This file is **generated** by `python -m sfbds_compare.analysis`. Re-run analysis to refresh it. Do not edit by hand.
 
 ```bash
-python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir results/analysis/pair-bound/<run-name>
-```
+{command}
+```{mix_note}
 
 ## Headline
 
@@ -396,8 +435,20 @@ def write_readme(
     paired: Sequence[dict[str, Any]],
     summary: Sequence[dict[str, Any]],
     out_dir: str | Path,
+    *,
+    input_dir: str | Path | None = None,
+    experiments: Sequence[str] | None = None,
 ) -> Path:
     path = Path(out_dir) / "README.md"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(render_readme(paired, summary), encoding="utf-8")
+    path.write_text(
+        render_readme(
+            paired,
+            summary,
+            input_dir=input_dir,
+            out_dir=out_dir,
+            experiments=experiments,
+        ),
+        encoding="utf-8",
+    )
     return path

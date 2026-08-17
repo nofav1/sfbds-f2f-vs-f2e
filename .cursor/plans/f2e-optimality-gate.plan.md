@@ -25,7 +25,7 @@ todos:
     status: completed
   - id: restart-baselines
     content: Only after gate: new-stem *_opt CSVs with --experiment filters; keep pre-fix pair-bound files
-    status: pending
+    status: completed
 isProject: true
 ---
 

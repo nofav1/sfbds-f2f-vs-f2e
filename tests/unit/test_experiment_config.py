@@ -211,6 +211,46 @@ _STUDY_SPECS = {
         "min_manhattan": 128,
         "obstacle_density": 0.0,
     },
+    "study_open_128_opt.yaml": {
+        "kind": "open",
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 64,
+        "obstacle_density": 0.0,
+    },
+    "study_random_64_opt.yaml": {
+        "kind": "random_obstacles",
+        "height": 64,
+        "width": 64,
+        "count": 30,
+        "min_manhattan": 24,
+        "obstacle_densities": (0.10, 0.20, 0.30),
+    },
+    "study_random_128_opt.yaml": {
+        "kind": "random_obstacles",
+        "height": 128,
+        "width": 128,
+        "count": 30,
+        "min_manhattan": 48,
+        "obstacle_densities": (0.10, 0.20, 0.30),
+    },
+    "study_maze_127_opt.yaml": {
+        "kind": "maze",
+        "height": 127,
+        "width": 127,
+        "count": 30,
+        "min_manhattan": 60,
+        "obstacle_density": 0.0,
+    },
+    "study_corridor_512_opt.yaml": {
+        "kind": "corridor",
+        "height": 1,
+        "width": 512,
+        "count": 30,
+        "min_manhattan": 128,
+        "obstacle_density": 0.0,
+    },
 }
 
 
@@ -259,6 +299,29 @@ def test_load_study_yaml_configs() -> None:
         for q in cfg.queries:
             md = abs(q.start[0] - q.goal[0]) + abs(q.start[1] - q.goal[1])
             assert md >= spec["min_manhattan"]
+
+
+_OPT_STEMS = (
+    "study_open_128",
+    "study_random_64",
+    "study_random_128",
+    "study_maze_127",
+    "study_corridor_512",
+)
+
+
+def test_opt_study_yamls_match_pre_fix_seeds_and_queries() -> None:
+    study_dir = Path(__file__).resolve().parents[2] / "configs" / "study"
+    for stem in _OPT_STEMS:
+        old = load_config(study_dir / f"{stem}.yaml")
+        new = load_config(study_dir / f"{stem}_opt.yaml")
+        assert new.name == f"{stem}_opt"
+        assert new.seed == old.seed
+        assert new.queries == old.queries
+        assert new.generator == old.generator
+        assert new.output_dir == old.output_dir
+        assert new.timeout_sec == old.timeout_sec
+        assert new.algorithms == old.algorithms
 
 
 _FOLLOWUP_SPECS = {

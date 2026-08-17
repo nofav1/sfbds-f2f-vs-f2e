@@ -37,10 +37,11 @@ python -m sfbds_compare.analysis --input-dir results/study/legacy --out-dir resu
 
 ## Runs (pair-bound F2E)
 
-These snapshots use **NoReopen** pair-bound F2E (pre-`BetterGReopenPolicy`). Cite reopen F2E only from `*_opt` after that run. Until then, cite maze from `2026-08-17-cost-clean-plots` as pre-fix; do not cite nested-random p-values.
+Pre-fix snapshots (through `2026-08-17-cost-clean-plots`) use **NoReopen** pair-bound F2E. Reopen F2E is [`pair-bound/2026-08-17-reopen-opt`](pair-bound/2026-08-17-reopen-opt/). Do not mix the two in one analysis; the CLI refuses unless `--experiment` selects only one family of names.
 
 | Folder | Date | Input | What it is |
 | --- | --- | --- | --- |
 | [`pair-bound/2026-08-17-baseline-study`](pair-bound/2026-08-17-baseline-study/) | 2026-08-17 | `configs/study/` CSVs in `results/study/pair-bound` | First paired F2F vs official pair-bound F2E analysis of the current study matrix (corridor 512, maze 127, open 128, nested random 64/128). Nested-random p-values in this README include cost mismatches; do not cite. |
 | [`pair-bound/2026-08-17-cost-clean-tests`](pair-bound/2026-08-17-cost-clean-tests/) | 2026-08-17 | same CSVs | Re-analysis: expansion tests drop `cost_mismatch` / A* disagreement. Maze 22/30 stays; 64@30% `n_untied` is 9 → p null. **Plots in this folder still include the 12 mismatches.** |
-| [`pair-bound/2026-08-17-cost-clean-plots`](pair-bound/2026-08-17-cost-clean-plots/) | 2026-08-17 | same CSVs | Same tables as cost-clean-tests; plots now omit `cost_mismatch` rows. Cite this folder for figures. |
+| [`pair-bound/2026-08-17-cost-clean-plots`](pair-bound/2026-08-17-cost-clean-plots/) | 2026-08-17 | same CSVs | Same tables as cost-clean-tests; plots now omit `cost_mismatch` rows. Cite this folder for **NoReopen** figures. |
+| [`pair-bound/2026-08-17-reopen-opt`](pair-bound/2026-08-17-reopen-opt/) | 2026-08-17 | `study_*_opt` CSVs (`--experiment` × 5) | Official reopen F2E on the same seeds/queries. 270/270 solved, **0** cost mismatches. Maze 22/30; nested 64@30% now cost-clean with 13 F2F-fewer. |

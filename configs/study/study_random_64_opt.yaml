@@ -1,0 +1,18 @@
+# Official reopen F2E rerun of study_random_64 (same seed/queries).
+# Writes study_random_64_opt.csv; do not overwrite study_random_64.csv.
+name: study_random_64_opt
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 110
+timeout_sec: 60
+output_dir: results/study/pair-bound
+generator:
+  kind: random_obstacles
+  height: 64
+  width: 64
+  obstacle_densities: [0.10, 0.20, 0.30]
+query_sample:
+  count: 30
+  min_manhattan: 24

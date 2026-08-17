@@ -62,7 +62,7 @@ These are in force until we explicitly revise this section. Same locks as [`docs
 
 - Official `sfbds_f2e` **bound** is `F2EPairLowerBound`: on unit grids, `lb = g_F+g_B` when `u=v`, else `lb = max(g_F+MD(u,G), g_B+MD(S,v), g_F+g_B+1)`. SFBDS still stores remaining cost via `h_gap = max(0, lb − g_F − g_B)`.
 - Official `sfbds_f2e` **search** is `official_f2e_searcher()`: that bound plus `f2e_policies()` (`BetterGReopenPolicy`: strictly better CLOSED `g` → remove then push). `SFBDSSearcher(F2EPairLowerBound())` is MVP NoReopen and is **not** official F2E. F2F stays `default_policies()` / `NoReopenPolicy`. Reopen is the hypothesized repair for the demonstrated pair-key inconsistency; empirically accepted on the frozen mismatch-row gate. Not a general proof of Late-stop optimality.
-- Current `results/study/pair-bound/study_*.csv` stems (no `_opt`) and the 2026-08-17 analysis snapshots are **NoReopen** pair-bound F2E. Cite reopen F2E only from `*_opt` after that run. Until then, cite maze from [`2026-08-17-cost-clean-plots/`](2026-08-17-cost-clean-plots/) as pre-fix, and do not cite nested-random p-values.
+- Pair-bound CSVs **without** `_opt` are **NoReopen** F2E. Stems **with** `_opt` are reopen F2E. Cite reopen results from [`2026-08-17-reopen-opt/`](2026-08-17-reopen-opt/). Cite pre-fix maze figures from [`2026-08-17-cost-clean-plots/`](2026-08-17-cost-clean-plots/) only as NoReopen. The analysis CLI refuses a mix. A run that includes any `*_opt` name must include all five official `_opt` stems unless `--allow-opt-subset`. Generated READMEs emit the `--experiment` flags used for that run.
 - Do not cite `results/study/legacy/` or `results/analysis/legacy/` as corrected F2E.
 
 ---
@@ -151,6 +151,21 @@ Official F2E is `official_f2e_searcher()`, not a bare bound searcher. On-disk `s
 
 ---
 
+### 2026-08-17 — Reopen F2E official baselines (`*_opt`)
+
+**Folder:** [`2026-08-17-reopen-opt/`](2026-08-17-reopen-opt/)  
+**Input:** five `study_*_opt` CSVs; `--experiment` for all five names. Pre-fix CSVs kept.
+
+**Headline.** 270/270 solved, **0** cost mismatches. Maze 22/30 F2F-fewer, Holm p ≈ 4.77e-07. Nested 64@30% is now cost-clean with 13 F2F-fewer, Holm p ≈ 0.0002 (`n_untied ≥ 10`). Open/corridor still all ties.
+
+---
+
+### 2026-08-17 — Analysis README command and official `_opt` set
+
+Generated READMEs emit the `--experiment` flags used for the run. Partial official `*_opt` analyses need `--allow-opt-subset`. Regenerated `2026-08-17-reopen-opt/README.md` in place (`--force`). Follow-ups: keep `_opt` plus `--experiment`, or a new stem; not `*_opt2`.
+
+---
+
 ## Next experiment (not started)
 
-New-stem `*_opt` baselines with `--experiment` filters; keep pre-fix pair-bound files. Maze 255 / denser nested random only after that restart. Late-stop remains Option C.
+Maze 255 / denser nested random under reopen F2E (`--experiment`, and `--allow-opt-subset` if not the five official stems). Cache stays off. Late-stop remains Option C.
