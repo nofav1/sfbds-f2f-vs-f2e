@@ -62,7 +62,7 @@ These are in force until we explicitly revise this section. Same locks as [`docs
 
 - Official `sfbds_f2e` **bound** is `F2EPairLowerBound`: on unit grids, `lb = g_F+g_B` when `u=v`, else `lb = max(g_F+MD(u,G), g_B+MD(S,v), g_F+g_B+1)`. SFBDS still stores remaining cost via `h_gap = max(0, lb − g_F − g_B)`.
 - Official `sfbds_f2e` **search** is `official_f2e_searcher()`: that bound plus `f2e_policies()` (`BetterGReopenPolicy`: strictly better CLOSED `g` → remove then push). `SFBDSSearcher(F2EPairLowerBound())` is MVP NoReopen and is **not** official F2E. F2F stays `default_policies()` / `NoReopenPolicy`. Reopen is the hypothesized repair for the demonstrated pair-key inconsistency; empirically accepted on the frozen mismatch-row gate. Not a general proof of Late-stop optimality.
-- Pair-bound CSVs **without** `_opt` are **NoReopen** F2E. Stems **with** `_opt` are reopen F2E. Cite the 64/128 reopen baseline from [`2026-08-17-reopen-opt/`](2026-08-17-reopen-opt/). Cite maze 255 / dense nested from [`2026-08-17-harder-opt/`](2026-08-17-harder-opt/). Cite pre-fix maze figures from [`2026-08-17-cost-clean-plots/`](2026-08-17-cost-clean-plots/) only as NoReopen. Do not cite legacy gap maze 255. The analysis CLI refuses a mix. A run that includes any official `_opt` stem must be exactly the five official stems; `--allow-opt-subset` is for a follow-up-only `*_opt` slice and does not mix those five with extras. Live follow-up YAMLs are `configs/followup/study_*_opt.yaml`. Generated READMEs emit the `--experiment` flags used for that run (and `--allow-opt-subset` when it was passed).
+- Pair-bound CSVs **without** `_opt` are **NoReopen** F2E. Stems **with** `_opt` are reopen F2E. Cite the 64/128 reopen baseline from [`2026-08-17-reopen-opt/`](2026-08-17-reopen-opt/). Cite maze 255 / dense nested (30/40/45%) from [`2026-08-17-harder-opt/`](2026-08-17-harder-opt/). Cite maze 127 far/braid/timed, maze 255 braid, and denser nested from [`2026-08-17-far-braid-by-experiment/`](2026-08-17-far-braid-by-experiment/). Do not cite pooled maze, size 127/128/64, or the runtime block in [`2026-08-17-far-braid-opt/`](2026-08-17-far-braid-opt/). Cite pre-fix maze figures from [`2026-08-17-cost-clean-plots/`](2026-08-17-cost-clean-plots/) only as NoReopen. Do not cite legacy gap maze 255. The analysis CLI refuses a mix. A run that includes any official `_opt` stem must be exactly the five official stems; `--allow-opt-subset` is for a follow-up-only `*_opt` slice and does not mix those five with extras. Live follow-up YAMLs are `configs/followup/study_*_opt.yaml`. Generated READMEs emit the `--experiment` flags used for that run (and `--allow-opt-subset` when it was passed).
 - Do not cite `results/study/legacy/` or `results/analysis/legacy/` as corrected F2E.
 
 ---
@@ -181,6 +181,22 @@ Non-`_opt` follow-up YAMLs moved to [`configs/followup/retired/`](../../../confi
 
 ---
 
+### 2026-08-17 — Far / braid / timed maze and denser nested (`*_opt`)
+
+**Folder:** [`2026-08-17-far-braid-opt/`](2026-08-17-far-braid-opt/)  
+**Input:** eight follow-up `*_opt` stems; `--allow-opt-subset`. Not mixed with the official five or the harder-opt three.
+
+**Headline.** 450/450 solved, **0** cost mismatches. Do not cite pooled maze 60/120 (`timed` = maze 127 maps, 22/30). Far 15/30; 127-braid 12/30; 255-braid 11/30 (vs 26/30 perfect maze 255). Nested 64 d50 and 128 d45 (md 28) have `n_untied ≥ 10` at every density; 64 d52 and 128 d45 md 48 (n=20) p null. Do not pool md-28 with md-48. Do not cite this folder’s maze headline, size 127/128, or runtime slice.
+
+---
+
+### 2026-08-17 — Per-experiment follow-up README (stats-code fix)
+
+**Folder:** [`2026-08-17-far-braid-by-experiment/`](2026-08-17-far-braid-by-experiment/)  
+Same eight CSVs. Generated headline is per experiment; mixed maze/size skip Wilcoxon; runtime is `_timed` only (22/22, median ≈ 0.885). Cite this folder.
+
+---
+
 ## Next experiment (not started)
 
-Remaining follow-ups under reopen F2E: copy from `configs/followup/retired/`, new `*_opt` stems, `--allow-opt-subset` (not mixed with the five official stems). Maze 127 far/braid/timed, maze 255 braid, denser nested 64@50–52% and 128@45–50%. Cache stays off. Late-stop remains Option C.
+**Cache ablation** only after instructor/scope lock. Late-stop remains Option C.

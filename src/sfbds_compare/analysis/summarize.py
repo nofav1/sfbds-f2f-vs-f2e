@@ -54,6 +54,8 @@ def nested_density_group_key(row: dict[str, Any]) -> Optional[str]:
 def _group_key(row: dict[str, Any], group_type: str) -> Optional[str]:
     if group_type == "map_family":
         return str(row["map_family"])
+    if group_type == "experiment":
+        return str(row["experiment"])
     if group_type == "size":
         return str(row["size"])
     if group_type == "obstacle_count":
@@ -62,6 +64,18 @@ def _group_key(row: dict[str, Any], group_type: str) -> Optional[str]:
         bucket = row.get("detour_bucket")
         return None if bucket is None else str(bucket)
     raise ValueError(f"unknown group_type: {group_type}")
+
+
+def _mixed_experiment_skip_reason(
+    rows: Sequence[dict[str, Any]], *, label: str
+) -> Optional[str]:
+    n_exps = len({str(r.get("experiment")) for r in rows})
+    if n_exps > 1:
+        return (
+            f"Wilcoxon skipped: {label} mixes experiments; "
+            "use the per-experiment table"
+        )
+    return None
 
 
 def _pooled_random_skip_reason(rows: Sequence[dict[str, Any]]) -> Optional[str]:
@@ -197,6 +211,21 @@ def summarize(paired: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
             skip_reason = None
             if group_type == "map_family" and key == "random":
                 skip_reason = _pooled_random_skip_reason(buckets[key])
+            elif group_type == "map_family" and key == "maze":
+                skip_reason = _mixed_experiment_skip_reason(
+                    buckets[key], label="pooled maze"
+                )
+            elif group_type == "size":
+                skip_reason = _mixed_experiment_skip_reason(
+                    buckets[key], label="size group"
+                )
+            elif group_type == "experiment" and any(
+                r.get("nested_density") for r in buckets[key]
+            ):
+                skip_reason = (
+                    "Wilcoxon skipped on nested-random experiment totals; "
+                    "use the per-experiment density table"
+                )
             rec = {
                 "group_type": group_type,
                 "group": key,
@@ -212,6 +241,7 @@ def summarize(paired: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
         return family_rows
 
     planned_families.append(collect("map_family", exploratory=False))
+    planned_families.append(collect("experiment", exploratory=False))
     planned_families.append(collect("size", exploratory=False))
     density_rows = collect("obstacle_count", exploratory=False)
     density_by_experiment: dict[str, list[dict[str, Any]]] = defaultdict(list)

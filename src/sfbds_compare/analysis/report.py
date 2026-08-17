@@ -116,13 +116,20 @@ def _experiment_counts(paired: Sequence[dict[str, Any]]) -> list[list[str]]:
     return rows
 
 
+def _timed_runtime_experiment(name: str) -> bool:
+    """``runtime_repeats > 1`` studies use a ``_timed`` stem (no repeats column on disk)."""
+
+    return "_timed" in str(name)
+
+
 def _maze_runtime_slice(paired: Sequence[dict[str, Any]]) -> str:
-    """Wall-clock on maze pairs where expansions already differ (not a primary test)."""
+    """Wall-clock on timed-protocol maze pairs where expansions already differ."""
 
     maze = [
         r
         for r in paired
         if r.get("map_family") == "maze"
+        and _timed_runtime_experiment(str(r.get("experiment") or ""))
         and _as_bool(r.get("solved"))
         and not _as_bool(r.get("cost_mismatch"))
         and r.get("expansion_diff") not in (None, 0, "0")
@@ -130,7 +137,11 @@ def _maze_runtime_slice(paired: Sequence[dict[str, Any]]) -> str:
         and r.get("runtime_ratio") != ""
     ]
     if not maze:
-        return "_No solved maze pairs with a nonzero expansion_diff in this run._"
+        return (
+            "_No timed-protocol maze pairs (`_timed` stem, runtime_repeats > 1) "
+            "with a nonzero expansion_diff in this run. Single-run maze clocks "
+            "are omitted; do not cite them as the median-of-repeats check._"
+        )
     ratios = [float(r["runtime_ratio"]) for r in maze]
     n = len(ratios)
     n_f2f_faster = sum(1 for x in ratios if x < 1.0)
@@ -142,7 +153,8 @@ def _maze_runtime_slice(paired: Sequence[dict[str, Any]]) -> str:
     return "\n".join(
         [
             "These rows are **exploratory**. Expansions remain the primary claim; "
-            "runtime is noisy. `runtime_ratio` is F2F / F2E (values **< 1** mean F2F was faster).",
+            "runtime is noisy. `runtime_ratio` is F2F / F2E (values **< 1** mean F2F was faster). "
+            "Only `_timed` experiments (median of `runtime_repeats`).",
             "",
             f"- Untied maze pairs with both times: **{n}**",
             f"- F2F faster wall-clock: **{n_f2f_faster}**; F2E faster: **{n_f2e_faster}**; "
@@ -171,42 +183,68 @@ def _density_label(paired: Sequence[dict[str, Any]], group: str) -> str:
     return f"{prefix}{count} obstacles (~{float(label):.2f} on {size}×{size})"
 
 
+def _family_headline_bullet(
+    rec: dict[str, Any], *, label: str, skip_hint: str | None = None
+) -> str:
+    n_tie = int(rec.get("n_tie") or 0)
+    n_solved = int(rec.get("n_solved") or 0)
+    n_f2f = int(rec.get("n_f2f_fewer") or 0)
+    n_f2e = int(rec.get("n_f2e_fewer") or 0)
+    note = str(rec.get("note") or "")
+    if "skipped" in note.lower():
+        hint = skip_hint or "use the per-experiment table."
+        return (
+            f"**{label}:** {n_solved} solved pairs; "
+            f"{n_f2f} F2F-fewer, {n_f2e} F2E-fewer, {n_tie} ties "
+            f"(n_test={_fmt_int(rec.get('n_test'))}). "
+            f"Wilcoxon is skipped on this pooled group; {hint}"
+        )
+    if n_tie == n_solved and n_solved:
+        return (
+            f"**{label}:** F2F and F2E tied on all {n_solved} solved pairs "
+            "(too few untied pairs for a Wilcoxon p-value)."
+        )
+    if n_f2f and not n_f2e:
+        return (
+            f"**{label}:** F2F expanded fewer pairs on {n_f2f}/{n_solved} "
+            f"solved maps ({_fmt_pct(rec.get('pct_f2f_fewer'))}); "
+            f"Holm p={_fmt_p(rec.get('wilcoxon_p_holm'))}."
+        )
+    return (
+        f"**{label}:** {n_f2f} F2F-fewer, {n_f2e} F2E-fewer, {n_tie} ties "
+        f"(n_solved={n_solved})."
+    )
+
+
 def _headline(
     summary: Sequence[dict[str, Any]], paired: Sequence[dict[str, Any]]
 ) -> list[str]:
     bullets: list[str] = []
+    maze_names = {
+        str(r["experiment"]) for r in paired if r.get("map_family") == "maze"
+    }
     for rec in _groups(summary, "map_family"):
         name = rec["group"]
-        n_tie = int(rec.get("n_tie") or 0)
-        n_solved = int(rec.get("n_solved") or 0)
-        n_f2f = int(rec.get("n_f2f_fewer") or 0)
-        n_f2e = int(rec.get("n_f2e_fewer") or 0)
-        if name == "random":
-            note = str(rec.get("note") or "")
-            if "skipped" in note.lower():
-                bullets.append(
-                    f"**Random (all files):** {n_solved} solved pairs; "
-                    f"{n_f2f} F2F-fewer, {n_f2e} F2E-fewer, {n_tie} ties "
-                    f"(n_test={_fmt_int(rec.get('n_test'))}). "
-                    "Wilcoxon is skipped on this pooled group; use nested density rows below."
-                )
-                continue
-        if n_tie == n_solved and n_solved:
+        if name == "maze" and "skipped" in str(rec.get("note") or "").lower():
+            for exp in _groups(summary, "experiment"):
+                if exp["group"] in maze_names:
+                    bullets.append(
+                        _family_headline_bullet(exp, label=str(exp["group"]))
+                    )
             bullets.append(
-                f"**{name.capitalize()}:** F2F and F2E tied on all {n_solved} solved pairs "
-                "(too few untied pairs for a Wilcoxon p-value)."
+                "Do not cite a pooled maze p-value; the per-experiment rows above "
+                "are the maze claim (timed is the same maps as maze 127 when seeds match)."
             )
-        elif n_f2f and not n_f2e:
-            bullets.append(
-                f"**{name.capitalize()}:** F2F expanded fewer pairs on {n_f2f}/{n_solved} "
-                f"solved maps ({_fmt_pct(rec.get('pct_f2f_fewer'))}); "
-                f"Holm p={_fmt_p(rec.get('wilcoxon_p_holm'))}."
-            )
-        else:
-            bullets.append(
-                f"**{name.capitalize()}:** {n_f2f} F2F-fewer, {n_f2e} F2E-fewer, {n_tie} ties "
-                f"(n_solved={n_solved})."
-            )
+            continue
+        hint = (
+            "use nested density rows below."
+            if name == "random"
+            else None
+        )
+        label = "Random (all files)" if name == "random" else str(name).capitalize()
+        bullets.append(
+            _family_headline_bullet(rec, label=label, skip_hint=hint)
+        )
     dens = _groups(summary, "obstacle_count")
     if dens:
         eligible = [r for r in dens if int(r.get("n_untied") or 0) >= 10]
@@ -237,6 +275,40 @@ def _headline(
             )
         )
     return bullets
+
+
+def _pooled_maze_skip_sentence(summary: Sequence[dict[str, Any]]) -> str:
+    recs = [
+        r
+        for r in summary
+        if r.get("group_type") == "map_family" and r.get("group") == "maze"
+    ]
+    if not recs:
+        return ""
+    note = str(recs[0].get("note") or "")
+    if "mixes experiments" in note:
+        return (
+            "Pooled `maze` mixes experiments (for example timed vs far vs braid), "
+            "so tests are skipped there on purpose; use the per-experiment table."
+        )
+    return ""
+
+
+def _pooled_size_skip_sentence(summary: Sequence[dict[str, Any]]) -> str:
+    mixed = [
+        r
+        for r in _groups(summary, "size")
+        if "mixes experiments" in str(r.get("note") or "")
+    ]
+    if not mixed:
+        return ""
+    names = ", ".join(str(r["group"]) for r in mixed)
+    return (
+        f"Size groups that mix experiments ({names}) skip Wilcoxon; "
+        "use the per-experiment table or nested density rows. "
+        "Size groups that mix nested random maps also collapse `family_id` "
+        "before testing (`n_test` < `n_solved`)."
+    )
 
 
 def _pooled_random_skip_sentence(summary: Sequence[dict[str, Any]]) -> str:
@@ -347,9 +419,25 @@ def render_readme(
         ["experiment", "paired rows", "map family", "nested density"],
         _experiment_counts(paired),
     )
+    exp_result_rows = _groups(summary, "experiment")
+    exp_result_table = (
+        _md_table(
+            _RESULT_HEADERS,
+            [_result_row(r, str(r["group"])) for r in exp_result_rows],
+        )
+        if exp_result_rows
+        else "_No experiments in this run._"
+    )
     maze_runtime = _maze_runtime_slice(paired)
     pooled_random_note = _pooled_random_skip_sentence(summary)
     pooled_random_block = f"\n{pooled_random_note}\n" if pooled_random_note else ""
+    pooled_maze_note = _pooled_maze_skip_sentence(summary)
+    pooled_maze_block = f"\n{pooled_maze_note}\n" if pooled_maze_note else ""
+    pooled_size_note = _pooled_size_skip_sentence(summary)
+    size_note = pooled_size_note or (
+        "Size groups that mix nested random maps collapse `family_id` "
+        "before testing (`n_test` < `n_solved`)."
+    )
     command = format_analysis_command(
         input_dir=input_dir,
         out_dir=out_dir,
@@ -399,17 +487,23 @@ Coverage of this run: **{n_paired}** paired instances, **{n_solved}** solved, **
 - **`n_solved`** = descriptive sample. **`n_test`** = Wilcoxon sample after collapsing nested `family_id`s (median `expansion_diff` per family). If they differ, densities of the same query were not treated as independent n. **F2F fewer / F2E fewer / ties** in the tables are counted on the same units as `n_test` (families after collapse, maps otherwise).
 - **Primary test:** two-sided Wilcoxon on `expansion_diff = F2E − F2F`. **Confirmatory:** sign test on who expanded fewer, ties dropped. If `n_untied < 10`, p is **null** (not a missing file). That is expected when F2F and F2E almost always tie (open, corridor).
 - **Rank-biserial** > 0 means F2F fewer expansions on the untied pairs.
-- **Holm** is within a planned family (map families together; nested density groups within one experiment; size groups together). Detour buckets are exploratory: raw p only.
+- **Holm** is within a planned family (map families together; maze experiments together; nested density groups within one experiment; size groups together). Mixed maze or size pools skip Wilcoxon. Detour buckets are exploratory: raw p only.
 - **Nested density:** nested random experiments share start/goal across density prefixes. Independent `*_d10/d20/d30` CSVs are kept for F2F vs F2E pairing but **do not** enter `obstacle_count` tests, `overall_random`, or `saving_by_density.png`. Density tests are keyed by experiment, grid size, and `obstacle_count` so two configs that share a prefix count are not pooled.
 
 ## Experiments in this run
 
 {exp_table}
 
+## Experiment
+
+{exp_result_table}
+
+Nested-random experiment totals skip Wilcoxon (use the density table). Maze experiments are tested here; do not cite a pooled maze row when that pool mixes timed / far / braid.
+
 ## Map family
 
 {family_table}
-{pooled_random_block}
+{pooled_maze_block}{pooled_random_block}
 ## Nested density (eligible maps only)
 
 {dens_table}
@@ -422,11 +516,11 @@ Coverage of this run: **{n_paired}** paired instances, **{n_solved}** solved, **
 
 {size_table}
 
-Size groups that mix nested random maps collapse `family_id` before testing (`n_test` < `n_solved`).
+{size_note}
 
 ## Maze runtime slice (exploratory)
 
-Only maze pairs where F2F and F2E **already differ in expansions**. Do not treat this as a co-primary test.
+Only **`_timed`** maze pairs where F2F and F2E **already differ in expansions** (median of `runtime_repeats`). Do not treat this as a co-primary test. Do not cite single-run maze clocks from this block.
 
 {maze_runtime}
 

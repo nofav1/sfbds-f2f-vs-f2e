@@ -30,6 +30,7 @@ def _raw(
     width: int = 16,
     obstacle_count: int = 0,
     seed: int = 1,
+    runtime_sec: float = 0.01,
     map_hash: str | None = None,
     generator_kind: str = "open",
 ) -> dict:
@@ -51,7 +52,7 @@ def _raw(
         "success": success,
         "termination_reason": "timeout" if timed_out else "goal_found",
         "solution_cost": cost,
-        "runtime_sec": 0.01,
+        "runtime_sec": runtime_sec,
         "generated": generated if generated is not None else expanded,
         "expanded": expanded,
         "expanded_unit": "state" if algorithm == "astar" else "pair",
@@ -565,6 +566,187 @@ def test_render_readme_includes_allow_opt_subset_flag() -> None:
     )
     assert "--experiment study_maze_255_opt" in text
     assert "--allow-opt-subset" in text
+
+
+def test_mixed_maze_experiments_skip_pooled_wilcoxon_and_headline() -> None:
+    from sfbds_compare.analysis.report import render_readme
+
+    raw = []
+    for q in range(12):
+        raw.extend(
+            _triple(
+                q,
+                f2f=3,
+                f2e=5,
+                experiment="study_maze_127_far_opt",
+                generator_kind="maze",
+                height=127,
+                width=127,
+                seed=141,
+            )
+        )
+        raw.extend(
+            _triple(
+                q,
+                f2f=3,
+                f2e=5,
+                experiment="study_maze_127_timed_opt",
+                generator_kind="maze",
+                height=127,
+                width=127,
+                seed=140,
+            )
+        )
+    paired = pair_rows(raw)
+    summary = summarize(paired)
+    maze = next(r for r in summary if r["group_type"] == "map_family" and r["group"] == "maze")
+    assert maze["wilcoxon_p_raw"] is None
+    assert "mixes experiments" in maze["note"]
+    size = next(r for r in summary if r["group_type"] == "size" and r["group"] == "127")
+    assert size["wilcoxon_p_raw"] is None
+    timed = next(
+        r for r in summary if r["group_type"] == "experiment" and r["group"] == "study_maze_127_timed_opt"
+    )
+    assert timed["n_f2f_fewer"] == 12
+    assert timed["wilcoxon_p_raw"] is not None
+    text = render_readme(paired, summary)
+    assert "study_maze_127_timed_opt" in text
+    assert "F2F expanded fewer pairs on 24/24" not in text
+    assert "Do not cite a pooled maze" in text
+    assert "## Experiment" in text
+
+
+def test_maze_runtime_slice_is_timed_protocol_only() -> None:
+    from sfbds_compare.analysis.report import _maze_runtime_slice
+
+    raw = []
+    raw.extend(
+        [
+            _raw(
+                algorithm="astar",
+                query_index=0,
+                expanded=5,
+                experiment="study_maze_127_far_opt",
+                generator_kind="maze",
+                height=127,
+                width=127,
+                runtime_sec=0.5,
+            ),
+            _raw(
+                algorithm="sfbds_f2f",
+                query_index=0,
+                expanded=3,
+                experiment="study_maze_127_far_opt",
+                generator_kind="maze",
+                height=127,
+                width=127,
+                runtime_sec=0.4,
+            ),
+            _raw(
+                algorithm="sfbds_f2e",
+                query_index=0,
+                expanded=5,
+                experiment="study_maze_127_far_opt",
+                generator_kind="maze",
+                height=127,
+                width=127,
+                runtime_sec=1.0,
+            ),
+        ]
+    )
+    raw.extend(
+        [
+            _raw(
+                algorithm="astar",
+                query_index=0,
+                expanded=5,
+                experiment="study_maze_127_timed_opt",
+                generator_kind="maze",
+                height=127,
+                width=127,
+                runtime_sec=0.9,
+            ),
+            _raw(
+                algorithm="sfbds_f2f",
+                query_index=0,
+                expanded=3,
+                experiment="study_maze_127_timed_opt",
+                generator_kind="maze",
+                height=127,
+                width=127,
+                runtime_sec=0.8,
+            ),
+            _raw(
+                algorithm="sfbds_f2e",
+                query_index=0,
+                expanded=5,
+                experiment="study_maze_127_timed_opt",
+                generator_kind="maze",
+                height=127,
+                width=127,
+                runtime_sec=1.0,
+            ),
+        ]
+    )
+    paired = pair_rows(raw)
+    text = _maze_runtime_slice(paired)
+    assert "Untied maze pairs with both times: **1**" in text
+    assert "0.800" in text
+    assert "0.400" not in text
+
+
+def test_readme_omits_single_run_maze_runtime_when_no_timed_stem() -> None:
+    from sfbds_compare.analysis.report import render_readme
+
+    paired = pair_rows(
+        _triple(0, f2f=3, f2e=5, experiment="study_maze_127_opt", generator_kind="maze")
+    )
+    text = render_readme(paired, summarize(paired))
+    assert "runtime_repeats > 1" in text
+    assert "Untied maze pairs with both times:" not in text
+
+
+def test_size_skips_wilcoxon_when_md28_and_md48_share_height() -> None:
+    raw = []
+    for q in range(12):
+        for count in (10, 20, 30):
+            raw.extend(
+                _triple(
+                    q,
+                    f2f=3,
+                    f2e=5,
+                    experiment="study_random_128_d45_opt",
+                    generator_kind="random_obstacles",
+                    height=128,
+                    width=128,
+                    obstacle_count=count,
+                    seed=221,
+                )
+            )
+            raw.extend(
+                _triple(
+                    q,
+                    f2f=3,
+                    f2e=9,
+                    experiment="study_random_128_d45_md48_opt",
+                    generator_kind="random_obstacles",
+                    height=128,
+                    width=128,
+                    obstacle_count=count,
+                    seed=221,
+                )
+            )
+    summary = summarize(pair_rows(raw))
+    size = next(r for r in summary if r["group_type"] == "size" and r["group"] == "128")
+    assert size["wilcoxon_p_raw"] is None
+    assert "mixes experiments" in size["note"]
+    dens = [
+        r
+        for r in summary
+        if r["group_type"] == "obstacle_count" and "d45_opt::" in str(r["group"])
+    ]
+    assert dens
+    assert all(r["wilcoxon_p_raw"] is not None for r in dens)
 
 
 def test_readme_skips_density_claims_for_independent_random() -> None:
