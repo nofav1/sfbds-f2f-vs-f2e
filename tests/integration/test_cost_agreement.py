@@ -88,3 +88,69 @@ def test_three_way_cost_agreement_on_small_maze() -> None:
         seed=11,
     )
     _run_three_way(problem)
+
+
+def _study_random_64_q20_d1228():
+    from dataclasses import replace
+
+    from sfbds_compare.experiments.config import load_config
+    from sfbds_compare.experiments.generators import map_fingerprint
+    from sfbds_compare.experiments.runner import _problems_for_query
+    from sfbds_compare.policies import default_policies
+    from sfbds_compare.policies.types import PathAction
+
+    cfg = load_config("configs/study/study_random_64.yaml")
+    problems = _problems_for_query(cfg, cfg.queries[20], 20)
+    problem = next(p for p in problems if len(p.obstacles) == 1228)
+    assert (
+        map_fingerprint(problem, generator=cfg.generator, seed=cfg.seed)
+        == "d604ed0b69115ce9"
+    )
+    return problem, replace, default_policies, PathAction
+
+
+def test_f2e_discards_better_g_closed_pairs_on_mismatch_instance() -> None:
+    """On this map, F2E visits CLOSED pairs with better g (NoReopen discards them).
+
+    Do not lock F2E's solution cost here. Optimality vs A* is the strict xfail
+    below; asserting a suboptimal cost would keep CI red after a real fix.
+    """
+
+    problem, replace, default_policies, PathAction = _study_random_64_q20_d1228()
+
+    class CountBetterClosed:
+        def __init__(self) -> None:
+            self.better = 0
+
+        def decide_closed(self, existing, candidate):  # type: ignore[no-untyped-def]
+            if candidate.g < existing.g:
+                self.better += 1
+            return PathAction.DISCARD
+
+    counter = CountBetterClosed()
+    f2e = SFBDSSearcher(
+        F2EPairLowerBound(),
+        policies=replace(default_policies(), reopen=counter),
+    ).search(problem)
+    f2f = SFBDSSearcher(F2FManhattanHeuristic()).search(problem)
+    astar = AStarSearcher(UniManhattanHeuristic()).search(problem)
+    assert astar.success and f2e.success and f2f.success
+    assert astar.solution_cost == 53.0
+    assert f2f.solution_cost == astar.solution_cost
+    assert counter.better > 0
+
+
+@pytest.mark.xfail(
+    reason=(
+        "pair-bound F2E + NoReopen is not solution-optimal on this nested-random "
+        "map (better-g CLOSED discards); remove xfail when reopen or a consistent "
+        "adapter is locked"
+    ),
+    strict=True,
+)
+def test_f2e_matches_astar_on_study_random_64_q20_d1228() -> None:
+    problem, _replace, _default_policies, _path_action = _study_random_64_q20_d1228()
+    astar = AStarSearcher(UniManhattanHeuristic()).search(problem)
+    f2e = SFBDSSearcher(F2EPairLowerBound()).search(problem)
+    assert astar.success and f2e.success
+    assert f2e.solution_cost == astar.solution_cost

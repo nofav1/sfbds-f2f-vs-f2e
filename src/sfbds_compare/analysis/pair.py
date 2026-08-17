@@ -34,6 +34,34 @@ def _solved_sfbds(row: dict[str, Any]) -> bool:
     return bool(row["success"]) and not bool(row["timed_out"])
 
 
+def _finite_cost(row: dict[str, Any]) -> Optional[float]:
+    if not _solved_sfbds(row) or row.get("solution_cost") is None:
+        return None
+    return float(row["solution_cost"])
+
+
+def _cost_mismatch(
+    f2f: dict[str, Any],
+    f2e: dict[str, Any],
+    astar: Optional[dict[str, Any]],
+) -> bool:
+    """True if F2F, F2E, or successful A* disagree on solution cost."""
+
+    costs: list[float] = []
+    for row in (f2f, f2e):
+        cost = _finite_cost(row)
+        if cost is not None:
+            costs.append(cost)
+    if astar is not None:
+        cost = _finite_cost(astar)
+        if cost is not None:
+            costs.append(cost)
+    if len(costs) < 2:
+        return False
+    first = costs[0]
+    return any(c != first for c in costs[1:])
+
+
 def pair_rows(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """One paired row per map_hash × query (requires both SFBDS algorithms)."""
 
@@ -103,15 +131,7 @@ def _paired_record(
     f2e_exp = int(f2e["expanded"]) if solved else None
     f2f_gen = int(f2f["generated"]) if solved else None
     f2e_gen = int(f2e["generated"]) if solved else None
-    cost_mismatch = False
-    if (
-        _solved_sfbds(f2f)
-        and _solved_sfbds(f2e)
-        and f2f["solution_cost"] is not None
-        and f2e["solution_cost"] is not None
-        and float(f2f["solution_cost"]) != float(f2e["solution_cost"])
-    ):
-        cost_mismatch = True
+    cost_mismatch = _cost_mismatch(f2f, f2e, astar)
 
     expansion_diff = None if not solved else f2e_exp - f2f_exp
     return {

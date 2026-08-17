@@ -95,7 +95,7 @@ Solved pair = both SFBDS `success` and neither `timed_out`.
 - `generation_saving_pct` analogous with `generated`.
 - `runtime_ratio = f2f_runtime / f2e_runtime` if solved and `f2e_runtime > 0`, else null (same for `heuristic_time_ratio`).
 
-Never mix A* `expanded` (states) into F2F/F2E saving %. If F2F and F2E both succeeded but `solution_cost` differs, keep the row and set `cost_mismatch=true` (should not happen).
+Never mix A* `expanded` (states) into F2F/F2E saving %. `cost_mismatch=true` if F2F, F2E, or successful A* disagree on `solution_cost`. Keep the row in `paired.csv`; **exclude it from Wilcoxon, sign, F2F-fewer / F2E-fewer / ties, expansion saving %, and plots**.
 
 **Timeouts:** keep the paired row; all ratio/saving/diff fields null. **Win %, tie %, mean, and median saving/ratio use solved pairs only.** Summary still reports timeout counts. Do not treat partial timeout `expanded` as a real count.
 
@@ -105,7 +105,7 @@ Exported `obstacle_density` is realized `count/(h*w)`, not YAML 0.10/0.20/0.30. 
 
 ### Statistical significance (paired F2F vs F2E)
 
-Tests run on **solved pairs only**. Do not test A* state expansions against SFBDS pairs. Do not treat timeout partial `expanded` as data.
+Tests run on **solved pairs that are not `cost_mismatch`**. Do not test A* state expansions against SFBDS pairs. Do not treat timeout partial `expanded` as data.
 
 **Independence (nested densities):** 10/20/30% of the **same** `query_index` share endpoints and nested obstacles. Do **not** stack those rows into one Wilcoxon as if n=90.
 

@@ -75,15 +75,19 @@ def _triple(
     *,
     astar_cost: float | None = None,
     sfbds_cost: float | None = None,
+    f2f_cost: float | None = None,
+    f2e_cost: float | None = None,
     **kwargs,
 ) -> list[dict]:
     cost = kwargs.pop("cost", 10.0)
     ac = cost if astar_cost is None else astar_cost
     sc = cost if sfbds_cost is None else sfbds_cost
+    fc = sc if f2f_cost is None else f2f_cost
+    ec = sc if f2e_cost is None else f2e_cost
     return [
         _raw(algorithm="astar", query_index=query_index, expanded=f2e, cost=ac, **kwargs),
-        _raw(algorithm="sfbds_f2f", query_index=query_index, expanded=f2f, cost=sc, **kwargs),
-        _raw(algorithm="sfbds_f2e", query_index=query_index, expanded=f2e, cost=sc, **kwargs),
+        _raw(algorithm="sfbds_f2f", query_index=query_index, expanded=f2f, cost=fc, **kwargs),
+        _raw(algorithm="sfbds_f2e", query_index=query_index, expanded=f2e, cost=ec, **kwargs),
     ]
 
 
@@ -437,6 +441,9 @@ def test_readme_includes_nested_density_groups() -> None:
     assert "10 obstacles" in text
     assert "nested random families" in text
     assert "Wilcoxon is skipped on this pooled group" in text
+    assert "independent files" not in text
+    assert "collapses nested densities" in text
+    assert "and from plots" in text
 
 
 def test_cli_refuses_analysis_index_and_nonempty_slug(tmp_path: Path) -> None:
@@ -506,6 +513,33 @@ def test_cli_refuses_analysis_index_and_nonempty_slug(tmp_path: Path) -> None:
     )
 
 
+def test_cli_hints_when_input_dir_has_formula_subdirs(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from sfbds_compare.analysis.__main__ import main
+
+    (tmp_path / "legacy").mkdir()
+    (tmp_path / "pair-bound").mkdir()
+    out = tmp_path / "out"
+    assert (
+        main(
+            [
+                "--input-dir",
+                str(tmp_path),
+                "--out-dir",
+                str(out),
+                "--no-plots",
+            ]
+        )
+        == 1
+    )
+    err = capsys.readouterr().err
+    assert "non-recursive" in err
+    assert "legacy" in err
+    assert "pair-bound" in err
+    assert not (out / "paired.csv").exists()
+
+
 def test_density_groups_do_not_pool_experiments() -> None:
     raw = []
     for experiment, seed in (("study_a", 1), ("study_b", 2)):
@@ -558,3 +592,133 @@ def test_load_raw_csvs_skips_analysis_stems(tmp_path: Path) -> None:
     loaded = load_raw_csvs(tmp_path)
     assert len(loaded) == 3
     assert {r["algorithm"] for r in loaded} == {"astar", "sfbds_f2f", "sfbds_f2e"}
+
+
+def test_cost_mismatch_includes_astar_disagreement() -> None:
+    f2f_vs_f2e = pair_rows(
+        _triple(0, f2f=3, f2e=9, f2f_cost=10.0, f2e_cost=12.0, astar_cost=10.0)
+    )
+    assert f2f_vs_f2e[0]["cost_mismatch"] is True
+    both_vs_astar = pair_rows(
+        _triple(1, f2f=3, f2e=9, astar_cost=10.0, sfbds_cost=12.0)
+    )
+    assert both_vs_astar[0]["cost_mismatch"] is True
+    clean = pair_rows(_triple(2, f2f=3, f2e=9, cost=10.0))
+    assert clean[0]["cost_mismatch"] is False
+
+
+def test_cost_mismatch_rows_do_not_enter_n_untied() -> None:
+    raw = []
+    for q in range(13):
+        mismatch = q < 4
+        for count in (10, 20, 30):
+            raw.extend(
+                _triple(
+                    q,
+                    f2f=1,
+                    f2e=100 if mismatch and count == 30 else 2,
+                    f2e_cost=12.0 if mismatch and count == 30 else 10.0,
+                    astar_cost=10.0,
+                    f2f_cost=10.0,
+                    obstacle_count=count,
+                    generator_kind="random_obstacles",
+                    experiment="study_random_64",
+                    height=64,
+                    width=64,
+                )
+            )
+    paired = pair_rows(raw)
+    summary = summarize(paired)
+    dens = next(
+        r
+        for r in summary
+        if r["group_type"] == "obstacle_count"
+        and r["group"] == "study_random_64::64x64::30"
+    )
+    assert dens["n_solved"] == 13
+    assert dens["n_untied"] == 9
+    assert dens["n_f2f_fewer"] == 9
+    assert dens["wilcoxon_p_raw"] is None
+    assert "excluded 4 cost_mismatch" in dens["note"]
+
+
+def test_plots_omit_cost_mismatch_rows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pytest.importorskip("matplotlib")
+    import matplotlib.axes
+
+    from sfbds_compare.analysis.plots import rows_for_plots, write_plots
+
+    raw = _triple(0, f2f=3, f2e=9, cost=10.0) + _triple(
+        1,
+        f2f=450,
+        f2e=2881,
+        f2f_cost=53.0,
+        f2e_cost=57.0,
+        astar_cost=53.0,
+    )
+    paired = pair_rows(raw)
+    drawn = rows_for_plots(paired)
+    assert [r["query_index"] for r in drawn] == [0]
+    assert [r["f2e_expanded"] for r in drawn] == [9]
+
+    captured: list[tuple[list[object], list[object]]] = []
+    original = matplotlib.axes.Axes.scatter
+
+    def spy(self, x, y, *args, **kwargs):  # type: ignore[no-untyped-def]
+        captured.append((list(x), list(y)))
+        return original(self, x, y, *args, **kwargs)
+
+    monkeypatch.setattr(matplotlib.axes.Axes, "scatter", spy)
+    written = write_plots(paired, tmp_path)
+    assert written
+    assert captured
+    f2e_x, f2f_y = captured[0]
+    assert [int(v) for v in f2e_x] == [9]
+    assert [int(v) for v in f2f_y] == [3]
+    for xs, ys in captured:
+        assert 2881 not in {int(v) for v in xs}
+        assert 450 not in {int(v) for v in ys}
+
+
+def test_load_raw_csvs_is_not_recursive(tmp_path: Path) -> None:
+    write_csv(tmp_path / "study_open.csv", _triple(0, f2f=3, f2e=5))
+    nested = tmp_path / "legacy"
+    nested.mkdir()
+    write_csv(nested / "hidden.csv", _triple(9, f2f=1, f2e=2))
+    loaded = load_raw_csvs(tmp_path)
+    assert {r["query_index"] for r in loaded} == {0}
+    assert len(loaded) == 3
+
+
+def test_readme_mentions_independent_mix_only_when_present() -> None:
+    from sfbds_compare.analysis.report import render_readme
+
+    raw = []
+    for q in range(12):
+        raw.extend(
+            _triple(
+                q,
+                f2f=1,
+                f2e=2,
+                experiment="study_random_128_d10",
+                obstacle_count=1638,
+                generator_kind="random_obstacles",
+                seed=110,
+            )
+        )
+        for count in (1638, 3277, 4915):
+            raw.extend(
+                _triple(
+                    q,
+                    f2f=3,
+                    f2e=4,
+                    experiment="study_random_128",
+                    obstacle_count=count,
+                    generator_kind="random_obstacles",
+                    seed=110,
+                )
+            )
+    text = render_readme(pair_rows(raw), summarize(pair_rows(raw)))
+    assert "mixes nested and independent files" in text

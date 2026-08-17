@@ -30,6 +30,16 @@ def _median(values: Sequence[Optional[float]]) -> Optional[float]:
     return median(data) if data else None
 
 
+def expansion_test_rows(rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Solved pairs whose F2F / F2E / A* costs agree (when A* succeeded)."""
+
+    return [
+        r
+        for r in rows
+        if r.get("solved") and not r.get("cost_mismatch")
+    ]
+
+
 def nested_density_group_key(row: dict[str, Any]) -> Optional[str]:
     """Density test key: one nested experiment × grid size × obstacle_count."""
 
@@ -54,15 +64,23 @@ def _group_key(row: dict[str, Any], group_type: str) -> Optional[str]:
     raise ValueError(f"unknown group_type: {group_type}")
 
 
-def _skip_pooled_random_tests(rows: Sequence[dict[str, Any]]) -> bool:
-    """Skip map_family=random Wilcoxon when nested+independent mix or collapsed n."""
+def _pooled_random_skip_reason(rows: Sequence[dict[str, Any]]) -> Optional[str]:
+    """Why map_family=random Wilcoxon is skipped, or None to test."""
 
     solved = [r for r in rows if r.get("solved")]
     flags = {bool(r.get("nested_density")) for r in solved}
     if flags == {True, False}:
-        return True
-    n_maps = sum(1 for r in solved if r.get("expansion_diff") is not None)
-    return len(collapse_random_diffs(solved)) != n_maps
+        return (
+            "Wilcoxon skipped: pooled random mixes nested and independent files; "
+            "see overall_random and obstacle_count"
+        )
+    test_rows = expansion_test_rows(rows)
+    n_maps = sum(1 for r in test_rows if r.get("expansion_diff") is not None)
+    if len(collapse_random_diffs(test_rows)) != n_maps:
+        return (
+            "Wilcoxon skipped on pooled nested random; see overall_random and obstacle_count"
+        )
+    return None
 
 
 def _describe(
@@ -75,16 +93,25 @@ def _describe(
     solved = [r for r in rows if r.get("solved")]
     n_timeout = sum(1 for r in rows if r.get("timed_out"))
     n_solved = len(solved)
-    test_diffs = collapse_random_diffs(solved)
+    n_mismatch = sum(1 for r in solved if r.get("cost_mismatch"))
+    test_rows = expansion_test_rows(rows)
+    test_diffs = collapse_random_diffs(test_rows)
     n_test = len(test_diffs)
     n_f2f, n_f2e, n_tie = expansion_win_counts(test_diffs)
     n_untied = n_f2f + n_f2e
     n_for_pct = n_test if n_test else n_solved
     pct = lambda c: None if n_for_pct == 0 else 100.0 * c / n_for_pct
     notes: list[str] = []
-    if any(r.get("map_family") == "random" for r in solved) and n_test != n_solved:
+    if n_mismatch:
         notes.append(
-            f"Wilcoxon n_test={n_test} collapsed family_ids; descriptives n_solved={n_solved}"
+            f"excluded {n_mismatch} cost_mismatch rows from expansion tests"
+        )
+    if any(r.get("map_family") == "random" for r in test_rows) and n_test != len(
+        test_rows
+    ):
+        notes.append(
+            f"Wilcoxon n_test={n_test} collapsed family_ids; "
+            f"descriptives n_solved={n_solved}"
         )
     if skip_tests:
         w_stat = w_p = s_p = None
@@ -110,26 +137,28 @@ def _describe(
         "pct_f2e_fewer": pct(n_f2e),
         "pct_tie": pct(n_tie),
         "mean_expansion_saving_pct": _mean(
-            [r.get("expansion_saving_pct") for r in solved]
+            [r.get("expansion_saving_pct") for r in test_rows]
         ),
         "median_expansion_saving_pct": _median(
-            [r.get("expansion_saving_pct") for r in solved]
+            [r.get("expansion_saving_pct") for r in test_rows]
         ),
         "mean_generation_saving_pct": _mean(
-            [r.get("generation_saving_pct") for r in solved]
+            [r.get("generation_saving_pct") for r in test_rows]
         ),
         "median_generation_saving_pct": _median(
-            [r.get("generation_saving_pct") for r in solved]
+            [r.get("generation_saving_pct") for r in test_rows]
         ),
-        "mean_runtime_ratio": _mean([r.get("runtime_ratio") for r in solved]),
-        "median_runtime_ratio": _median([r.get("runtime_ratio") for r in solved]),
+        "mean_runtime_ratio": _mean([r.get("runtime_ratio") for r in test_rows]),
+        "median_runtime_ratio": _median([r.get("runtime_ratio") for r in test_rows]),
         "mean_heuristic_time_ratio": _mean(
-            [r.get("heuristic_time_ratio") for r in solved]
+            [r.get("heuristic_time_ratio") for r in test_rows]
         ),
         "median_heuristic_time_ratio": _median(
-            [r.get("heuristic_time_ratio") for r in solved]
+            [r.get("heuristic_time_ratio") for r in test_rows]
         ),
-        "median_expansion_diff": _median([r.get("expansion_diff") for r in solved]),
+        "median_expansion_diff": _median(
+            [r.get("expansion_diff") for r in test_rows]
+        ),
         "wilcoxon_stat": w_stat,
         "wilcoxon_p_raw": w_p,
         "wilcoxon_p_holm": None,
@@ -165,16 +194,17 @@ def summarize(paired: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
             buckets[key].append(row)
         family_rows: list[dict[str, Any]] = []
         for key in sorted(buckets, key=str):
-            skip_tests = False
+            skip_reason = None
             if group_type == "map_family" and key == "random":
-                skip_tests = _skip_pooled_random_tests(buckets[key])
+                skip_reason = _pooled_random_skip_reason(buckets[key])
             rec = {
                 "group_type": group_type,
                 "group": key,
                 **_describe(
                     buckets[key],
                     exploratory=exploratory,
-                    skip_tests=skip_tests,
+                    skip_tests=skip_reason is not None,
+                    skip_reason=skip_reason,
                 ),
             }
             family_rows.append(rec)

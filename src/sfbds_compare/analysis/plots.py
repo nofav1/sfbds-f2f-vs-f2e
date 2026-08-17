@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any, Sequence
 
-from sfbds_compare.analysis.summarize import nested_density_group_key
+from sfbds_compare.analysis.summarize import expansion_test_rows, nested_density_group_key
 
 
 def paired_xy(
@@ -22,6 +22,12 @@ def paired_xy(
     return [p[0] for p in pts], [p[1] for p in pts]
 
 
+def rows_for_plots(paired: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Rows every plot series is built from (cost-clean solved pairs)."""
+
+    return expansion_test_rows(paired)
+
+
 def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[Path]:
     try:
         import matplotlib.pyplot as plt
@@ -31,7 +37,7 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
 
     root = Path(out_dir)
     root.mkdir(parents=True, exist_ok=True)
-    solved = [r for r in paired if r.get("solved")]
+    drawn = rows_for_plots(paired)
     written: list[Path] = []
 
     def save(fig, name: str) -> None:
@@ -42,8 +48,8 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
         written.append(path)
 
     fig, ax = plt.subplots()
-    x = [r["f2e_expanded"] for r in solved]
-    y = [r["f2f_expanded"] for r in solved]
+    x = [r["f2e_expanded"] for r in drawn]
+    y = [r["f2f_expanded"] for r in drawn]
     ax.scatter(x, y, s=18, alpha=0.7)
     if x and y:
         hi = max(max(x), max(y))
@@ -54,9 +60,9 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
     save(fig, "expansions_scatter.png")
 
     fig, ax = plt.subplots()
-    families = sorted({r["map_family"] for r in solved})
+    families = sorted({r["map_family"] for r in drawn})
     data = [
-        [r["expansion_saving_pct"] for r in solved if r["map_family"] == fam
+        [r["expansion_saving_pct"] for r in drawn if r["map_family"] == fam
          and r.get("expansion_saving_pct") is not None]
         for fam in families
     ]
@@ -71,7 +77,7 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
     save(fig, "saving_by_family.png")
 
     random_rows = [
-        r for r in solved if r["map_family"] == "random" and r.get("nested_density")
+        r for r in drawn if r["map_family"] == "random" and r.get("nested_density")
     ]
 
     keys = sorted(
@@ -101,7 +107,7 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
     save(fig, "saving_by_density.png")
 
     fig, ax = plt.subplots()
-    xs, ys = paired_xy(solved, "detour_ratio", "expansion_saving_pct")
+    xs, ys = paired_xy(drawn, "detour_ratio", "expansion_saving_pct")
     ax.scatter(xs, ys, s=18, alpha=0.7)
     ax.axhline(0, color="black", linewidth=0.8)
     ax.set_xlabel("detour_ratio")
@@ -110,7 +116,7 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
     save(fig, "saving_vs_detour.png")
 
     fig, ax = plt.subplots()
-    ratios = [r["runtime_ratio"] for r in solved if r.get("runtime_ratio") is not None]
+    ratios = [r["runtime_ratio"] for r in drawn if r.get("runtime_ratio") is not None]
     if ratios:
         ax.hist(ratios, bins=min(20, max(5, len(ratios) // 3)))
     ax.axvline(1.0, color="black", linewidth=0.8)
@@ -119,9 +125,9 @@ def write_plots(paired: Sequence[dict[str, Any]], out_dir: str | Path) -> list[P
     save(fig, "runtime_ratio.png")
 
     fig, ax = plt.subplots()
-    fx, fy = paired_xy(solved, "f2f_forward_expanded", "f2f_backward_expanded")
+    fx, fy = paired_xy(drawn, "f2f_forward_expanded", "f2f_backward_expanded")
     ax.scatter(fx, fy, s=18, alpha=0.7, label="F2F")
-    ex, ey = paired_xy(solved, "f2e_forward_expanded", "f2e_backward_expanded")
+    ex, ey = paired_xy(drawn, "f2e_forward_expanded", "f2e_backward_expanded")
     ax.scatter(ex, ey, s=18, alpha=0.7, label="F2E", marker="x")
     ax.set_xlabel("forward_expanded")
     ax.set_ylabel("backward_expanded")

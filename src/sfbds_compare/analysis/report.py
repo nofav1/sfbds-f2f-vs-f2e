@@ -124,6 +124,7 @@ def _maze_runtime_slice(paired: Sequence[dict[str, Any]]) -> str:
         for r in paired
         if r.get("map_family") == "maze"
         and _as_bool(r.get("solved"))
+        and not _as_bool(r.get("cost_mismatch"))
         and r.get("expansion_diff") not in (None, 0, "0")
         and r.get("runtime_ratio") is not None
         and r.get("runtime_ratio") != ""
@@ -238,6 +239,28 @@ def _headline(
     return bullets
 
 
+def _pooled_random_skip_sentence(summary: Sequence[dict[str, Any]]) -> str:
+    recs = [
+        r
+        for r in summary
+        if r.get("group_type") == "map_family" and r.get("group") == "random"
+    ]
+    if not recs:
+        return ""
+    note = str(recs[0].get("note") or "")
+    if "mixes nested and independent" in note:
+        return (
+            "Pooled `random` mixes nested and independent files, "
+            "so tests are skipped there on purpose."
+        )
+    if "skipped on pooled nested random" in note or "skipped on this pooled group" in note:
+        return (
+            "Pooled `random` collapses nested densities (`n_test` ≠ `n_solved`), "
+            "so tests are skipped there on purpose; use the per-experiment density table."
+        )
+    return ""
+
+
 def render_readme(
     paired: Sequence[dict[str, Any]],
     summary: Sequence[dict[str, Any]],
@@ -292,20 +315,22 @@ def render_readme(
         _experiment_counts(paired),
     )
     maze_runtime = _maze_runtime_slice(paired)
+    pooled_random_note = _pooled_random_skip_sentence(summary)
+    pooled_random_block = f"\n{pooled_random_note}\n" if pooled_random_note else ""
 
     return f"""# Analysis results (F2F vs F2E)
 
 This file is **generated** by `python -m sfbds_compare.analysis`. Re-run analysis to refresh it. Do not edit by hand.
 
 ```bash
-python -m sfbds_compare.analysis --input-dir results/study --out-dir results/analysis/<run-name>
+python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir results/analysis/pair-bound/<run-name>
 ```
 
 ## Headline
 
 {bullets}
 
-Coverage of this run: **{n_paired}** paired instances, **{n_solved}** solved, **{n_timeout}** timed out, **{n_nested}** nested-density rows, map families {", ".join(families)}. Cost mismatches (F2F vs F2E solution cost): **{n_mismatch}**.
+Coverage of this run: **{n_paired}** paired instances, **{n_solved}** solved, **{n_timeout}** timed out, **{n_nested}** nested-density rows, map families {", ".join(families)}. Cost mismatches (F2F / F2E / A* when A* succeeded): **{n_mismatch}**.
 
 ## What the files are
 
@@ -313,17 +338,18 @@ Coverage of this run: **{n_paired}** paired instances, **{n_solved}** solved, **
 | --- | --- |
 | `paired.csv` | One row per instance: F2F vs F2E on the same map (`pair_id` = family + `map_hash`). A* is a sidecar (cost / success), not mixed into expansion savings. |
 | `summary.csv` / `stats.csv` | Same grouped table (descriptives + tests). Identical copies. |
-| `expansions_scatter.png` | F2F pair expansions vs F2E (line of equality). |
-| `saving_by_family.png` | Expansion saving % by map family. |
-| `saving_by_density.png` | Expansion saving % by `obstacle_count` for **nested** random maps only. |
-| `saving_vs_detour.png` | Saving % vs detour ratio. |
-| `runtime_ratio.png` | Histogram of F2F/F2E runtime. |
-| `forward_backward.png` | Forward vs backward pair expansions. |
+| `expansions_scatter.png` | F2F pair expansions vs F2E (line of equality). Cost-clean solved rows only. |
+| `saving_by_family.png` | Expansion saving % by map family. Cost-clean solved rows only. |
+| `saving_by_density.png` | Expansion saving % by `obstacle_count` for **nested** random maps only. Cost-clean solved rows only. |
+| `saving_vs_detour.png` | Saving % vs detour ratio. Cost-clean solved rows only. |
+| `runtime_ratio.png` | Histogram of F2F/F2E runtime. Cost-clean solved rows only. |
+| `forward_backward.png` | Forward vs backward pair expansions. Cost-clean solved rows only. |
 
 ## How to read the numbers
 
 - **Pair expansions only.** A* `expanded` is states; SFBDS `expanded` is pairs. Saving % is `(F2E − F2F) / F2E × 100`. Positive means F2F expanded fewer pairs.
 - **Solved pair** = both SFBDS succeeded and neither timed out. Timeouts stay in `paired.csv` with null diffs; they are excluded from means, win %, and tests.
+- **`cost_mismatch`** = F2F, F2E, or successful A* disagree on solution cost. Those rows stay in `paired.csv` but are **excluded from expansion tests** (Wilcoxon, sign, F2F-fewer / F2E-fewer / ties, expansion saving %) **and from plots**.
 - **`n_solved`** = descriptive sample. **`n_test`** = Wilcoxon sample after collapsing nested `family_id`s (median `expansion_diff` per family). If they differ, densities of the same query were not treated as independent n. **F2F fewer / F2E fewer / ties** in the tables are counted on the same units as `n_test` (families after collapse, maps otherwise).
 - **Primary test:** two-sided Wilcoxon on `expansion_diff = F2E − F2F`. **Confirmatory:** sign test on who expanded fewer, ties dropped. If `n_untied < 10`, p is **null** (not a missing file). That is expected when F2F and F2E almost always tie (open, corridor).
 - **Rank-biserial** > 0 means F2F fewer expansions on the untied pairs.
@@ -337,9 +363,7 @@ Coverage of this run: **{n_paired}** paired instances, **{n_solved}** solved, **
 ## Map family
 
 {family_table}
-
-Pooled `random` mixes nested and independent files, so tests are skipped there on purpose.
-
+{pooled_random_block}
 ## Nested density (eligible maps only)
 
 {dens_table}
