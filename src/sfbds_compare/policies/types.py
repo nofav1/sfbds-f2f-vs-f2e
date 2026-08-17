@@ -31,6 +31,7 @@ class PathAction(Enum):
 
     PUSH = auto()
     REPLACE_OPEN = auto()
+    REOPEN = auto()
     DISCARD = auto()
 
 

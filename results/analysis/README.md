@@ -37,6 +37,8 @@ python -m sfbds_compare.analysis --input-dir results/study/legacy --out-dir resu
 
 ## Runs (pair-bound F2E)
 
+These snapshots use **NoReopen** pair-bound F2E (pre-`BetterGReopenPolicy`). Cite reopen F2E only from `*_opt` after that run. Until then, cite maze from `2026-08-17-cost-clean-plots` as pre-fix; do not cite nested-random p-values.
+
 | Folder | Date | Input | What it is |
 | --- | --- | --- | --- |
 | [`pair-bound/2026-08-17-baseline-study`](pair-bound/2026-08-17-baseline-study/) | 2026-08-17 | `configs/study/` CSVs in `results/study/pair-bound` | First paired F2F vs official pair-bound F2E analysis of the current study matrix (corridor 512, maze 127, open 128, nested random 64/128). Nested-random p-values in this README include cost mismatches; do not cite. |

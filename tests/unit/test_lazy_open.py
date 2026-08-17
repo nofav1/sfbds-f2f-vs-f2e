@@ -92,3 +92,18 @@ def test_closed_set_roundtrip() -> None:
     assert closed.contains("c")
     assert closed.get("c") is node
     assert len(closed) == 1
+
+
+def test_closed_set_remove() -> None:
+    closed: ClosedSet[str, _Node] = ClosedSet()
+    node = _Node("c", g=1)
+    closed.add("c", node)
+    assert closed.remove("c") is node
+    assert closed.contains("c") is False
+    assert closed.get("c") is None
+    try:
+        closed.remove("c")
+    except KeyError:
+        pass
+    else:
+        raise AssertionError("expected KeyError for missing CLOSED key")

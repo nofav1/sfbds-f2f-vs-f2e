@@ -22,6 +22,10 @@ PairKey = tuple[StateT, StateT]
 class SFBDSSearcher(Generic[StateT]):
     """Single-frontier bidirectional search with injectable policies/heuristic.
 
+    ``policies`` default is ``default_policies()`` (NoReopen). That is official
+    F2F. Official F2E is :func:`official_f2e_searcher`, not
+    ``SFBDSSearcher(F2EPairLowerBound())``.
+
     Metric conventions (aligned with A* MVP):
     - **Late:** goal when selected from OPEN (``forward == backward``); that
       selection is **not** counted in ``expanded``.
@@ -156,7 +160,7 @@ class SFBDSSearcher(Generic[StateT]):
                     metrics.duplicates_discarded += 1
                     continue
 
-                # PUSH and REPLACE_OPEN both mean insert/improve OPEN (lazy).
+                # PUSH, REPLACE_OPEN, and REOPEN all insert/improve OPEN (lazy).
                 t1 = time.perf_counter()
                 h_gap = self._heuristic.evaluate(
                     provisional.forward,
@@ -175,10 +179,13 @@ class SFBDSSearcher(Generic[StateT]):
                     parent_F=provisional.parent_F,
                     parent_B=provisional.parent_B,
                 )
-                if open_list.push(child):
-                    metrics.note_open_size(open_list.logical_size())
-                else:
-                    metrics.duplicates_discarded += 1
+                self._insert_child(
+                    action,
+                    child,
+                    closed=closed,
+                    open_list=open_list,
+                    metrics=metrics,
+                )
 
         metrics.stale_skipped = open_list.stale_skipped
         snap = metrics.finish(success=False, solution_cost=None)
@@ -187,6 +194,30 @@ class SFBDSSearcher(Generic[StateT]):
             termination_reason=TerminationReason.OPEN_EXHAUSTED,
             metrics=snap,
         )
+
+    def _insert_child(
+        self,
+        action: PathAction,
+        child: SFBDSNode[StateT],
+        *,
+        closed: ClosedSet[PairKey, SFBDSNode[StateT]],
+        open_list: LazyHeapOpen[PairKey, SFBDSNode[StateT]],
+        metrics: MetricsCollector,
+    ) -> None:
+        """Push ``child``; on REOPEN, remove CLOSED first and restore if push fails."""
+
+        closed_victim: Optional[SFBDSNode[StateT]] = None
+        if action is PathAction.REOPEN:
+            closed_victim = closed.remove(child.pair_key)
+        if open_list.push(child):
+            metrics.note_open_size(open_list.logical_size())
+            return
+        if closed_victim is not None:
+            closed.add(child.pair_key, closed_victim)
+            raise RuntimeError(
+                f"REOPEN push rejected for pair {child.pair_key!r}; CLOSED restored"
+            )
+        metrics.duplicates_discarded += 1
 
     def _child_shell(
         self,
@@ -215,3 +246,24 @@ class SFBDSSearcher(Generic[StateT]):
             parent_F=node.parent_F,
             parent_B=node,
         )
+
+
+def official_f2e_searcher(
+    *,
+    metrics_factory: Optional[Callable[[], MetricsCollector]] = None,
+) -> SFBDSSearcher:
+    """Official SFBDS-F2E: pair lower bound plus better-g CLOSED reopen.
+
+    ``SFBDSSearcher(F2EPairLowerBound())`` uses ``default_policies()``
+    (NoReopen) and is **not** official F2E. F2F stays
+    ``SFBDSSearcher(F2FManhattanHeuristic())``.
+    """
+
+    from sfbds_compare.heuristics.f2e import F2EPairLowerBound
+    from sfbds_compare.policies import f2e_policies
+
+    return SFBDSSearcher(
+        F2EPairLowerBound(),
+        policies=f2e_policies(),
+        metrics_factory=metrics_factory,
+    )

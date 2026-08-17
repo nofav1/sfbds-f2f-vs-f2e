@@ -27,3 +27,16 @@ class NoReopenPolicy(Generic[StateT]):
         candidate: SFBDSNode[StateT],
     ) -> PathAction:
         return PathAction.DISCARD
+
+
+class BetterGReopenPolicy(Generic[StateT]):
+    """Reopen CLOSED pairs on strictly better g; discard equal or worse g."""
+
+    def decide_closed(
+        self,
+        existing: SFBDSNode[StateT],
+        candidate: SFBDSNode[StateT],
+    ) -> PathAction:
+        if candidate.g < existing.g:
+            return PathAction.REOPEN
+        return PathAction.DISCARD

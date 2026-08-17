@@ -32,13 +32,12 @@ from sfbds_compare.experiments.visualize import (
     QueryFrame,
     write_visual,
 )
-from sfbds_compare.heuristics.f2e import F2EPairLowerBound
 from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
 from sfbds_compare.metrics.collector import MetricsCollector
 from sfbds_compare.search.astar import AStarSearcher
 from sfbds_compare.search.result import SearchResult, TerminationReason
-from sfbds_compare.search.sfbds import SFBDSSearcher
+from sfbds_compare.search.sfbds import SFBDSSearcher, official_f2e_searcher
 
 # Grace period after signaling should_stop for the loop to return real metrics.
 _TIMEOUT_GRACE_SEC = 2.0
@@ -115,9 +114,7 @@ def _search_with_stop(
             problem, should_stop=should_stop
         )
     if algorithm == "sfbds_f2e":
-        return SFBDSSearcher(F2EPairLowerBound()).search(
-            problem, should_stop=should_stop
-        )
+        return official_f2e_searcher().search(problem, should_stop=should_stop)
     raise ValueError(f"unsupported algorithm: {algorithm}")
 
 

@@ -8,9 +8,16 @@ from sfbds_compare.domain.grid import GridProblem, GridState
 from sfbds_compare.heuristics.f2e import F2EPairLowerBound
 from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
+from sfbds_compare.metrics.collector import MetricsCollector
+from sfbds_compare.policies.reopen import BetterGReopenPolicy, NoReopenPolicy
+from sfbds_compare.policies.tie_break import TBhTieBreakingPolicy
+from sfbds_compare.policies.types import PathAction
 from sfbds_compare.search.astar import AStarSearcher
+from sfbds_compare.search.nodes import SFBDSNode
 from sfbds_compare.search.result import TerminationReason
-from sfbds_compare.search.sfbds import SFBDSSearcher
+from sfbds_compare.search.sfbds import SFBDSSearcher, official_f2e_searcher
+from sfbds_compare.structures.closed_set import ClosedSet
+from sfbds_compare.structures.open_list import LazyHeapOpen
 
 
 def _assert_unit_path(
@@ -135,7 +142,7 @@ def test_sfbds_f2e_cost_agrees_with_astar_open_and_obstacle() -> None:
         obstacles=[GridState(0, 1)],
     )
     for problem in (open_problem, obstacle_problem):
-        sfbds = SFBDSSearcher(F2EPairLowerBound()).search(problem)
+        sfbds = official_f2e_searcher().search(problem)
         astar = AStarSearcher(UniManhattanHeuristic()).search(problem)
         assert sfbds.success and astar.success
         assert sfbds.solution_cost == astar.solution_cost
@@ -160,8 +167,10 @@ def test_sfbds_dead_end_goal_expands_backward() -> None:
         goal=GridState(2, 2),
         obstacles=[GridState(2, 1)],
     )
-    for heuristic in (F2FManhattanHeuristic(), F2EPairLowerBound()):
-        result = SFBDSSearcher(heuristic).search(problem)
+    for result in (
+        SFBDSSearcher(F2FManhattanHeuristic()).search(problem),
+        official_f2e_searcher().search(problem),
+    ):
         assert result.success
         _assert_sfbds_instrumentation(result)
         assert result.metrics.backward_expanded is not None
@@ -223,3 +232,108 @@ def test_sfbds_passes_child_g_to_pair_evaluate() -> None:
     child_gs = [(g_F, g_B) for _, _, g_F, g_B in spy.calls[1:]]
     assert child_gs
     assert all(g_F > 0.0 and g_B == 0.0 for g_F, g_B in child_gs)
+
+
+def test_f2e_meeting_remaining_cost_is_zero() -> None:
+    problem = GridProblem(1, 4, GridState(0, 0), GridState(0, 3))
+    result = official_f2e_searcher().search(problem)
+    assert result.success
+    assert result.path is not None
+    assert result.metrics.meeting_g_F is not None
+    assert result.metrics.meeting_g_B is not None
+    meeting = result.path[int(result.metrics.meeting_g_F)]
+    h_gap = F2EPairLowerBound().evaluate(
+        meeting,
+        meeting,
+        problem,
+        g_F=result.metrics.meeting_g_F,
+        g_B=result.metrics.meeting_g_B,
+    )
+    assert h_gap == 0.0
+    lb = F2EPairLowerBound().lower_bound(
+        meeting,
+        meeting,
+        problem,
+        result.metrics.meeting_g_F,
+        result.metrics.meeting_g_B,
+    )
+    assert lb == result.solution_cost
+
+
+def test_official_f2e_searcher_is_not_bare_bound() -> None:
+    official = official_f2e_searcher()
+    bare = SFBDSSearcher(F2EPairLowerBound())
+    assert isinstance(official._policies.reopen, BetterGReopenPolicy)
+    assert isinstance(bare._policies.reopen, NoReopenPolicy)
+
+
+def test_runner_f2e_uses_official_factory() -> None:
+    import inspect
+
+    from sfbds_compare.experiments import runner
+
+    source = inspect.getsource(runner._search_with_stop)
+    assert "official_f2e_searcher" in source
+    assert "F2EPairLowerBound()" not in source
+
+
+def test_search_package_lazy_exports_searcher() -> None:
+    from sfbds_compare.search import SFBDSSearcher as Exported
+    from sfbds_compare.search import official_f2e_searcher as exported_factory
+
+    assert Exported is SFBDSSearcher
+    assert exported_factory is official_f2e_searcher
+
+
+def test_reopen_push_false_restores_closed_and_raises() -> None:
+    existing = SFBDSNode(forward="p", backward="q", g_F=5.0, g_B=0.0, h_gap=0.0)
+    child = SFBDSNode(forward="p", backward="q", g_F=2.0, g_B=0.0, h_gap=0.0)
+    closed: ClosedSet[tuple[str, str], SFBDSNode[str]] = ClosedSet()
+    closed.add(existing.pair_key, existing)
+    tie = TBhTieBreakingPolicy[str]()
+
+    class _RejectOpen(LazyHeapOpen[tuple[str, str], SFBDSNode[str]]):
+        def push(self, node: SFBDSNode[str]) -> bool:
+            del node
+            return False
+
+    open_list = _RejectOpen(
+        key_of=lambda n: n.pair_key,
+        g_of=lambda n: n.g,
+        sort_key_of=tie.sort_key,
+    )
+    searcher = SFBDSSearcher(F2FManhattanHeuristic())
+    with pytest.raises(RuntimeError, match="REOPEN push rejected"):
+        searcher._insert_child(
+            PathAction.REOPEN,
+            child,
+            closed=closed,
+            open_list=open_list,
+            metrics=MetricsCollector(),
+        )
+    assert closed.get(existing.pair_key) is existing
+
+
+def test_reopen_insert_removes_closed_then_push_expands() -> None:
+    existing = SFBDSNode(forward="p", backward="q", g_F=5.0, g_B=0.0, h_gap=0.0)
+    child = SFBDSNode(forward="p", backward="q", g_F=2.0, g_B=0.0, h_gap=0.0)
+    closed: ClosedSet[tuple[str, str], SFBDSNode[str]] = ClosedSet()
+    closed.add(existing.pair_key, existing)
+    tie = TBhTieBreakingPolicy[str]()
+    open_list: LazyHeapOpen[tuple[str, str], SFBDSNode[str]] = LazyHeapOpen(
+        key_of=lambda n: n.pair_key,
+        g_of=lambda n: n.g,
+        sort_key_of=tie.sort_key,
+    )
+    searcher = SFBDSSearcher(F2FManhattanHeuristic())
+    searcher._insert_child(
+        PathAction.REOPEN,
+        child,
+        closed=closed,
+        open_list=open_list,
+        metrics=MetricsCollector(),
+    )
+    assert closed.contains(child.pair_key) is False
+    popped = open_list.pop_min()
+    assert popped is child
+    assert closed.contains(popped.pair_key) is False

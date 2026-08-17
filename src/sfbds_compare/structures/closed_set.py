@@ -23,6 +23,9 @@ class ClosedSet(Generic[K, N]):
     def get(self, key: K) -> Optional[N]:
         return self._nodes.get(key)
 
+    def remove(self, key: K) -> N:
+        return self._nodes.pop(key)
+
     def __len__(self) -> int:
         return len(self._nodes)
 

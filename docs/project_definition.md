@@ -246,7 +246,7 @@ Same SFBDS framework without pair-cache as the primary factor; emphasize density
 | Ties | Locked | **TBh** (prefer smaller \(h\) / larger \(g\)), then deterministic pair/state id |
 | Heuristic | Locked for MVP | **Manhattan** on 4-connected unit grids (admissible + consistent) |
 | Pair \(f\) | Locked 2026-08-17 | SFBDS stores \(f=g_F+g_B+h_{\mathrm{gap}}\). F2F: \(h_{\mathrm{gap}}=\mathrm{MD}(u,v)\). Official F2E is a **pair lower bound**: \(\mathrm{lb}=g_F+g_B\) if \(u=v\), else \(\max(g_F+\mathrm{MD}(u,G),\,g_B+\mathrm{MD}(S,v),\,g_F+g_B+1)\); adapter \(h_{\mathrm{gap}}=\max(0,\mathrm{lb}-g_F-g_B)\). Study CSVs from before this lock used the legacy gap \(\max(\lvert\mathrm{MD}(u,G)-\mathrm{MD}(v,G)\rvert,\lvert\mathrm{MD}(S,u)-\mathrm{MD}(S,v)\rvert)\) and are not corrected F2E. |
-| Reopening | Locked under consistent \(h\) | None required for MVP |
+| Reopening | Locked | F2F / consistent \(h\): none (`NoReopenPolicy`). Official F2E remaining-cost adapter is **not** consistent on pair key \((u,v)\): `BetterGReopenPolicy` (strictly better CLOSED \(g\) → remove then push). Late-stop optimality is Option C (12 frozen mismatch rows vs A*), not a general proof. Do not revert F2E to NoReopen to “match” the old consistent-\(h\) MVP line. |
 | Cache | Locked object; semantics gate | Shared **pair/result** cache for F2E and F2F; off / unbounded / capped; report hits/misses. Exact key/eviction from Lippi PDF. **Not** primary \(h\)-memo under Manhattan. |
 | Eval-cost sensitivity | Locked in MVP | Small multiplier on heuristic wall time / artificial delay (Idea D light) |
 | Metrics | Locked | Runtime, expansions, generations, heuristic evals + time, peak OPEN/CLOSED/cache, solution cost, timeouts |

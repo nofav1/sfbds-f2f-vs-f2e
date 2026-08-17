@@ -23,9 +23,11 @@ class BetterPathPolicy(Protocol[StateT]):
 class ReplaceBetterOpenPathPolicy(Generic[StateT]):
     """Push unseen; replace OPEN on strictly better g; CLOSED → ReopenPolicy.
 
-    Does not mutate OPEN/CLOSED. For MVP, ``PUSH`` and ``REPLACE_OPEN`` are
-    both applied as ``open_list.push`` (improve-only / lazy stale). A future
-    reopen policy that resurrects CLOSED must remove the CLOSED entry itself.
+    Does not mutate OPEN/CLOSED. ``PUSH`` and ``REPLACE_OPEN`` are both
+    applied as ``open_list.push`` (improve-only / lazy stale). ``REOPEN`` is
+    for CLOSED only: the searcher must ``closed.remove`` then push. Do not
+    return ``PUSH`` for a CLOSED duplicate (the searcher would skip the
+    later pop while the key is still CLOSED).
     """
 
     def decide(

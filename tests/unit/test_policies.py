@@ -7,7 +7,8 @@ from sfbds_compare.policies.better_path import ReplaceBetterOpenPathPolicy
 from sfbds_compare.policies.direction import BranchingFactorDirectionPolicy
 from sfbds_compare.policies.duplicates import OrderedPairDuplicatePolicy
 from sfbds_compare.policies.goal import GoalOnSelectPolicy
-from sfbds_compare.policies.reopen import NoReopenPolicy
+from sfbds_compare.policies import default_policies, f2e_policies
+from sfbds_compare.policies.reopen import BetterGReopenPolicy, NoReopenPolicy
 from sfbds_compare.policies.tie_break import TBhTieBreakingPolicy
 from sfbds_compare.policies.types import (
     DuplicateLocation,
@@ -175,6 +176,52 @@ def test_better_path_replace_open_lazy_and_noreopen() -> None:
         )
         is PathAction.DISCARD
     )
+
+
+def test_better_g_reopen_policy_strict_better_only() -> None:
+    policy = BetterGReopenPolicy[str]()
+    existing = _pair("c", "d", g_F=5.0, g_B=0.0)
+    better = _pair("c", "d", g_F=3.0, g_B=0.0)
+    equal = _pair("c", "d", g_F=2.0, g_B=3.0)
+    worse = _pair("c", "d", g_F=6.0, g_B=0.0)
+    assert policy.decide_closed(existing, better) is PathAction.REOPEN
+    assert policy.decide_closed(existing, equal) is PathAction.DISCARD
+    assert policy.decide_closed(existing, worse) is PathAction.DISCARD
+
+
+def test_better_path_closed_delegates_reopen_not_push() -> None:
+    better = ReplaceBetterOpenPathPolicy[str]()
+    reopen = BetterGReopenPolicy[str]()
+    existing = _pair("c", "d", g_F=5.0)
+    candidate = _pair("c", "d", g_F=1.0)
+    action = better.decide(
+        DuplicateLookup(DuplicateLocation.CLOSED, existing),
+        candidate,
+        reopen,
+    )
+    assert action is PathAction.REOPEN
+    assert action is not PathAction.PUSH
+
+
+def test_reopen_remove_then_push_is_expanded_not_skipped() -> None:
+    """Searcher skip is `if closed.contains: continue`; remove must precede push."""
+
+    closed: ClosedSet[tuple[str, str], SFBDSNode[str]] = ClosedSet()
+    open_list = _make_open()
+    first = _pair("p", "q", g_F=5.0)
+    closed.add(first.pair_key, first)
+    better = _pair("p", "q", g_F=2.0)
+    assert BetterGReopenPolicy[str]().decide_closed(first, better) is PathAction.REOPEN
+    closed.remove(better.pair_key)
+    assert open_list.push(better) is True
+    popped = open_list.pop_min()
+    assert popped is better
+    assert closed.contains(popped.pair_key) is False
+
+
+def test_f2e_policies_reopen_default_does_not() -> None:
+    assert isinstance(default_policies().reopen, NoReopenPolicy)
+    assert isinstance(f2e_policies().reopen, BetterGReopenPolicy)
 
 
 def test_tbh_prefers_smaller_h_gap_on_equal_f() -> None:

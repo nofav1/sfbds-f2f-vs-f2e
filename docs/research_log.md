@@ -59,7 +59,9 @@ These are in force until we explicitly revise this section.
 
 **SFBDS-F2E pair bound (locked 2026-08-17)**
 
-- Official `sfbds_f2e` is `F2EPairLowerBound`: on unit grids, `lb = g_F+g_B` when `u=v`, else `lb = max(g_F+MD(u,G), g_B+MD(S,v), g_F+g_B+1)`. SFBDS still stores remaining cost via `h_gap = max(0, lb − g_F − g_B)`.
+- Official `sfbds_f2e` **bound** is `F2EPairLowerBound`: on unit grids, `lb = g_F+g_B` when `u=v`, else `lb = max(g_F+MD(u,G), g_B+MD(S,v), g_F+g_B+1)`. SFBDS still stores remaining cost via `h_gap = max(0, lb − g_F − g_B)`.
+- Official `sfbds_f2e` **search** is `official_f2e_searcher()`: that bound plus `f2e_policies()` (`BetterGReopenPolicy`: strictly better CLOSED `g` → remove then push). `SFBDSSearcher(F2EPairLowerBound())` is MVP NoReopen and is **not** official F2E. F2F stays `default_policies()` / `NoReopenPolicy`. Reopen is the hypothesized repair for the demonstrated pair-key inconsistency; empirically accepted on the frozen mismatch-row gate. Not a general proof of Late-stop optimality.
+- Current `results/study/pair-bound/study_*.csv` stems (no `_opt`) and the 2026-08-17 analysis snapshots are **NoReopen** pair-bound F2E. Cite reopen F2E only from `*_opt` after that run. Until then, cite maze from [`results/analysis/pair-bound/2026-08-17-cost-clean-plots/`](../results/analysis/pair-bound/2026-08-17-cost-clean-plots/) as pre-fix, and do not cite nested-random p-values.
 - Every study CSV and analysis snapshot **before this lock** used the project-choice gap `max(|MD(x,G)−MD(y,G)|, |MD(S,x)−MD(S,y)|)` (now `LegacyFixedEndpointGapHeuristic`, tests only). Those results are **legacy F2E**, not the pair bound. They live under `results/study/legacy/`, `results/pilot/legacy/`, and `results/analysis/legacy/`. Do not cite them as corrected F2E. New pair-bound output goes to the matching `pair-bound/` folders. Regenerate study CSVs only after approval.
 
 ---
@@ -280,7 +282,7 @@ Study / follow-up / pilot YAML `output_dir` now points at the pair-bound folders
 - No nested-density group now has `n_untied ≥ 10`.
 - Generated README skip sentence for pooled random is “collapses nested densities,” not a false independent-file mix.
 
-**Diagnosis (study_random_64 q=20, 1228 obstacles, hash `d604ed0b69115ce9`).** A* and F2F cost 53; F2E cost 57 (450 vs 2881 pairs). F2E discarded **230** better-`g` CLOSED pairs. Cause is **NoReopen + remaining-cost adapter**, not a swapped-`g` wiring bug. A strict xfail locks F2E=A* on this map until reopen or a consistent adapter is locked.
+**Diagnosis (study_random_64 q=20, 1228 obstacles, hash `d604ed0b69115ce9`).** A* and F2F cost 53; F2E cost 57 (450 vs 2881 pairs). F2E discarded **230** better-`g` CLOSED pairs. That sentence was the **hypothesis at the time**; the 2026-08-17 q=20 optimality-diagnosis entry demonstrated it. A strict xfail locked F2E=A* on this map until reopen landed.
 
 **Decisions.** Keep maze. Do not cite nested-random expansion p-values until F2E is solution-optimal vs A* or we pre-register a cost-clean protocol with `n_untied ≥ 10`. Do not cite plots in this folder as mismatch-free.
 
@@ -301,12 +303,54 @@ Study / follow-up / pilot YAML `output_dir` now points at the pair-bound folders
 
 ---
 
+### 2026-08-17 — F2E optimality diagnosis (q=20); fix not started
+
+**Instance:** `study_random_64` query 20, 1228 obstacles, hash `d604ed0b69115ce9`. A* 53, F2F 53 (450 pairs), F2E 57 (2881 pairs). Same Late-goal cell `(57,51)`; F2F `g_F+g_B = 41+12`, F2E `45+12`.
+
+**Demonstrated (not assumed).**
+
+- F2E never generated a meeting pair at g=53. The only meeting generated was `(m,m)` at g=57 (UNSEEN, PUSH), then Late-selected.
+- F2F generated a meeting only at g=53. Same `NoReopenPolicy`: F2F had **0** CLOSED better-`g` discards; F2E had **230** (none of them meetings).
+- Four of those 230 sit on F2F’s ancestor pair-keys (all with backward already at `m`). On `(47,35),(57,51)` F2E CLOSED at g=29 then discarded g=27, which **equals F2F’s g** on that key.
+- Parent→child Lipschitz `h(n) ≤ c + h(n')` had **0** violations on every generated F2E (and F2F) edge, including the meeting step. The `lower_bound` formula (meeting `lb=gsum`, else `max(f_F,f_B,gsum+1)`) is not the demonstrated bug. Adapter `h_gap` **depends on `g_F`/`g_B`**, so the duplicate key `(u,v)` is not a consistent A* node: first select can freeze a suboptimal `g`.
+- The “missing” F2F ancestor key is the root `(S,G)` (never a generated child).
+
+**Root cause.** Path-dependent remaining-cost `h_gap` + NoReopen on pair keys: F2E expands/closes optimal-chain pairs at inflated `g_F`, then discards later better `g` (including F2F’s `g`). It never reaches `(m,m)` at `C*`.
+
+**Smallest proposed correction (approved later the same day; see the reopen-gate entry).** Reopen on strictly better CLOSED `g`: remove the CLOSED key and push the candidate. **Forbidden:** meeting `lb=gsum+1`. **Not preferred:** `h_gap=1` off meeting. Pathmax on the current path does not resurrect a better branch after CLOSE.
+
+**Do not treat this entry as a proof.** “Why reopen preserves optimality” was a hypothesis. Standard graph-search reopen is not a Late-stop proof. F2F (`h=MD(u,v)`) stays NoReopen.
+
+**Do not implement** (status at this entry). No new studies yet.
+
+---
+
+### 2026-08-17 — F2E better-g reopen (Option C empirical gate)
+
+**What changed.** Official F2E uses `f2e_policies()`: `BetterGReopenPolicy` + `ClosedSet.remove` + searcher remove-then-push. `default_policies()` / F2F stay `NoReopenPolicy`. Meeting lower bound unchanged (`u=v` ⇒ `lb = gsum`, `h_gap = 0`). Late-on-first-meeting unchanged. Pre-fix pair-bound CSVs kept.
+
+**Demonstrated (q=20 tracer, NoReopen replay).** F2F CLOSED better-`g` discards = 0. F2E CLOSED `((47,35),(57,51))` at g=29 then discarded g=27, which equals F2F’s `g` on that key. F2E generated no `(x,x)` at g=53.
+
+**Hypothesized repair.** Reopen that better-`g` pair (and others) so the optimal chain can be expanded. q=20 under reopen must expand g=27 on that key.
+
+**Not proven.** Reopen is the hypothesized repair for the demonstrated duplicate-key failure. It is empirically accepted only if all 12 frozen mismatches match A*. This is not yet a general proof of optimality.
+
+**Gate (passed).** Frozen identities from pre-fix `results/study/pair-bound/` (`experiment`, `query_index`, `obstacle_count`, `map_hash`), not 12 query indexes. All 12 match A*. q=20 under reopen: F2E=A*=53; g=27 on `((47,35),(57,51))` is reopened and expanded; meeting `h_gap` stays 0. Pre-fix pair-bound CSVs kept. No `*_opt` studies in this pass.
+
+---
+
+### 2026-08-17 — Official F2E factory and citation lock
+
+**What changed.** Runner and tests construct official F2E via `official_f2e_searcher()` (bound + `f2e_policies()`). Bare `SFBDSSearcher(F2EPairLowerBound())` stays NoReopen on purpose. Failed REOPEN push restores the CLOSED node and raises. `docs/project_definition.md` reopen row matches the F2E exception.
+
+**Cite.** On-disk `results/study/pair-bound/study_*.csv` (no `_opt`) remain NoReopen pair-bound F2E. Maze figures: `2026-08-17-cost-clean-plots` as pre-fix. Do not cite nested-random p-values. Do not cite those CSVs as reopen F2E.
+
+---
+
 ## Next experiment (not started)
 
-Cache stays off until instructor/scope lock. Pair-bound living notes: [`results/analysis/pair-bound/research_log.md`](../results/analysis/pair-bound/research_log.md).
+The 12-row gate passed. Cache stays off. Pair-bound living notes: [`results/analysis/pair-bound/research_log.md`](../results/analysis/pair-bound/research_log.md).
 
-1. **Fix F2E suboptimality** (reopen on better CLOSED `g`, or a consistent remaining-cost mapping) so the xfail on q=20 can be removed.
-2. **Maze 255 / denser nested random** under pair-bound, only after costs match A* or cost-clean `n_untied ≥ 10` is pre-registered.
-3. **Cache ablation** — only after instructor/scope lock.
-
-When we choose, add a YAML under `configs/followup/` if needed, run into `results/study/pair-bound/` without deleting `results/study/legacy/`, analyze into `results/analysis/pair-bound/YYYY-MM-DD-<slug>/` with `--experiment` filters, and add a row here plus in [`results/analysis/README.md`](../results/analysis/README.md) and the pair-bound log.
+1. **New-stem official 64/128** (`*_opt`) into `results/study/pair-bound/` without deleting pre-fix CSVs. Analysis must pass `--experiment` for all five `_opt` names. New analysis slug.
+2. **Maze 255 / denser nested random / cache** only after that restart.
+3. Late-stop is still Option C (empirical). Option A proof or Option B incumbent stop only after separate approval.

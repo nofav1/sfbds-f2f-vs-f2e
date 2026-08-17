@@ -18,7 +18,11 @@ from sfbds_compare.policies.duplicates import (
     OrderedPairDuplicatePolicy,
 )
 from sfbds_compare.policies.goal import GoalOnSelectPolicy, GoalTestPolicy
-from sfbds_compare.policies.reopen import NoReopenPolicy, ReopenPolicy
+from sfbds_compare.policies.reopen import (
+    BetterGReopenPolicy,
+    NoReopenPolicy,
+    ReopenPolicy,
+)
 from sfbds_compare.policies.tie_break import TBhTieBreakingPolicy, TieBreakingPolicy
 from sfbds_compare.policies.types import (
     DuplicateLocation,
@@ -43,7 +47,7 @@ class PolicyBundle(Generic[StateT]):
 
 
 def default_policies() -> PolicyBundle[Hashable]:
-    """Locked MVP policy set."""
+    """Locked MVP policy set (F2F and generic SFBDS). Stays NoReopen."""
 
     return PolicyBundle(
         direction=BranchingFactorDirectionPolicy(),
@@ -55,7 +59,26 @@ def default_policies() -> PolicyBundle[Hashable]:
     )
 
 
+def f2e_policies() -> PolicyBundle[Hashable]:
+    """Official F2E bundle: same as default except better-g CLOSED reopen.
+
+    Remaining-cost ``h_gap`` is not consistent on the pair key ``(u, v)``.
+    Use ``official_f2e_searcher()`` rather than
+    ``SFBDSSearcher(F2EPairLowerBound())``. F2F keeps ``default_policies()``.
+    """
+
+    return PolicyBundle(
+        direction=BranchingFactorDirectionPolicy(),
+        goal=GoalOnSelectPolicy(),
+        duplicate=OrderedPairDuplicatePolicy(),
+        better_path=ReplaceBetterOpenPathPolicy(),
+        reopen=BetterGReopenPolicy(),
+        tie_break=TBhTieBreakingPolicy(),
+    )
+
+
 __all__ = [
+    "BetterGReopenPolicy",
     "BetterPathPolicy",
     "BranchingFactorDirectionPolicy",
     "DirectionPolicy",
@@ -74,4 +97,5 @@ __all__ = [
     "TBhTieBreakingPolicy",
     "TieBreakingPolicy",
     "default_policies",
+    "f2e_policies",
 ]

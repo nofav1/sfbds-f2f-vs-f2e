@@ -1,7 +1,8 @@
 """Front-to-end pair evaluation for SFBDS.
 
-Official ``sfbds_f2e`` is :class:`F2EPairLowerBound` (solution-cost bound
-through the pair). :class:`LegacyFixedEndpointGapHeuristic` is the former
+Official ``sfbds_f2e`` search is ``official_f2e_searcher()``:
+:class:`F2EPairLowerBound` plus ``f2e_policies()``. The bound class alone is
+not official F2E. :class:`LegacyFixedEndpointGapHeuristic` is the former
 project-choice gap, kept for tests only.
 """
 
@@ -52,6 +53,11 @@ class F2EPairLowerBound:
     ``evaluate`` is the remaining-cost adapter for ``SFBDSNode.f = g + h_gap``:
 
         h_gap = max(0, lb − g_F − g_B)
+
+    This class is the **bound only**. Official SFBDS-F2E search is
+    ``official_f2e_searcher()`` (this bound + ``f2e_policies()`` /
+    ``BetterGReopenPolicy``). ``SFBDSSearcher(F2EPairLowerBound())`` uses MVP
+    NoReopen and is **not** official F2E.
     """
 
     def lower_bound(
