@@ -206,6 +206,21 @@ Existing `study_maze_127_opt`, `study_maze_255_opt`, and nested 64@30% rows from
 
 ---
 
+### 2026-08-17 — Heuristic-strength replay (F2F vs pair-bound F2E)
+
+**Folder:** [`2026-08-17-heuristic-strength/`](2026-08-17-heuristic-strength/)  
+Replay F2F + official F2E; both LBs on each `evaluate()` `(u,v,g)`. Nested 64@30% seed 110 vs 64@45% seed 210 (not paired maps).
+
+**Headline.** F2E bound never strictly stronger. Open all-equal / all-tie. Maze bound advantage tracks maze wins; braid shrinks both. Nested 64@45% q=8 is F2E-fewer expansions despite F2F-stronger bounds. **Partially explains** the expansion result.
+
+---
+
+### 2026-08-17 — Heuristic-strength replay locks
+
+Replay also matches frozen `heuristic_evals` and `solution_cost`. Spearman in the snapshot README is expansion-untied only. Pytest: mini `RecordingHeuristic` search, frozen splits, nested 64@45% q=8 `expansion_diff=-1`, snapshot query-8 bound stats. `query_summary.csv` / `family_summary.csv` are gitignore exceptions for this slug. `--check-only` does not write.
+
+---
+
 ### 2026-08-17 — Eval-cost invariant test and `--force`
 
 Script refuses a non-empty slug unless `--force`. Pytest locks 30 pairs × 3 families, `rest ≥ 0`, 0 F2E-fewer evals. Snapshot unchanged.
@@ -220,6 +235,6 @@ Experimental phase is frozen for the report.
 
 **Main claims:** maze F2F-fewer expansions (127: 22/30; 255: 26/30), cost-clean; open/corridor ties; nested weaker and not pooled across seeds; braid reduces maze wins. Runtime is not co-primary. Late-stop remains Option C.
 
-**Secondary:** eval-cost sweep (no crossover); maze 127 timed wall-clock.
+**Secondary:** eval-cost sweep (no crossover); maze 127 timed wall-clock; heuristic-strength replay (partial explanation).
 
 **Future work (not done):** pair/result cache after instructor lock; Late-stop proof; incumbent stop; online expensive-`h` re-search.

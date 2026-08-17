@@ -456,6 +456,23 @@ python -m sfbds_compare.analysis --input-dir results/study/pair-bound --out-dir 
 
 ---
 
+### 2026-08-17 — Heuristic-strength replay (F2F vs pair-bound F2E)
+
+**Folder:** [`results/analysis/pair-bound/2026-08-17-heuristic-strength/`](../results/analysis/pair-bound/2026-08-17-heuristic-strength/)  
+Replay official F2F and reopen F2E on open 128, maze 127/255, maze 127 braid, nested 64@30% (seed 110), nested 64@45% (seed 210). Both LBs on every `evaluate()` pair. Frozen `map_hash` / `expanded` / `heuristic_evals` / `solution_cost` matched. Script: [`scripts/heuristic_strength.py`](../scripts/heuristic_strength.py).
+
+**Headline.** F2E’s bound was never strictly stronger. Open: 100% equal bounds and 30/30 expansion ties. Maze 127: 67.5% F2F-stronger, median-of-medians `diff` 18.25, 22/30 F2F-fewer; maze 255: 89.6%, 123.5, 26/30. Braid cuts F2F-stronger share to 27% and wins to 12/30. Nested 30% vs 45% are **different seeds**, not a paired density progression; pooled F2F-stronger ~59% vs ~56%. Nested 64@45% q=8 is F2E-fewer on expansions but still has median `diff` +4.
+
+**Verdict.** Bound strength **partially explains** the expansion geography. It does not determine expansion-gap size, and it failed to predict the one F2E-fewer nested query.
+
+---
+
+### 2026-08-17 — Heuristic-strength replay locks
+
+Replay also matches frozen `heuristic_evals` and `solution_cost`. Snapshot Spearman is expansion-untied only (maze 255 0.13; do not cite all-query 0.80 nested as a savings ranking). Pytest locks frozen splits, nested 64@45% q=8 `expansion_diff=-1`, a mini `RecordingHeuristic` search, and snapshot query-8 bound stats. `query_summary.csv` / `family_summary.csv` are gitignore exceptions. `--check-only` does not write.
+
+---
+
 ### 2026-08-17 — Eval-cost invariant test and `--force`
 
 `scripts/eval_cost_sensitivity.py` refuses a non-empty freeze slug unless `--force`. `--check-only` and `tests/unit/test_eval_cost_sensitivity.py` lock 30 pairs × 3 families, `rest ≥ 0`, and **0** F2E-fewer-eval maps on the frozen `*_opt` CSVs. Snapshot numbers unchanged.
@@ -485,6 +502,7 @@ Experimental phase is frozen for the report. Do not add map families, cache, inc
 
 - This eval-cost sweep: no crossover to F2E as assumed eval cost grows.
 - Maze 127 timed wall-clock: 22/22 F2F faster among expansion-untied queries; median ratio ≈ 0.885.
+- Heuristic-strength replay: F2F bound ≥ F2E bound on recorded evaluate() pairs; maze/open/braid pattern is consistent with bound strength; nested 30% vs 45% not a paired density story. Partially explains expansions.
 
 **Future work (explicitly not done)**
 
