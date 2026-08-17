@@ -1,0 +1,19 @@
+name: pilot_maze_lb_f2e
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 30
+timeout_sec: 10
+output_dir: results/pilot
+generator:
+  kind: maze
+  height: 15
+  width: 15
+queries:
+  - start: [0, 0]
+    goal: [14, 14]
+  - start: [0, 0]
+    goal: [0, 14]
+  - start: [7, 0]
+    goal: [7, 14]

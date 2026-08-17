@@ -5,7 +5,9 @@ from __future__ import annotations
 import pytest
 
 from sfbds_compare.domain.grid import GridProblem, GridState
-from sfbds_compare.heuristics.f2e import F2EFixedEndpointHeuristic
+from sfbds_compare.experiments.config import GeneratorConfig, QuerySpec
+from sfbds_compare.experiments.generators import build_problem
+from sfbds_compare.heuristics.f2e import F2EPairLowerBound
 from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
 from sfbds_compare.search.astar import AStarSearcher
@@ -30,7 +32,7 @@ def _assert_sfbds_h_evals(result) -> None:
 def _run_three_way(problem: GridProblem) -> None:
     astar = AStarSearcher(UniManhattanHeuristic()).search(problem)
     f2f = SFBDSSearcher(F2FManhattanHeuristic()).search(problem)
-    f2e = SFBDSSearcher(F2EFixedEndpointHeuristic()).search(problem)
+    f2e = SFBDSSearcher(F2EPairLowerBound()).search(problem)
 
     assert astar.success and f2f.success and f2e.success
     assert astar.solution_cost == f2f.solution_cost == f2e.solution_cost
@@ -76,4 +78,13 @@ def _run_three_way(problem: GridProblem) -> None:
     ],
 )
 def test_three_way_cost_and_path_agreement(problem: GridProblem) -> None:
+    _run_three_way(problem)
+
+
+def test_three_way_cost_agreement_on_small_maze() -> None:
+    problem = build_problem(
+        GeneratorConfig(kind="maze", height=7, width=7),
+        QuerySpec(start=(0, 0), goal=(6, 6)),
+        seed=11,
+    )
     _run_three_way(problem)

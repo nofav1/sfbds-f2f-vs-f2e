@@ -1,0 +1,20 @@
+name: pilot_random_lb_f2e
+algorithms:
+  - astar
+  - sfbds_f2f
+  - sfbds_f2e
+seed: 20
+timeout_sec: 10
+output_dir: results/pilot
+generator:
+  kind: random_obstacles
+  height: 12
+  width: 12
+  obstacle_density: 0.15
+queries:
+  - start: [0, 0]
+    goal: [11, 11]
+  - start: [0, 5]
+    goal: [11, 5]
+  - start: [1, 1]
+    goal: [10, 10]

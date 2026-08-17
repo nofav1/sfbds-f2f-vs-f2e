@@ -1,0 +1,10 @@
+experiment,algorithm,seed,query_index,generator_kind,height,width,obstacle_density,obstacle_count,map_hash,start_row,start_col,goal_row,goal_col,success,termination_reason,solution_cost,runtime_sec,generated,expanded,expanded_unit,forward_expanded,backward_expanded,meeting_g_F,meeting_g_B,direction_switches,heuristic_evals,heuristic_time_sec,peak_open,peak_closed,stale_skipped,duplicates_discarded,timed_out
+pilot_open_lb_f2e,astar,10,0,open,15,15,0.0,0,f21f27dbf90068d1,0,0,14,14,True,goal_found,28.0,0.000487100041937083,55,28,state,,,,,,55,2.5500019546598196e-05,27,28,0,1,False
+pilot_open_lb_f2e,sfbds_f2f,10,0,open,15,15,0.0,0,f21f27dbf90068d1,0,0,14,14,True,goal_found,28.0,0.0008597999694757164,55,28,pair,28,0,28.0,0.0,0,55,2.6300083845853806e-05,27,28,0,1,False
+pilot_open_lb_f2e,sfbds_f2e,10,0,open,15,15,0.0,0,f21f27dbf90068d1,0,0,14,14,True,goal_found,28.0,0.0011707000085152686,55,28,pair,28,0,28.0,0.0,0,55,9.599997429177165e-05,27,28,0,1,False
+pilot_open_lb_f2e,astar,10,1,open,15,15,0.0,0,fb1b59a373b639cf,0,0,7,14,True,goal_found,21.0,0.0007136000203900039,41,21,state,,,,,,41,3.0300114303827286e-05,20,21,0,1,False
+pilot_open_lb_f2e,sfbds_f2f,10,1,open,15,15,0.0,0,fb1b59a373b639cf,0,0,7,14,True,goal_found,21.0,0.0009459000430069864,41,21,pair,21,0,21.0,0.0,0,41,2.5300192646682262e-05,20,21,0,1,False
+pilot_open_lb_f2e,sfbds_f2e,10,1,open,15,15,0.0,0,fb1b59a373b639cf,0,0,7,14,True,goal_found,21.0,0.0007343000033870339,41,21,pair,21,0,21.0,0.0,0,41,4.880002234131098e-05,20,21,0,1,False
+pilot_open_lb_f2e,astar,10,2,open,15,15,0.0,0,66655b329a9969a3,2,3,12,11,True,goal_found,18.0,0.0004288000054657459,55,18,state,,,,,,55,2.269999822601676e-05,37,18,0,1,False
+pilot_open_lb_f2e,sfbds_f2f,10,2,open,15,15,0.0,0,66655b329a9969a3,2,3,12,11,True,goal_found,18.0,0.0007339000003412366,55,18,pair,18,0,18.0,0.0,0,55,2.350006252527237e-05,37,18,0,1,False
+pilot_open_lb_f2e,sfbds_f2e,10,2,open,15,15,0.0,0,66655b329a9969a3,2,3,12,11,True,goal_found,18.0,0.0007538999780081213,55,18,pair,18,0,18.0,0.0,0,55,6.120017496868968e-05,37,18,0,1,False

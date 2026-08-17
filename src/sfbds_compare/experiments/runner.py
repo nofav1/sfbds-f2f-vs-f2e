@@ -28,7 +28,7 @@ from sfbds_compare.experiments.visualize import (
     QueryFrame,
     write_visual,
 )
-from sfbds_compare.heuristics.f2e import F2EFixedEndpointHeuristic
+from sfbds_compare.heuristics.f2e import F2EPairLowerBound
 from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
 from sfbds_compare.metrics.collector import MetricsCollector
@@ -111,7 +111,7 @@ def _search_with_stop(
             problem, should_stop=should_stop
         )
     if algorithm == "sfbds_f2e":
-        return SFBDSSearcher(F2EFixedEndpointHeuristic()).search(
+        return SFBDSSearcher(F2EPairLowerBound()).search(
             problem, should_stop=should_stop
         )
     raise ValueError(f"unsupported algorithm: {algorithm}")

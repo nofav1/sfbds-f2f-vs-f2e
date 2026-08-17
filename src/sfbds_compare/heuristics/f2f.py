@@ -15,5 +15,8 @@ class F2FManhattanHeuristic:
         forward: GridState,
         backward: GridState,
         problem: SearchProblem[GridState],
+        g_F: float = 0.0,
+        g_B: float = 0.0,
     ) -> float:
+        del g_F, g_B
         return manhattan(forward, backward)

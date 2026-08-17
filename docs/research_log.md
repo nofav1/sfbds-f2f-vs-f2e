@@ -55,6 +55,11 @@ These are in force until we explicitly revise this section.
 - Runtime must not drive the claim.
 - Optional YAML `runtime_repeats` (default 1): median `runtime_sec` and `heuristic_time_sec` across **successful** repeats; expansions/path from the first successful run. TIMEOUT only if every repeat times out. Skip ASCII visuals when repeats > 1, nested densities are set, or the grid is ≥ 200×200.
 
+**SFBDS-F2E pair bound (locked 2026-08-17)**
+
+- Official `sfbds_f2e` is `F2EPairLowerBound`: on unit grids, `lb = g_F+g_B` when `u=v`, else `lb = max(g_F+MD(u,G), g_B+MD(S,v), g_F+g_B+1)`. SFBDS still stores remaining cost via `h_gap = max(0, lb − g_F − g_B)`.
+- Every study CSV and analysis snapshot **before this lock** used the project-choice gap `max(|MD(x,G)−MD(y,G)|, |MD(S,x)−MD(S,y)|)` (now `LegacyFixedEndpointGapHeuristic`, tests only). Those results are **legacy F2E**, not the pair bound. Do not cite them as corrected F2E. Regenerate study CSVs only after approval — not in the 2026-08-17 code pass.
+
 ---
 
 ## Timeline
@@ -199,6 +204,29 @@ These are in force until we explicitly revise this section.
 **Headline after unpooling.** Maze 127/255 ± braid counts are unchanged. Nested 128 @ 45–50% **md 28** (30 families) still has `n_untied ≥ 10` at all three densities. Nested 128 **md 48** (17 families) stays `n_untied` 6–8 at every density → p null. That is the md-48 result; do not read a pooled n=47 test. The overall nested-random row in that README still stacks md-28 + md-48 families — do not cite its p-value.
 
 Display/CLI leftovers from the same review (no new study CSVs, no new analysis slug): `map_family=random` Wilcoxon runs when the bucket is independent-only; table F2F-fewer counts follow `n_test`; `--out-dir` refuses the analysis index and a non-empty slug unless `--force`; maze YAML `obstacle_density` is rejected. Leftover `results/analysis/paired.csv` at the index root was removed. Read density from [`2026-08-14-density-by-experiment`](../results/analysis/2026-08-14-density-by-experiment/).
+
+---
+
+### 2026-08-17 — F2E audit (before pair-bound switch)
+
+**Old official formula** (`F2EFixedEndpointHeuristic`, renamed `LegacyFixedEndpointGapHeuristic`):
+
+```
+h_gap(x,y) = max(|MD(x,G)−MD(y,G)|, |MD(S,x)−MD(S,y)|)
+f = g_F + g_B + h_gap
+```
+
+`PairHeuristic.evaluate` and both SFBDS call sites (`sfbds.py` root insert and child insert) passed only `(forward, backward, problem)` — no `g`. Runner wired `sfbds_f2e` to that class. Numeric locks: `test_f2e_hand_formula`; Lipschitz / gap≤MD in `test_heuristic_properties.py`. Those properties belong to the gap, not to the pair lower bound.
+
+**Decision.** Treat all existing `results/study/` F2E rows as legacy gap. Switch official `sfbds_f2e` to the NBS-style pair lower bound with a remaining-cost adapter. Do not overwrite study CSVs in this pass.
+
+---
+
+### 2026-08-17 — Official SFBDS-F2E is the pair lower bound
+
+Code: `F2EPairLowerBound.lower_bound` is the source of truth; `evaluate` returns `max(0, lb − gsum)` so `SFBDSNode.f` is unchanged. Both SFBDS `evaluate` call sites pass `g_F`/`g_B`. Runner `sfbds_f2e` uses the new class. Spy test on the 1×4 Forward-tie corridor locks the first child to `(g_F, g_B) == (1.0, 0.0)` so swapped kwargs cannot stay green. Pytest: 161 passed.
+
+**New-stem pilots** (old `pilot_*` filenames not overwritten): `pilot_corridor_lb_f2e`, `pilot_open_lb_f2e`, `pilot_maze_lb_f2e`, `pilot_random_lb_f2e`. All 9/9 success, 0 timeouts. A* / F2F / F2E **costs agree** on every query. Corridor/open/maze expansions tied F2F vs F2E on these small maps; random q=0 was 29 vs 35 pairs (F2F fewer). Study CSVs still legacy — regenerate only after approval.
 
 ---
 

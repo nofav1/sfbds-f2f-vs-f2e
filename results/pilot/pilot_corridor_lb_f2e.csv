@@ -1,0 +1,10 @@
+experiment,algorithm,seed,query_index,generator_kind,height,width,obstacle_density,obstacle_count,map_hash,start_row,start_col,goal_row,goal_col,success,termination_reason,solution_cost,runtime_sec,generated,expanded,expanded_unit,forward_expanded,backward_expanded,meeting_g_F,meeting_g_B,direction_switches,heuristic_evals,heuristic_time_sec,peak_open,peak_closed,stale_skipped,duplicates_discarded,timed_out
+pilot_corridor_lb_f2e,astar,40,0,corridor,1,40,0.0,0,c9092a22312cd877,0,0,0,39,True,goal_found,39.0,0.000534399994648993,39,39,state,,,,,,40,4.8700079787522554e-05,1,39,0,0,False
+pilot_corridor_lb_f2e,sfbds_f2f,40,0,corridor,1,40,0.0,0,c9092a22312cd877,0,0,0,39,True,goal_found,39.0,0.000754999986384064,39,39,pair,39,0,39.0,0.0,0,40,2.079986734315753e-05,1,39,0,0,False
+pilot_corridor_lb_f2e,sfbds_f2e,40,0,corridor,1,40,0.0,0,c9092a22312cd877,0,0,0,39,True,goal_found,39.0,0.0008190000080503523,39,39,pair,39,0,39.0,0.0,0,40,5.3400115575641394e-05,1,39,0,0,False
+pilot_corridor_lb_f2e,astar,40,1,corridor,1,40,0.0,0,520d9991c09a46b6,0,0,0,20,True,goal_found,20.0,0.0002620000159367919,20,20,state,,,,,,21,1.4599994756281376e-05,1,20,0,0,False
+pilot_corridor_lb_f2e,sfbds_f2f,40,1,corridor,1,40,0.0,0,520d9991c09a46b6,0,0,0,20,True,goal_found,20.0,0.0004325999761931598,20,20,pair,20,0,20.0,0.0,0,21,9.599956683814526e-06,1,20,0,0,False
+pilot_corridor_lb_f2e,sfbds_f2e,40,1,corridor,1,40,0.0,0,520d9991c09a46b6,0,0,0,20,True,goal_found,20.0,0.0004330999800004065,20,20,pair,20,0,20.0,0.0,0,21,2.649991074576974e-05,1,20,0,0,False
+pilot_corridor_lb_f2e,astar,40,2,corridor,1,40,0.0,0,e42dbd043f955b97,0,5,0,35,True,goal_found,30.0,0.0003431000513955951,31,30,state,,,,,,32,1.2800039257854223e-05,2,30,0,0,False
+pilot_corridor_lb_f2e,sfbds_f2f,40,2,corridor,1,40,0.0,0,e42dbd043f955b97,0,5,0,35,True,goal_found,30.0,0.000602399988565594,31,30,pair,30,0,30.0,0.0,0,32,1.3599870726466179e-05,2,30,0,0,False
+pilot_corridor_lb_f2e,sfbds_f2e,40,2,corridor,1,40,0.0,0,e42dbd043f955b97,0,5,0,35,True,goal_found,30.0,0.0006576000014320016,31,30,pair,30,0,30.0,0.0,0,32,3.550003748387098e-05,2,30,0,0,False

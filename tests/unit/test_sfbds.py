@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from sfbds_compare.domain.grid import GridProblem, GridState
-from sfbds_compare.heuristics.f2e import F2EFixedEndpointHeuristic
+from sfbds_compare.heuristics.f2e import F2EPairLowerBound
 from sfbds_compare.heuristics.f2f import F2FManhattanHeuristic
 from sfbds_compare.heuristics.uni import UniManhattanHeuristic
 from sfbds_compare.search.astar import AStarSearcher
@@ -135,7 +135,7 @@ def test_sfbds_f2e_cost_agrees_with_astar_open_and_obstacle() -> None:
         obstacles=[GridState(0, 1)],
     )
     for problem in (open_problem, obstacle_problem):
-        sfbds = SFBDSSearcher(F2EFixedEndpointHeuristic()).search(problem)
+        sfbds = SFBDSSearcher(F2EPairLowerBound()).search(problem)
         astar = AStarSearcher(UniManhattanHeuristic()).search(problem)
         assert sfbds.success and astar.success
         assert sfbds.solution_cost == astar.solution_cost
@@ -160,7 +160,7 @@ def test_sfbds_dead_end_goal_expands_backward() -> None:
         goal=GridState(2, 2),
         obstacles=[GridState(2, 1)],
     )
-    for heuristic in (F2FManhattanHeuristic(), F2EFixedEndpointHeuristic()):
+    for heuristic in (F2FManhattanHeuristic(), F2EPairLowerBound()):
         result = SFBDSSearcher(heuristic).search(problem)
         assert result.success
         _assert_sfbds_instrumentation(result)
@@ -186,3 +186,40 @@ def test_sfbds_unreachable_open_exhausted() -> None:
     assert result.metrics.success is False
     _assert_heuristic_eval_aligned(result)
     _assert_sfbds_instrumentation(result)
+
+
+class _RecordingPairHeuristic:
+    """Spy: remaining cost 0; records g_F/g_B passed by SFBDSSearcher."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[GridState, GridState, float, float]] = []
+
+    def evaluate(
+        self,
+        forward: GridState,
+        backward: GridState,
+        problem: GridProblem,
+        g_F: float = 0.0,
+        g_B: float = 0.0,
+    ) -> float:
+        del problem
+        self.calls.append((forward, backward, g_F, g_B))
+        return 0.0
+
+
+def test_sfbds_passes_child_g_to_pair_evaluate() -> None:
+    """1×4 corridor: BF ties so first expansion is Forward; child's g is (1, 0).
+
+    A swapped-kwargs call (g_F=provisional.g_B, g_B=provisional.g_F) still
+    passes a nonzero-or check because one side stays 0 on this map.
+    """
+    problem = GridProblem(1, 4, GridState(0, 0), GridState(0, 3))
+    spy = _RecordingPairHeuristic()
+    result = SFBDSSearcher(spy).search(problem)
+    assert result.success
+    assert spy.calls
+    assert spy.calls[0][2:] == (0.0, 0.0)
+    assert spy.calls[1][2:] == (1.0, 0.0)
+    child_gs = [(g_F, g_B) for _, _, g_F, g_B in spy.calls[1:]]
+    assert child_gs
+    assert all(g_F > 0.0 and g_B == 0.0 for g_F, g_B in child_gs)

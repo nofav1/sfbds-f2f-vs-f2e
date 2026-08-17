@@ -66,7 +66,11 @@ class SFBDSSearcher(Generic[StateT]):
 
         t0 = time.perf_counter()
         h0 = self._heuristic.evaluate(
-            problem.start_state, problem.goal_state, problem
+            problem.start_state,
+            problem.goal_state,
+            problem,
+            g_F=0.0,
+            g_B=0.0,
         )
         metrics.add_heuristic_time(time.perf_counter() - t0)
 
@@ -155,7 +159,11 @@ class SFBDSSearcher(Generic[StateT]):
                 # PUSH and REPLACE_OPEN both mean insert/improve OPEN (lazy).
                 t1 = time.perf_counter()
                 h_gap = self._heuristic.evaluate(
-                    provisional.forward, provisional.backward, problem
+                    provisional.forward,
+                    provisional.backward,
+                    problem,
+                    g_F=provisional.g_F,
+                    g_B=provisional.g_B,
                 )
                 metrics.add_heuristic_time(time.perf_counter() - t1)
                 child = SFBDSNode(
