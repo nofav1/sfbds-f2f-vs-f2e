@@ -1,0 +1,12 @@
+---
+description: Pause and ask to commit after each coherent chunk of work
+alwaysApply: true
+---
+
+# Ask to commit after each chunk
+
+After a coherent unit of work (new study CSVs, an analysis slug, a methodology lock, or a review-fix), **stop and ask** whether to commit before starting the next unit.
+
+- Do not stack a follow-up experiment, a CLI lock, and a review fix in one uncommitted tree
+- If the user says "commit and continue", commit the current chunk, then stop again after the next chunk
+- Never commit unless the user asked (including in this turn)
