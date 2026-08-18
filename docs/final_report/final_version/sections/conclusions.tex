@@ -1,11 +1,17 @@
 \section{Experimental Conclusions and Summary}
 
-\textit{Skeleton. Content in a later phase.}
+We compared Front-to-Front and official Front-to-End inside one SFBDS on 4-connected unit grids, with pair expansions as the primary metric. The goal was to say on which families F2F expands fewer pairs than F2E, and whether that reduction pays for extra heuristic work when \(h\) is Manhattan. The experiments answer that question by condition. They do not support a blanket ranking of the two variants: official F2E also reopens CLOSED nodes on a strictly better \(g\), and F2F does not.
+
+On perfect mazes F2F expands fewer pairs: \(22/30\) maps on maze 127 and \(26/30\) on maze 255, median expansion saving \(3.8\%\). The pairwise bound is often strictly stronger there, which is consistent with the expansion pattern. Opening leftover maze walls shrinks the advantage (\(12/30\) and \(11/30\)): more loops make the two bounds agree more often. A longer Manhattan floor at maze 127 did not strengthen the effect (\(15/30\)). Open \(128\times128\) and the \(1\times512\) corridor do not separate the bounds at these sizes (all ties), so F2E is sufficient there; that is not a claim that F2F never helps. Nested random is weaker and seed-specific. At \(64\times64\) and \(30\%\) obstacles the median saving is \(0\%\) (\(13/30\) F2F-fewer). Other nested prefixes can show more untied F2F-fewer maps, but they are different seeds and are not a paired density story.
+
+On this cheap-\(h\) domain the extra F2F work largely did not appear. F2F never issued more heuristic evaluations than F2E on the three eval-cost families, so raising an assumed per-eval cost cannot reverse the order by making heuristics expensive. The timed maze-127 check favored F2F among expansion-untied queries (median runtime ratio \(0.885\)); that is secondary and is not a claim that F2F is faster in general. Those numbers do not refute large F2F overhead when F2F is a min over the opposite OPEN \cite{siag2023socs}. That is a different architecture.
+
+Project goals for this setting were met: the comparison is inside one SFBDS, the primary ranking is pair expansions, and the cost question is answered for Manhattan grids rather than left as a general runtime contest. On official instances in this matrix, F2F, F2E, and successful A* agreed on solution cost. That is coverage of these maps, not a general optimality theorem.
 
 \subsection{Limitations}
 
-\textit{Skeleton. Content in a later phase.}
+All maps are 4-connected unit grids with Manhattan \(h\). We did not run an online expensive heuristic; the eval-cost curve only rescales recorded Manhattan evaluations. F2F here is one pairwise call per inserted or improved pair, not a min over OPEN. Nested prefixes with \(n_{\mathrm{untied}}<10\) have no confirmatory \(p\)-value, including the seed-221 min-MD-48 sample of realized \(n=20\). Peak OPEN does not always move with expansions. Search uses Late stop; we do not prove Late-stop optimality. Runtime is CPython wall-clock on one machine.
 
 \subsection{Future Work}
 
-\textit{Skeleton. Content in a later phase.}
+A pair or result cache, a proof of Late-stop optimality, and an incumbent or lower-bound stopping rule were out of scope for this implementation. Late stop is the rule used on these maps; we do not prove it. An online search with a genuinely expensive heuristic was not implemented; that item sits off this cheap-\(h\) grid setting.

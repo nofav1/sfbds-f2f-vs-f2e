@@ -597,6 +597,22 @@ Results no longer treat nested 128 MD-48 (seed 221, realized \(n=20\)) as the MD
 
 ---
 
+### 2026-08-18 — Phase 7 Experimental Conclusions
+
+Filled [`sections/conclusions.tex`](final_report/final_version/sections/conclusions.tex). Answers §6.5 by condition: perfect mazes \(22/30\) and \(26/30\), median saving \(3.8\%\); open/corridor all ties so F2E is sufficient at these sizes; nested weaker and seed-specific; braid shrinks the maze effect. Cheap-\(h\) extra F2F cost largely did not appear (no extra evals on the three eval-cost families; timed maze secondary, not a general speed claim). Does not refute two-frontier OPEN-min overhead. Limitations and future work name cache / expensive \(h\) / Late-stop proof as **not implemented**, with no Felner cache cite. Compile check: `phase7check.pdf`.
+
+**Next.** Introduction Contribution subsection only after approval. Do not write the abstract yet.
+
+---
+
+### 2026-08-18 — Phase 7 review (Late-stop scope, F2E reopen)
+
+Future work now treats cache, Late-stop proof, and incumbent stop as out of scope **on this implementation**; only expensive online \(h\) is off this cheap-grid setting. Opening sentence notes official F2E reopens on better \(g\) and F2F does not, so maze win counts are not bound-only.
+
+**Next.** Introduction Contribution subsection only after approval. Do not write the abstract yet.
+
+---
+
 ## Experiment freeze (2026-08-17)
 
 Experimental phase is frozen for the report. Do not add map families, cache, incumbent stop, or a Late-stop proof unless a later scope lock says so.
