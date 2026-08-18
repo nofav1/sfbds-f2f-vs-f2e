@@ -29,7 +29,7 @@ Build artifacts (`*.aux`, `*.log`, `main.pdf`, …) are gitignored. Compile loca
 | --- | --- |
 | `main.tex` | Camera-ready driver (`\input` of `sections/`) |
 | `sections/*.tex` | One file per section (Phase 1 skeleton; later phases fill these) |
-| `references.bib` | Empty until the bibliography phase; keys must match `PAPER_SOURCE_MAP.md` |
+| `references.bib` | Map keys only (`PAPER_SOURCE_MAP.md`); optional DOI polish later |
 | `aaai2027.sty`, `aaai2027.bst` | Copied from AuthorKit; do not modify |
 | `notes/source_map.md` | Internal. The only place excluded-era paths may be named. **Not compiled.** |
 
@@ -37,4 +37,3 @@ Build artifacts (`*.aux`, `*.log`, `main.pdf`, …) are gitignored. Compile loca
 
 - Author names, emails
 - Public code URL (`links` environment)
-- Hardware/OS/Python string (methodology phase)

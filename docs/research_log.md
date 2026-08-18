@@ -525,6 +525,46 @@ Chapters are now the course §2–§6 parts: Introduction and Literature Review;
 
 ---
 
+### 2026-08-18 — Phase 2 Methodology (algorithm and heuristics)
+
+Filled `sections/methodology.tex` Search Algorithm + Heuristics from `sfbds.py`, `f2f.py`, `f2e.py`, and official policies. Pair nodes and BF direction cite `felner2010sfbds`; Chen path-pair bound without \(\varepsilon\) cites `chen2017nbs`; unit-grid \(\varepsilon=1\) cites `siag2023ijcai` (not SoCS). Remaining-cost adapter written without the banned “gap” name. Reopen is part of official F2E, not a repair story. No result numbers. Domain / Metrics / Protocol stay stubs.
+
+**Next.** Phase 3 (Introduction related work) only after approval.
+
+---
+
+### 2026-08-18 — Phase 2 Algorithm 1 CLOSED walk
+
+Algorithm 1 now discards F2F CLOSED children even when the candidate has strictly smaller \(g\). Official F2E CLOSED + better \(g\) still removes then inserts. Hart cite is only on the A* \(f=g+h\) sentence. Both meeting and off-meeting bound lines sit in one numbered cases display.
+
+**Next.** Phase 3 only after approval.
+
+---
+
+### 2026-08-18 — Phase 3 Introduction related work
+
+Filled `sections/introduction.tex` from [`PAPER_SOURCE_MAP.md`](context/final_report_papers/PAPER_SOURCE_MAP.md) only. Background: two-frontier min-over-OPEN cites `siag2023socs` without SFBDS; pair nodes cite `felner2010sfbds`. Related work: Barker “likely dominated” + overlapping savings; Chen path-pair lb without \(\varepsilon\); Siag IJCAI meeting form with unit-grid \(\varepsilon=1\); SoCS two-frontier overhead (does not refute pairwise Manhattan); Felner pair-frontier with cache not implemented. No result numbers. Contribution stays a skeleton.
+
+**Next.** Phase 4 (Methodology: Domain, Mechanics, Metrics, Protocol) only after approval.
+
+---
+
+### 2026-08-18 — Phase 4 Domain, Mechanics, Metrics, Protocol
+
+Filled the remaining Methodology stubs from official `*_opt` YAML and locked pairing/stats. Geography and factor instance tables; nested prefix sampling and braid endpoint sharing; lazy OPEN / hash CLOSED / Late / timeout / no cache; pair expansions primary; cost-mismatch exclusion as protocol (not a repair story); Wilcoxon (zeros discarded, \(p\) undefined if \(n_{\mathrm{untied}}<10\)), sign, Holm, no pooling of nested seeds or maze factors; heuristic-strength replay and offline \(T_\beta\) described without result numbers. Hardware: CPython 3.11.15, Windows build 26200, Intel Core 7 240H, 16 GB RAM.
+
+**Next.** Phase 5 (`scripts/paper_figures.py`) only after approval.
+
+---
+
+### 2026-08-18 — Phase 4 review (Siag meeting, nested \(n\), CLOSED)
+
+Introduction now uses Siag's \(\mathrm{lb}\) only for \(u\neq v\) and points at Eq.~\eqref{eq:f2e-lb} for the \(u=v\) meeting case \(g_F+g_B\). Geography/factor tables mark nested rows as 3 prefix densities (90 maps), not 30. CLOSED is expanded nodes keyed by the ordered pair (stored \(g\) for reopen).
+
+**Next.** Phase 5 only after approval.
+
+---
+
 ## Experiment freeze (2026-08-17)
 
 Experimental phase is frozen for the report. Do not add map families, cache, incumbent stop, or a Late-stop proof unless a later scope lock says so.

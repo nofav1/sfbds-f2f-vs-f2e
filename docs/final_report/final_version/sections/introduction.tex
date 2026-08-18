@@ -1,22 +1,30 @@
 \section{Introduction and Literature Review}
 
-\textit{Skeleton. Content in a later phase.}
+Heuristic search on grids is usually unidirectional A* with evaluation \(f=g+h\) \cite{hart1968astar}. Bidirectional methods search from both ends. This report compares two heuristic styles \emph{inside} one single-frontier bidirectional algorithm, on 4-connected unit grids, with pair expansions as the primary cost.
 
 \subsection{Background}
 
-\textit{Skeleton. Content in a later phase.}
+Front-to-end (F2E) heuristics estimate remaining cost only to the original start or goal. Front-to-front (F2F) heuristics estimate remaining cost between two search states \cite{barker2015f2e}. In the usual two-frontier setting, F2F takes a minimum over the opposite OPEN list, \(h_F(u)=\min_{v\in\mathrm{Open}_B}h(u,v)\), which can be quadratic in the OPEN size \cite{siag2023socs}.
+
+Single-Frontier Bidirectional Search (SFBDS) uses a different organization: a node is a pair \(N(x,y)\) whose task is a shortest path between \(x\) and \(y\) \cite{felner2010sfbds}. Expanding \(x\) generates \((x_i,y)\); expanding \(y\) generates \((x,y_j)\). The goal is \(x=y\). A jumping policy chooses the side to expand; one listed feature is branching factor. The heuristic is pairwise \(h(x,y)\) on that pair; Manhattan distance is a symmetric example. Best-first SFBDS can have up to \(V^2\) unique pair tasks \cite{felner2010sfbds}. Because the node already is a pair, one F2F evaluation is one \(h(u,v)\), not a min over OPEN.
 
 \subsection{Motivation}
 
-\textit{Skeleton. Content in a later phase.}
+F2F is more informed than F2E when the pairwise estimate is tighter than the two endpoint estimates. That extra information can reduce expansions, but it can also cost more per node. The interesting question on cheap Manhattan grids is not whether F2F can ever be expensive in some other architecture, but whether a pairwise Manhattan evaluation inside SFBDS buys enough pair-expansion reduction to matter. Runtime and assumed eval-cost are secondary to expansions.
 
 \subsection{Problem and Research Objective}
 
-\textit{Skeleton. Content in a later phase.}
+The domain is a 4-connected unit grid. The task is a shortest \(S\)--\(G\) path. Both variants run inside the same SFBDS loop; they differ in the pair bound and in the F2E reopen policy. A* is a sidecar for solution cost and success. The research question is: on which grid families does F2F expand fewer pairs than SFBDS-F2E, and does that reduction justify extra heuristic cost on this cheap-\(h\) domain?
 
 \subsection{Related Work}
 
-\textit{Skeleton. Content in a later phase.}
+Barker and Korf argue that F2E bidirectional heuristic search will \emph{likely} be dominated by unidirectional heuristic search or by bidirectional brute-force search \cite{barker2015f2e}. The mechanism is overlapping savings: a heuristic mainly avoids expanding high-\(g\) nodes, and those deep nodes are also the ones bidirectional brute-force already avoids past the midpoint. Weak \(h\) does not beat bidirectional brute-force; strong \(h\) tends to make unidirectional search expand fewer than F2E BiHS. They give a pathological counterexample, so the claim is not an impossibility theorem. We do not treat their tables as our grid results, and we do not upgrade ``likely dominated'' to ``never works.''
+
+Chen et al.\ give a path-pair lower bound \(\mathrm{lb}(U,V)=\max\{f_F(U),f_B(V),c(U)+c(V)\}\) on a solution of the form \(U Z V^{-1}\) \cite{chen2017nbs}. That bound has no cheapest-edge term. Their Near-Optimal Bidirectional Search expands both endpoints of a minimum-\(\mathrm{lb}\) pair and is at most \(2\cdot VC\) expansions on the must-expand graph. Siag et al.\ show that leaving the F2E bound unspecified changes which algorithm is being compared, and they write \(\mathrm{lb}(u,v)=\max\{f_F(u),f_B(v),g_F(u)+g_B(v)+\varepsilon\}\) with cheapest-edge cost \(\varepsilon\) \cite{siag2023ijcai}. We use that form on unit grids when \(u\neq v\) (\(\varepsilon=1\)); when \(u=v\) the implemented bound is \(g_F+g_B\) (no extra edge). Both cases are Eq.~\eqref{eq:f2e-lb}. We do not implement their tighter consistency-case \(\mathrm{lb}_C\), and we do not claim Chen's \(c(U)+c(V)\) already contains \(+1\).
+
+Siag, Shperberg, Felner, and Sturtevant compare F2F and F2E in two-frontier search \cite{siag2023socs}. Their F2F uses the min over the opposite OPEN. F2F variants expand fewer nodes than F2E in that setting, but F2F Near-Optimal Bidirectional Search incurs large runtime and data-structure overhead; a naive F2F evaluation is quadratic in \(|\mathrm{Open}|\). They ask when F2F is worth that overhead. That is a two-frontier cost story. It is not a claim about one pairwise Manhattan evaluation per pair, and our later experiments do not refute it.
+
+Pair-frontier search, jumping by branching factor, and pairwise \(h\) are due to Felner, Moldenhauer, Sturtevant, and Schaeffer \cite{felner2010sfbds}. This report uses that organization with one Manhattan call per inserted or improved pair. We did not implement pair or result caching.
 
 \subsection{Contribution}
 

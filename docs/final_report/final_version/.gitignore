@@ -10,3 +10,6 @@
 *.fdb_latexmk
 *.fls
 /main.pdf
+phase2check.*
+phase3check.*
+phase4check.*

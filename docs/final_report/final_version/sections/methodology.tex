@@ -1,27 +1,161 @@
 \section{Methodology}
 
-\textit{Skeleton. Content in a later phase.}
+We compare Front-to-Front (F2F) and Front-to-End (F2E) heuristics inside one Single-Frontier Bidirectional Search (SFBDS) implementation. The two variants share the pair-frontier loop, direction rule, duplicate rule, tie-breaking, and Late goal test. They differ in the pair lower bound and in the F2E reopen policy. Unidirectional A* is a sidecar used to check solution cost and success; its expansion counts are states, not pairs, and are never mixed into pair-expansion savings.
 
 \subsection{Search Algorithm}
 
-\textit{Skeleton. Content in a later phase.}
+A search node is an ordered pair \(N(u,v)\) whose task is a shortest path between \(u\) and \(v\) \cite{felner2010sfbds}. Expanding the forward state generates children \((u',v)\); expanding the backward state generates \((u,v')\). The search starts from \(N(S,G)\) with \(g_F=g_B=0\). A node is a goal when it is selected from OPEN and \(u=v\); that selection is not counted as an expansion.
+
+The pair cost is \(g=g_F+g_B\). OPEN is a lazy min-heap ordered by TBh: smaller \(f\), then smaller remaining cost, then larger \(g\), then a deterministic pair identifier. CLOSED is a hash table of expanded nodes, keyed by the ordered pair \((u,v)\). Duplicates are detected on that key, checking OPEN before CLOSED. An unseen pair is pushed. A pair already on OPEN is replaced only if the candidate has strictly smaller \(g\). Heuristic evaluation runs only when a pair is about to be inserted or improved on OPEN.
+
+Direction is a branching-factor jumping policy in the family listed by Felner et al.\ \cite{felner2010sfbds}: after parent-edge suppression, expand the side with fewer legal operators; ties expand forward. Forward neighbors are successors of \(u\); backward neighbors are predecessors of \(v\). On undirected grids those operators coincide.
+
+F2F uses this policy set with no CLOSED reopen: a CLOSED pair is never re-inserted. Official F2E uses the same set except that a CLOSED pair is reopened when the candidate has strictly smaller \(g\). Reopen is part of official F2E because the remaining-cost adapter below is not consistent on the pair key \((u,v)\).
+
+\begin{algorithm}[tb]
+\caption{Best-first SFBDS (shared loop)}
+\label{alg:sfbds}
+\begin{algorithmic}[1]
+\STATE OPEN \(\leftarrow \{N(S,G)\}\); CLOSED \(\leftarrow \emptyset\)
+\WHILE{OPEN is not empty}
+\STATE \(N(u,v) \leftarrow\) pop min \(f\) from OPEN
+\IF{\(u=v\)}
+\STATE \textbf{return} reconstructed \(S\)--\(G\) path
+\ENDIF
+\IF{\((u,v)\) is CLOSED}
+\STATE \textbf{continue}
+\ENDIF
+\STATE add \((u,v)\) to CLOSED
+\STATE expand the side with smaller branching factor
+\FORALL{child pairs \(N(u',v')\)}
+\IF{the pair is CLOSED}
+\IF{official F2E \AND the candidate has strictly smaller \(g\)}
+\STATE remove from CLOSED
+\STATE evaluate remaining cost; insert or improve OPEN
+\ELSE
+\STATE \textbf{discard}
+\ENDIF
+\ELSE
+\IF{the pair is on OPEN \AND the candidate does not have strictly smaller \(g\)}
+\STATE \textbf{discard}
+\ELSE
+\STATE evaluate remaining cost; insert or improve OPEN
+\ENDIF
+\ENDIF
+\ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+
+A* uses Late goal-on-select, no CLOSED reopen, TBh on states, parent-edge suppression, and Manhattan to the original goal. Its \(f=g+h\) evaluation is the standard unidirectional form \cite{hart1968astar}.
 
 \subsection{Heuristics}
 
-\textit{Skeleton. Content in a later phase.}
+On 4-connected unit grids, Manhattan distance \(\mathrm{MD}\) is admissible and consistent. F2F uses the pairwise Manhattan remaining cost
+\[
+h_{\mathrm{F2F}}(u,v)=\mathrm{MD}(u,v),
+\]
+so the pair evaluation is \(f=g_F+g_B+\mathrm{MD}(u,v)\) \cite{felner2010sfbds}. One heuristic call is made per pair that is inserted or improved on OPEN.
+
+F2E uses endpoint Manhattan, \(h_F(u)=\mathrm{MD}(u,G)\) and \(h_B(v)=\mathrm{MD}(S,v)\). Chen et al.\ define a path-pair lower bound \(\mathrm{lb}(U,V)=\max\{f_F(U),f_B(V),c(U)+c(V)\}\) with no cheapest-edge term \cite{chen2017nbs}. Siag et al.\ write the meeting form \(\mathrm{lb}(u,v)=\max\{f_F(u),f_B(v),g_F(u)+g_B(v)+\varepsilon\}\), where \(\varepsilon\) is the cheapest edge cost \cite{siag2023ijcai}. On our unit grids \(\varepsilon=1\) when \(u\neq v\). Writing \(f_F(u)=g_F+\mathrm{MD}(u,G)\) and \(f_B(v)=g_B+\mathrm{MD}(S,v)\), the implemented bound is
+\begin{equation}
+\label{eq:f2e-lb}
+\mathrm{lb}(u,v)=
+\begin{cases}
+g_F+g_B & \text{if }u=v,\\
+\max\bigl(f_F(u),\, f_B(v),\, g_F+g_B+1\bigr) & \text{otherwise.}
+\end{cases}
+\end{equation}
+The \(u=v\) case is a feasible meeting at cost \(g_F+g_B\) (no extra edge); it is our implementation, not a separate equation of Siag et al. We do not implement their tighter consistency-case bound \(\mathrm{lb}_C\).
+
+SFBDS stores remaining cost so that \(f=g+h\) with \(g=g_F+g_B\):
+\[
+h(u,v)=\max\bigl(0,\;\mathrm{lb}(u,v)-g_F-g_B\bigr).
+\]
+Official F2E search is this bound together with better-\(g\) CLOSED reopen. F2F keeps no-reopen.
 
 \subsection{Domain and Instances}
 
-\textit{Skeleton. Content in a later phase.}
+The domain is a 4-connected unit-cost grid: cardinal moves only, each of cost \(1\). Cells are row-major with \((0,0)\) at the top-left. Blocked cells are impassable. Manhattan distance on this domain is admissible and consistent. Every experiment runs A*, SFBDS-F2F, and official SFBDS-F2E on the same resolved map and the same endpoints.
+
+Queries are sampled as distinct in-bounds start/goal pairs whose Manhattan distance is at least a configured floor (30 pairs unless a nested run skips an unplaceable query). On random-obstacle maps, a connect-once step may then move the pair onto a free 4-connected component that still meets the floor: the current component is tried first if the sampled pair is already connected; otherwise components are tried largest-first.
+
+Four generator families are used.
+
+\textbf{Open.} An empty rectangle.
+
+\textbf{Corridor.} A \(1\times W\) empty row.
+
+\textbf{Maze.} A perfect wall-and-passage maze: DFS spans rooms at even coordinates and carves the intervening wall. Start and goal are forced free and attached by a short tunnel. Optional braiding opens a fraction of leftover inter-room walls after the spanning tree (here \(0.5\)). A braided run that shares seed and query sample with an unbraided maze keeps the same endpoints and adds loops.
+
+\textbf{Nested random.} Non-reserved cells are shuffled once. Obstacle sets are prefixes of that shuffle, so a lower density is a subset of a higher density on the same query. Connect-once runs on the densest prefix; the relocated endpoints are reused at lower densities. Reported obstacle density is the realized fraction \(\mathrm{count}/(hw)\); confirmatory density tests are keyed by integer obstacle count. Nested configs with different seeds are separate instance families, not a paired density progression on the same maps.
+
+Table~\ref{tab:instances} lists the geography configurations (nested geography uses target densities \(10/20/30\%\)). Table~\ref{tab:factors} lists the factor configurations (query length, braid, denser nested prefixes, and a timed maze). Nested \(128\times 128\) at \(45/47.5/50\%\) with Manhattan floor \(48\) is the only run that skips an unconnected query instead of aborting, so realized \(n\) may be below \(30\). Timeouts are \(60\)s except corridor (\(30\)s) and maze \(255\) (unbraided and braided, \(120\)s).
+
+\begin{table}[tb]
+\centering
+\small
+\caption{Geography configurations. Each row has 30 start/goal queries. Nested rows resolve three prefix densities (\(90\) maps); open, corridor, and maze rows are \(30\) maps each. Timeout is wall-clock seconds per algorithm run.}
+\label{tab:instances}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Family & Size & Seed & min MD & Notes \\
+\midrule
+Open & \(128\times 128\) & 100 & 64 & \(30\) maps \\
+Corridor & \(1\times 512\) & 150 & 128 & \(30\) maps \\
+Maze & \(127\times 127\) & 140 & 60 & \(30\) maps \\
+Maze & \(255\times 255\) & 150 & 120 & \(30\) maps \\
+Nested random & \(64\times 64\) & 110 & 24 & 3 densities \\
+Nested random & \(128\times 128\) & 110 & 48 & 3 densities \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[tb]
+\centering
+\small
+\caption{Factor configurations. Braid \(0.5\) shares endpoints with the matching unbraided maze. Timed maze 127 uses five wall-clock repeats. Timeout \(60\)s except maze 255 braid (\(120\)s). Nested rows are 30 queries \(\times\) 3 prefix densities.}
+\label{tab:factors}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Config & Size & Seed & min MD & Notes \\
+\midrule
+Maze far & \(127\) & 141 & 90 & longer floor \\
+Maze braid & \(127\) & 140 & 60 & braid \(0.5\) \\
+Maze braid & \(255\) & 150 & 120 & braid \(0.5\) \\
+Maze timed & \(127\) & 140 & 60 & 5 repeats \\
+Nested & \(64\) & 210 & 24 & 3 dens.\ \(30/40/45\%\) \\
+Nested & \(64\) & 211 & 24 & 3 dens.\ \(40/45/50\%\) \\
+Nested & \(64\) & 212 & 16 & 3 dens.\ \(50/51/52\%\) \\
+Nested & \(128\) & 220 & 48 & 3 dens.\ \(30/40/45\%\) \\
+Nested & \(128\) & 221 & 28 & 3 dens.\ \(45/47.5/50\%\) \\
+Nested & \(128\) & 221 & 48 & 3 dens.; skip \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Search Mechanics}
 
-\textit{Skeleton. Content in a later phase.}
+OPEN is a lazy binary heap: an improved pair pushes a new heap row, and a popped row is skipped if it is no longer the champion. CLOSED is a hash table of expanded nodes, keyed by the ordered pair. Peak OPEN is the maximum logical OPEN size (stale heap rows are not counted). Duplicate lookup checks OPEN before CLOSED. Parent-edge suppression omits the reverse parent operator when generating neighbors; branching-factor direction uses the remaining legal operators after that suppression.
+
+Search stops when OPEN is empty, when a meeting pair \(u=v\) is selected (Late), or when a wall-clock timeout fires through a cooperative stop flag. There is no incumbent-cost cutoff and no pair or result cache. A successful SFBDS path is reconstructed from the two parent chains of the selected meeting node, concatenating the forward walk (reversed) with the backward walk and writing the meeting cell once. A* reconstructs from a single parent chain. Runtime is wall-clock from \texttt{time.perf\_counter}. On the timed maze, each algorithm is repeated five times; reported runtime and heuristic time are medians over successful repeats, while expansions and the path come from the first successful run. A query times out only if every repeat times out.
+
+The implementation is CPython 3.11.15 on 64-bit Windows (build 26200), Intel Core 7 240H, 16\,GB RAM. Analysis uses SciPy for the Wilcoxon and sign tests described below.
 
 \subsection{Metrics}
 
-\textit{Skeleton. Content in a later phase.}
+The primary cost is SFBDS \emph{pair} expansions: nodes popped from OPEN and expanded, not including the Late meeting selection. A* expansions are states and are never mixed into pair-expansion savings, win counts, or Wilcoxon tests. Secondary SFBDS counts, used descriptively, are generated child pairs, heuristic evaluations (one per insert or improve on OPEN), peak OPEN, peak CLOSED, and wall-clock runtime. Heuristic CPU time is recorded only to support the offline eval-cost model below.
+
+Solution cost is the length of the reconstructed path. Detour is solution cost divided by Manhattan, using A* cost when A* succeeded. Expansion saving is \((\mathrm{F2E}-\mathrm{F2F})/\mathrm{F2E}\times 100\) on solved, cost-clean pairs. Runtime is not a co-primary claim; the timed maze and the eval-cost sweep are the only runtime analyses, and both are secondary.
 
 \subsection{Experimental Protocol}
 
-\textit{Skeleton. Content in a later phase.}
+A paired instance is one query on one resolved map. F2F, F2E, and A* share that map. The pairing key is experiment, generator kind, height, width, seed, and query index. Nested densities of one query share a family identifier; they are not treated as independent sample points in an overall nested test.
+
+A pair is solved when both SFBDS variants succeed and neither timed out. Timeouts remain in the raw table with undefined ratios; confirmatory tests and win percentages use solved pairs only. A cost-mismatch row is one on which F2F, F2E, or successful A* disagree on solution cost. Those rows stay in the raw table and are excluded from Wilcoxon tests, sign tests, F2F-fewer / F2E-fewer / tie counts, expansion-saving percentages, and plots. Cost agreement with A* is a validity check, not a ranking metric, and is not a general optimality theorem.
+
+The primary test is a two-sided Wilcoxon signed-rank test on \(\mathrm{expansion\_diff}=\mathrm{F2E}-\mathrm{F2F}\), discarding zeros, exact when the number of untied pairs is at most \(25\). If that number is below \(10\), the \(p\)-value is left undefined. Rank-biserial correlation is computed from the Wilcoxon \(T^+\) and \(T^-\) counts; a positive value means F2F expanded fewer pairs. The confirmatory test is a two-sided sign test on F2F-fewer versus F2E-fewer, dropping ties. Holm correction is applied separately to the Wilcoxon family and to the sign family. Detour buckets are exploratory (raw \(p\) only).
+
+Nested random maps are not stacked as independent \(n\). An overall nested test, when used, takes one median \(\mathrm{expansion\_diff}\) per family. Per-density tests stay uncollapsed and are keyed by experiment \(\times\) grid size \(\times\) obstacle count. Holm for density is within one nested configuration, not across experiments or sizes. When a snapshot mixes more than one nested experiment, the overall nested Wilcoxon is skipped and the per-experiment density table is used. Maze factor runs (far, braid, timed) are tested per experiment; they are not pooled with the geography maze. Nested \(64\times 64\) at \(30\%\) (seed 110) is not pooled with denser nested \(64\times 64\) (seed 210 or later).
+
+Two secondary analyses reuse official searches rather than replacing the expansion geography. Heuristic-strength replay rebuilds the same maps from the same seeds and evaluates both pair bounds on every pair that SFBDS actually scores for OPEN insert or improve. Nested \(64\times 64\) at \(30\%\) and at \(45\%\) use different seeds, so that contrast is family-level, not a paired density step. The offline eval-cost model does not re-run search. Writing \(\mathrm{rest}=\mathrm{runtime}-\mathrm{heuristic\_time}\), it forms \(T_\beta=\mathrm{rest}+\beta\cdot\mathrm{heuristic\_evals}\) and sweeps \(\beta\) through \(0\) and \(0.1\times\) through \(10^6\times\) the observed median seconds per Manhattan evaluation. Preference is \(T_{\mathrm{F2F}}\) versus \(T_{\mathrm{F2E}}\) on each paired query. The model rescales recorded evaluations; it does not change which pairs the search expands, and it is not a substitute for an expensive online heuristic.
