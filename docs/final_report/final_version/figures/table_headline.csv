@@ -1,0 +1,6 @@
+family,experiment,n_test,n_f2f_fewer,n_f2e_fewer,n_tie,median_saving_pct,wilcoxon_p_holm,note
+Open 128,study_open_128_opt,30,0,0,30,0.0,,30 maps
+Corridor 512,study_corridor_512_opt,30,0,0,30,0.0,,30 maps
+Maze 127,study_maze_127_opt,30,22,0,8,3.770677666336878,4.77e-07,30 maps
+Maze 255,study_maze_255_opt,30,26,0,4,3.766235685728056,2.98e-08,30 maps
+Nested 64 @ 30%,study_random_64_opt,30,13,0,17,0.0,0.0002,30 maps; one prefix of nested 64

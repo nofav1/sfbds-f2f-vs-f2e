@@ -1,0 +1,11 @@
+group,n_solved,n_test,n_untied,n_f2f_fewer,n_f2e_fewer,n_tie,median_expansion_saving_pct,wilcoxon_p_holm
+study_random_128_d45_opt::128x128::7372,30,30,13,13,0,17,0.0,0.0002
+study_random_128_d45_opt::128x128::7781,30,30,17,17,0,13,6.299603174603174,4.58e-05
+study_random_128_d45_opt::128x128::8191,30,30,17,17,0,13,6.330128205128204,4.58e-05
+study_random_128_dense_opt::128x128::7372,30,30,11,11,0,19,0.0,0.0010
+study_random_64_d50_opt::64x64::1638,30,30,12,12,0,18,0.0,0.0007
+study_random_64_d50_opt::64x64::1842,30,30,13,13,0,17,0.0,0.0007
+study_random_64_d50_opt::64x64::2047,30,30,13,13,0,17,0.0,0.0007
+study_random_64_dense_opt::64x64::1638,30,30,16,16,0,14,4.903438156798985,6.10e-05
+study_random_64_dense_opt::64x64::1842,30,30,15,14,1,15,0.0,0.0001
+study_random_64_opt::64x64::1228,30,30,13,13,0,17,0.0,0.0002

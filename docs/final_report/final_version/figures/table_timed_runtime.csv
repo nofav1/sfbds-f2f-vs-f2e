@@ -1,0 +1,2 @@
+experiment,n_expansion_untied,n_f2f_faster,median_runtime_ratio,note
+study_maze_127_timed_opt,22,22,0.8851889474191801,secondary; expansions from first successful repeat

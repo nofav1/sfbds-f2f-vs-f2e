@@ -1,0 +1,6 @@
+family,experiment,n_test,n_f2f_fewer,n_f2e_fewer,n_tie,median_saving_pct,wilcoxon_p_holm
+Maze 127,study_maze_127_opt,30,22,0,8,3.770677666336878,4.77e-07
+Maze 127 far,study_maze_127_far_opt,30,15,0,15,0.2008032128514056,0.0002
+Maze 127 braid,study_maze_127_braid_opt,30,12,0,18,0.0,0.0010
+Maze 255,study_maze_255_opt,30,26,0,4,3.766235685728056,2.98e-08
+Maze 255 braid,study_maze_255_braid_opt,30,11,0,19,0.0,0.0010

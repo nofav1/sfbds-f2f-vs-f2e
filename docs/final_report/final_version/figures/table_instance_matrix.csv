@@ -1,0 +1,17 @@
+experiment,family,height,width,seed,n_queries,n_maps,n_densities
+study_corridor_512_opt,Corridor 512,1,512,150,30,30,1
+study_maze_127_braid_opt,Maze 127 braid,127,127,140,30,30,1
+study_maze_127_far_opt,Maze 127 far,127,127,141,30,30,1
+study_maze_127_opt,Maze 127,127,127,140,30,30,1
+study_maze_127_timed_opt,Maze 127 timed,127,127,140,30,30,1
+study_maze_255_braid_opt,Maze 255 braid,255,255,150,30,30,1
+study_maze_255_opt,Maze 255,255,255,150,30,30,1
+study_open_128_opt,Open 128,128,128,100,30,30,1
+study_random_128_d45_md48_opt,Nested 128 md 48,128,128,221,20,60,3
+study_random_128_d45_opt,Nested 128 @ 45–50%,128,128,221,30,90,3
+study_random_128_dense_opt,Nested 128 dense,128,128,220,30,90,3
+study_random_128_opt,Nested 128 (10/20/30%),128,128,110,30,90,3
+study_random_64_d50_opt,Nested 64 @ 40–50%,64,64,211,30,90,3
+study_random_64_d52_opt,Nested 64 @ 50–52%,64,64,212,30,90,3
+study_random_64_dense_opt,Nested 64 dense,64,64,210,30,90,3
+study_random_64_opt,Nested 64 (10/20/30%),64,64,110,30,90,3

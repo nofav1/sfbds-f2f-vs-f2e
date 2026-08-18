@@ -565,6 +565,22 @@ Introduction now uses Siag's \(\mathrm{lb}\) only for \(u\neq v\) and points at 
 
 ---
 
+### 2026-08-18 — Phase 5 paper figures
+
+Added [`scripts/paper_figures.py`](../scripts/paper_figures.py). It pairs git `results/study/pair-bound/*_opt.csv` in memory (no gitignored analysis `paired.csv`) and writes [`docs/final_report/final_version/figures/`](final_report/final_version/figures/). Sanity from study CSVs: maze 127 **22/30**, maze 255 **26/30**. Headline, maze scatter, maze factors, heuristic-strength (from committed `family_summary.csv`, no Spearman ranking), eval-cost curve, plus generated/peak_open and nested-density (`n_untied≥10`) CSVs. Timed maze 127: 22/22 F2F faster among expansion-untied, median ratio ≈ 0.885.
+
+**Next.** Phase 6 (Experimental Results) only after approval.
+
+---
+
+### 2026-08-18 — Phase 5 review (instance densities, eval-cost β=0, tests)
+
+`table_instance_matrix.csv` now sets `n_densities` only for nested prefixes (maze/open/corridor = 1). Eval-cost figure xlabel notes that log-\(x\) omits \(\beta=0\); that point stays in `table_eval_cost.csv`. Tests lock nested 64@30% 13/0/17, timed 22/22 median ratio ≈ 0.885, maze `n_densities=1`, and `--force`.
+
+**Next.** Phase 6 only after approval.
+
+---
+
 ## Experiment freeze (2026-08-17)
 
 Experimental phase is frozen for the report. Do not add map families, cache, incumbent stop, or a Late-stop proof unless a later scope lock says so.

@@ -1,6 +1,6 @@
 ---
 name: final-report-construction
-overview: Phase 0–4 done. Next gate is Phase 5 (scripts/paper_figures.py from git *_opt.csv). Course four-part skeleton. Official *_opt pair-bound F2E with reopen only.
+overview: Phase 0–5 done. Next gate is Phase 6 (Experimental Results from frozen figures). Official *_opt pair-bound F2E with reopen only.
 todos:
   - id: phase-0-template
     content: "Phase 0: copy aaai2027.sty/bst into final_version, dummy camera-ready main.tex with \\nocopyright, notes/source_map.md, build README"
@@ -22,7 +22,7 @@ todos:
     status: completed
   - id: phase-5-figures
     content: "Phase 5: scripts/paper_figures.py from git study *_opt.csv + heuristic-strength family_summary.csv into final_version/figures/; do not require gitignored paired.csv"
-    status: pending
+    status: completed
   - id: phase-6-13-writeup
     content: "Phases 6–13: Results through abstract, bib audit, QA, final PDF — each gated"
     status: pending
@@ -31,7 +31,7 @@ isProject: true
 
 # Final Report Construction Plan
 
-Phase 0–4 are **done**. Next gate is **Phase 5** (`scripts/paper_figures.py` from git study `*_opt.csv` + `family_summary.csv`). Do not start Results prose yet. [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec. Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27).
+Phase 0–5 are **done**. Next gate is **Phase 6** (Experimental Results from frozen `final_version/figures/`). Do not start Conclusions or the abstract yet. [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec. Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27).
 
 ---
 
@@ -290,7 +290,7 @@ Phase L is **done**. PDFs are already under [`docs/context/final_report_papers/p
 
 **Phase 4 — Methodology: Domain, Mechanics, Metrics, Protocol** (done). Official `*_opt` matrix only. Cost-mismatch exclusion as protocol, not as a story. Hardware recorded as CPython 3.11.15 / Windows build 26200 / Intel Core 7 240H.
 
-**Phase 5 — Freeze figures** via `scripts/paper_figures.py` from git study `*_opt.csv` + `family_summary.csv` into `final_version/figures/`. Do **not** require gitignored analysis `paired.csv`. Confirm maze 127/255 still 22/30 and 26/30.
+**Phase 5 — Freeze figures** (done) via [`scripts/paper_figures.py`](scripts/paper_figures.py) from git study `*_opt.csv` + `family_summary.csv` into `final_version/figures/`. Maze 127 **22/30**, maze 255 **26/30**. Does not read gitignored `paired.csv`.
 
 **Phases 6–13** — Experimental Results through abstract; analysis stays in Results (course §5.3); Conclusions shorter (course §6); cache future work with no Felner cache cite; bib audit against map keys; QA greps below; course checklist; code link.
 
@@ -307,8 +307,7 @@ Unchanged, except `notes/source_map.md` is the only place excluded-era paths may
 - Author names, emails, BGU affiliation
 - Public code URL
 - Original `instructions.pdf` not in repo
-- Phase 0 source lock is in `docs/final_report/final_version/`; dummy PDF still needs local PDFLaTeX (`pdflatex` was not on PATH in the Phase 0 environment)
-- `scripts/paper_figures.py` not written; figures not rebuilt from a clean clone
+- Phase 0 source lock is in `docs/final_report/final_version/`
 - Generated/peak_open not yet tabulated in `final_version/`
 - Page length unlocked
 
@@ -334,8 +333,8 @@ Unchanged, except `notes/source_map.md` is the only place excluded-era paths may
 
 ## 12. First steps after this revision is approved
 
-1. Phase 0–4 are done. Methodology Domain / Mechanics / Metrics / Protocol are filled from official `*_opt` YAML and locked stats.
-2. **Do not start Phase 5 until approved.**
+1. Phase 0–5 are done. Figures and table CSVs are in `docs/final_report/final_version/figures/`.
+2. **Do not start Phase 6 until approved.**
 3. Phase L is already done. Do not re-download papers.
 
 Then stop for review after each phase.

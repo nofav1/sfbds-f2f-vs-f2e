@@ -1,0 +1,7 @@
+family,experiment,n,median_f2f_generated,median_f2e_generated,median_f2f_peak_open,median_f2e_peak_open
+Open 128,study_open_128_opt,30,295.0,295.0,197.0,197.0
+Corridor 512,study_corridor_512_opt,30,247.0,247.0,2.0,2.0
+Maze 127,study_maze_127_opt,30,6635.0,7055.0,18.0,15.0
+Maze 255,study_maze_255_opt,30,27193.5,28425.5,30.0,30.0
+Maze 127 braid,study_maze_127_braid_opt,30,601.0,801.5,86.5,88.0
+Nested 64 @ 30%,study_random_64_opt,30,449.5,516.5,62.0,61.0
