@@ -1,3 +1,40 @@
-\section{Additional Results}
+\section{Extra Tables}
 
-\textit{Skeleton. Content in a later phase.}
+Table~\ref{tab:generated} reports median generated child pairs and peak OPEN on selected families. Table~\ref{tab:evalcost-beta0} records the \(\beta=0\) eval-cost point omitted from the log-\(x\) curve in Figure~\ref{fig:evalcost}.
+
+\begin{table}[tb]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Median generated child pairs and peak OPEN (cost-clean solved queries). Nested \(64@30\%\) is the 1228-obstacle prefix.}
+\label{tab:generated}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Family & Gen.\ F2F & Gen.\ F2E & Peak F2F & Peak F2E \\
+\midrule
+Open 128 & 295 & 295 & 197 & 197 \\
+Corridor 512 & 247 & 247 & 2 & 2 \\
+Maze 127 & 6635 & 7055 & 18 & 15 \\
+Maze 255 & 27193.5 & 28425.5 & 30 & 30 \\
+Maze 127 braid & 601 & 801.5 & 86.5 & 88 \\
+Nested \(64@30\%\) & 449.5 & 516.5 & 62 & 61 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[tb]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Offline eval-cost at \(\beta=0\) (non-heuristic residual only). Secondary; 30 pairs each.}
+\label{tab:evalcost-beta0}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Family & Median \(T\) ratio & F2F cheaper & F2E cheaper \\
+\midrule
+Maze 127 & 0.934 & 27 & 3 \\
+Maze 255 & 0.915 & 26 & 4 \\
+Nested \(64@30\%\) & 0.950 & 21 & 9 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -581,6 +581,22 @@ Added [`scripts/paper_figures.py`](../scripts/paper_figures.py). It pairs git `r
 
 ---
 
+### 2026-08-18 — Phase 6 Experimental Results
+
+Filled [`sections/results.tex`](final_report/final_version/sections/results.tex) from frozen `final_version/figures/` table CSVs (not gitignored `paired.csv`). Geography: open/corridor all ties; maze 127 **22/30** and maze 255 **26/30**, median saving **3.8%**; nested 64@30% seed 110 **13/0/17**. Factors: far **15/30**, braid **12/30** and **11/30**; nested prefixes with \(n_{\mathrm{untied}}\ge 10\) listed per seed, not pooled. Secondary: heuristic-strength shares (no Spearman ranking); timed maze 22/22 median ratio **0.885**; eval-cost no crossover, \(\beta=0\) in the appendix; generated/peak OPEN in the appendix. Siag SoCS cited only as two-frontier OPEN-min overhead (does not refute). Compile check: `phase6check.pdf`.
+
+**Next.** Phase 7 (Conclusions) only after approval. Do not write the abstract yet.
+
+---
+
+### 2026-08-18 — Phase 6 review (MD-48 is a new sample)
+
+Results no longer treat nested 128 MD-48 (seed 221, realized \(n=20\)) as the MD-28 thirty minus unconnected queries. Same density list, new endpoints at min MD 48; \(n_{\mathrm{untied}}<10\). Geography Table 1 dropped the spare Timeout column. Methodology factor row notes new queries / \(n=20\).
+
+**Next.** Phase 7 (Conclusions) only after approval. Do not write the abstract yet.
+
+---
+
 ## Experiment freeze (2026-08-17)
 
 Experimental phase is frozen for the report. Do not add map families, cache, incumbent stop, or a Late-stop proof unless a later scope lock says so.

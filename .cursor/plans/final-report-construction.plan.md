@@ -1,6 +1,6 @@
 ---
 name: final-report-construction
-overview: Phase 0–5 done. Next gate is Phase 6 (Experimental Results from frozen figures). Official *_opt pair-bound F2E with reopen only.
+overview: Phase 0–6 done. Next gate is Phase 7 (Experimental Conclusions and Summary). Official *_opt pair-bound F2E with reopen only.
 todos:
   - id: phase-0-template
     content: "Phase 0: copy aaai2027.sty/bst into final_version, dummy camera-ready main.tex with \\nocopyright, notes/source_map.md, build README"
@@ -24,14 +24,14 @@ todos:
     content: "Phase 5: scripts/paper_figures.py from git study *_opt.csv + heuristic-strength family_summary.csv into final_version/figures/; do not require gitignored paired.csv"
     status: completed
   - id: phase-6-13-writeup
-    content: "Phases 6–13: Results through abstract, bib audit, QA, final PDF — each gated"
-    status: pending
+    content: "Phase 6 Results done. Remaining gated: Conclusions, Contribution, abstract, bib audit, QA, final PDF"
+    status: in_progress
 isProject: true
 ---
 
 # Final Report Construction Plan
 
-Phase 0–5 are **done**. Next gate is **Phase 6** (Experimental Results from frozen `final_version/figures/`). Do not start Conclusions or the abstract yet. [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec. Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27).
+Phase 0–6 are **done**. Next gate is **Phase 7** (Experimental Conclusions and Summary; shorter than Results). Do not start the abstract yet. [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec. Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27).
 
 ---
 
@@ -308,7 +308,7 @@ Unchanged, except `notes/source_map.md` is the only place excluded-era paths may
 - Public code URL
 - Original `instructions.pdf` not in repo
 - Phase 0 source lock is in `docs/final_report/final_version/`
-- Generated/peak_open not yet tabulated in `final_version/`
+- Generated/peak_open tabulated in `final_version/figures/table_generated_peak_open.csv` and the appendix
 - Page length unlocked
 
 ---
@@ -333,8 +333,8 @@ Unchanged, except `notes/source_map.md` is the only place excluded-era paths may
 
 ## 12. First steps after this revision is approved
 
-1. Phase 0–5 are done. Figures and table CSVs are in `docs/final_report/final_version/figures/`.
-2. **Do not start Phase 6 until approved.**
+1. Phase 0–6 are done. Results and appendix tables cite frozen `final_version/figures/` (maze 127 **22/30**, maze 255 **26/30**).
+2. **Do not start Phase 7 until approved.**
 3. Phase L is already done. Do not re-download papers.
 
 Then stop for review after each phase.

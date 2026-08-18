@@ -1,15 +1,126 @@
 \section{Experimental Results}
 
-\textit{Skeleton. Content in a later phase.}
+All counts below are pair expansions on cost-clean solved queries. Win counts and Holm \(p\)-values are those in Tables~\ref{tab:headline} and~\ref{tab:maze-factors} (from the frozen study CSVs). A* expansions are states and are not mixed into these comparisons. On every official instance in this matrix, F2F, F2E, and successful A* agreed on solution cost, and none of those queries timed out. That is empirical coverage of these maps, not a general optimality theorem.
 
 \subsection{Map Families}
 
-\textit{Skeleton. Content in a later phase.}
+Table~\ref{tab:headline} and Figure~\ref{fig:headline} summarize the geography families. Open \(128\times128\) and the \(1\times512\) corridor are all ties (\(0/30\) untied). That does not mean F2F never helps; it means these sizes do not separate the two bounds.
+
+Perfect mazes do separate. On maze 127, F2F expanded fewer pairs on \(22/30\) maps (8 ties, Holm \(p=4.77\times10^{-7}\)), median expansion saving \(3.8\%\). On maze 255 the count is \(26/30\) (4 ties, Holm \(p=2.98\times10^{-8}\)), median saving again \(3.8\%\). Figure~\ref{fig:maze-scatter} shows the same pattern query by query: points lie on or below the equality line, and the F2F saving is a small fraction of a large pair-expansion count.
+
+Nested random is weaker. At \(64\times64\) and \(30\%\) obstacles (seed 110, 1228 blocked cells), F2F expanded fewer on \(13/30\) maps (Holm \(p=0.0002\)); median saving is \(0\%\). The \(128\times128\) geography prefixes at \(10/20/30\%\) do not reach \(n_{\mathrm{untied}}\ge 10\). Nested configs with other seeds are not pooled with this row; they are reported as factors.
+
+\begin{table}[tb]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Pair-expansion wins on geography families (30 queries each). Nested \(64@30\%\) is one prefix of the nested-64 geography run, not three densities stacked as independent \(n\). Holm \(p\) is undefined when \(n_{\mathrm{untied}}<10\).}
+\label{tab:headline}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Family & F2F fewer & F2E fewer & Ties & Holm \(p\) \\
+\midrule
+Open 128 & 0 & 0 & 30 & --- \\
+Corridor 512 & 0 & 0 & 30 & --- \\
+Maze 127 & 22 & 0 & 8 & \(4.77\times10^{-7}\) \\
+Maze 255 & 26 & 0 & 4 & \(2.98\times10^{-8}\) \\
+Nested \(64@30\%\) & 13 & 0 & 17 & \(0.0002\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_headline_wins.pdf}
+\caption{F2F-fewer / tie / F2E-fewer pair-expansion counts on the geography families in Table~\ref{tab:headline}.}
+\label{fig:headline}
+\end{figure}
+
+\begin{figure*}[tb]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig_maze_scatter.pdf}
+\caption{Maze pair expansions, F2F versus F2E. The line is equality. Maze 127 is \(22/30\) F2F-fewer; maze 255 is \(26/30\).}
+\label{fig:maze-scatter}
+\end{figure*}
 
 \subsection{Map Factors}
 
-\textit{Skeleton. Content in a later phase.}
+Table~\ref{tab:maze-factors} and Figure~\ref{fig:maze-factors} hold maze size fixed and change one factor at a time. Raising the Manhattan floor on maze 127 (seed 141, min MD 90) yields \(15/30\) F2F-fewer, so a longer query at this size did not strengthen the maze effect. Opening \(50\%\) of leftover inter-room walls, with the same endpoints as the unbraided maze, drops the count from \(22/30\) to \(12/30\) on maze 127 and from \(26/30\) to \(11/30\) on maze 255. Loops make the two heuristics agree more often, not less.
+
+Nested random remains seed- and density-specific. Table~\ref{tab:nested} lists every nested prefix with \(n_{\mathrm{untied}}\ge 10\). Seed 210 at \(64\times64\), \(40\%\) and \(45\%\) (1638 and 1842 obstacles), gives \(16/30\) and \(14/1/15\). Those maps are not the seed-110 \(30\%\) instance, so they are not a paired density step on the same grids. On \(128\times128\), the first testable slice is \(45\%\) (seed 220: \(11/30\); seed 221 at MD 28: \(13/30\), \(17/30\), \(17/30\) at \(45/47.5/50\%\)). A second seed-221 run keeps the same density list but draws new queries at min MD 48 (realized \(n=20\)); \(n_{\mathrm{untied}}<10\), so there is no \(p\)-value. Those endpoints are not a subset of the MD-28 thirty. The \(64\times64\) prefixes at \(50\)--\(52\%\) (seed 212) are likewise too tied for a \(p\)-value.
+
+\begin{table}[tb]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Maze factors. Far and braid are separate experiments; they are not pooled with geography maze 127/255.}
+\label{tab:maze-factors}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Config & F2F fewer & F2E fewer & Ties & Holm \(p\) \\
+\midrule
+Maze 127 & 22 & 0 & 8 & \(4.77\times10^{-7}\) \\
+Maze 127 far & 15 & 0 & 15 & \(0.0002\) \\
+Maze 127 braid & 12 & 0 & 18 & \(0.0010\) \\
+Maze 255 & 26 & 0 & 4 & \(2.98\times10^{-8}\) \\
+Maze 255 braid & 11 & 0 & 19 & \(0.0010\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_maze_factors.pdf}
+\caption{F2F-fewer pair-expansion counts under maze size, longer Manhattan, and braid \(0.5\).}
+\label{fig:maze-factors}
+\end{figure}
+
+\begin{table}[tb]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\caption{Nested-random prefixes with \(n_{\mathrm{untied}}\ge 10\). Holm is within one nested experiment. Seeds differ across blocks.}
+\label{tab:nested}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Slice (seed) & \#obs & F2F fewer & F2E fewer & Holm \(p\) \\
+\midrule
+64@30\% (110) & 1228 & 13 & 0 & 0.0002 \\
+64@40\% (210) & 1638 & 16 & 0 & \(6.10\times10^{-5}\) \\
+64@45\% (210) & 1842 & 14 & 1 & 0.0001 \\
+64@40\% (211) & 1638 & 12 & 0 & 0.0007 \\
+64@45\% (211) & 1842 & 13 & 0 & 0.0007 \\
+64@50\% (211) & 2047 & 13 & 0 & 0.0007 \\
+128@45\% (220) & 7372 & 11 & 0 & 0.0010 \\
+128@45\% (221) & 7372 & 13 & 0 & 0.0002 \\
+128@47.5\% (221) & 7781 & 17 & 0 & \(4.58\times10^{-5}\) \\
+128@50\% (221) & 8191 & 17 & 0 & \(4.58\times10^{-5}\) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Secondary Cost}
 
-\textit{Skeleton. Content in a later phase.}
+Siag et al.\ report large F2F overhead when F2F is a min over the opposite OPEN \cite{siag2023socs}. Our setting is one pairwise Manhattan call per inserted or improved pair. Those are different cost stories; the numbers in this subsection do not refute the two-frontier overhead result.
+
+Figure~\ref{fig:strength} compares both pair bounds on every pair that SFBDS actually scores for OPEN insert or improve. F2E's bound is never strictly stronger on any recorded pair. Open 128 is \(100\%\) equal, which matches the all-tie expansion table. On perfect mazes F2F is often strictly stronger (\(68\%\) of maze-127 pairs, \(90\%\) of maze-255 pairs). Braid drops that share to \(27\%\), in line with the extra ties. Nested \(64@30\%\) (seed 110) and \(64@45\%\) (seed 210) are different maps; both sit near \(56\)--\(59\%\) F2F-stronger. The figure is a mechanism check, not a ranking of savings by correlation.
+
+Median generated-child counts move with expansions: they tie on open and corridor, and F2F is slightly lower on mazes (maze 127: \(6635\) vs.\ \(7055\); maze 255: \(27193.5\) vs.\ \(28425.5\)). Peak OPEN does not track the same way: maze 127 medians are 18 (F2F) and 15 (F2E). Full generated and peak-OPEN medians are in the appendix.
+
+Runtime is not co-primary. On the timed maze-127 rerun (five wall-clock repeats, same seed and queries as the expansion maze), among the 22 expansion-untied queries F2F was faster on all 22, median runtime ratio \(0.885\). That is a check on this cheap-\(h\) maze, not a claim that F2F is faster in general.
+
+The offline eval-cost model charges \(\beta\) seconds per recorded heuristic evaluation and does not re-run search. On maze 127, maze 255, and nested \(64@30\%\), F2F never issued more evaluations than F2E, so raising \(\beta\) cannot reverse the cost order by making heuristics expensive. Figure~\ref{fig:evalcost} plots the median \(T_{\mathrm{F2F}}/T_{\mathrm{F2E}}\) against \(\beta\) on a log \(x\)-axis, which omits \(\beta=0\); that point is in Table~\ref{tab:evalcost-beta0} (maze 127 median ratio \(0.934\)). There is no crossover to F2E on the tested range. The model rescales recorded Manhattan evaluations; it is not a substitute for an expensive online heuristic, and it does not change which pairs the search expands.
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_heuristic_strength.pdf}
+\caption{Share of recorded \texttt{evaluate()} pairs on which F2F's pair bound is strictly stronger, equal, or weaker. Nested \(64@30\%\) and \(64@45\%\) use different seeds.}
+\label{fig:strength}
+\end{figure}
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_eval_cost.pdf}
+\caption{Offline eval-cost sensitivity (secondary). Log \(x\) omits \(\beta=0\); that point is in Table~\ref{tab:evalcost-beta0}. No crossover to F2E.}
+\label{fig:evalcost}
+\end{figure}

@@ -90,14 +90,14 @@ Four generator families are used.
 
 \textbf{Nested random.} Non-reserved cells are shuffled once. Obstacle sets are prefixes of that shuffle, so a lower density is a subset of a higher density on the same query. Connect-once runs on the densest prefix; the relocated endpoints are reused at lower densities. Reported obstacle density is the realized fraction \(\mathrm{count}/(hw)\); confirmatory density tests are keyed by integer obstacle count. Nested configs with different seeds are separate instance families, not a paired density progression on the same maps.
 
-Table~\ref{tab:instances} lists the geography configurations (nested geography uses target densities \(10/20/30\%\)). Table~\ref{tab:factors} lists the factor configurations (query length, braid, denser nested prefixes, and a timed maze). Nested \(128\times 128\) at \(45/47.5/50\%\) with Manhattan floor \(48\) is the only run that skips an unconnected query instead of aborting, so realized \(n\) may be below \(30\). Timeouts are \(60\)s except corridor (\(30\)s) and maze \(255\) (unbraided and braided, \(120\)s).
+Table~\ref{tab:instances} lists the geography configurations (nested geography uses target densities \(10/20/30\%\)). Table~\ref{tab:factors} lists the factor configurations (query length, braid, denser nested prefixes, and a timed maze). A second seed-221 nested \(128\times 128\) run uses the same \(45/47.5/50\%\) density list with min MD 48 and new start/goal pairs (realized \(n=20\)); it is not a subset of the MD-28 thirty. Timeouts are \(60\)s except corridor (\(30\)s) and maze \(255\) (unbraided and braided, \(120\)s).
 
 \begin{table}[tb]
 \centering
 \small
-\caption{Geography configurations. Each row has 30 start/goal queries. Nested rows resolve three prefix densities (\(90\) maps); open, corridor, and maze rows are \(30\) maps each. Timeout is wall-clock seconds per algorithm run.}
+\caption{Geography configurations. Each row has 30 start/goal queries. Nested rows resolve three prefix densities (\(90\) maps); open, corridor, and maze rows are \(30\) maps each.}
 \label{tab:instances}
-\begin{tabular}{@{}lccccc@{}}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
 Family & Size & Seed & min MD & Notes \\
 \midrule
@@ -114,7 +114,7 @@ Nested random & \(128\times 128\) & 110 & 48 & 3 densities \\
 \begin{table}[tb]
 \centering
 \small
-\caption{Factor configurations. Braid \(0.5\) shares endpoints with the matching unbraided maze. Timed maze 127 uses five wall-clock repeats. Timeout \(60\)s except maze 255 braid (\(120\)s). Nested rows are 30 queries \(\times\) 3 prefix densities.}
+\caption{Factor configurations. Braid \(0.5\) shares endpoints with the matching unbraided maze. Timed maze 127 uses five wall-clock repeats. Timeout \(60\)s except maze 255 braid (\(120\)s). Nested rows are 30 queries \(\times\) 3 prefix densities except the MD-48 row (new queries, realized \(n=20\)).}
 \label{tab:factors}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
@@ -129,7 +129,7 @@ Nested & \(64\) & 211 & 24 & 3 dens.\ \(40/45/50\%\) \\
 Nested & \(64\) & 212 & 16 & 3 dens.\ \(50/51/52\%\) \\
 Nested & \(128\) & 220 & 48 & 3 dens.\ \(30/40/45\%\) \\
 Nested & \(128\) & 221 & 28 & 3 dens.\ \(45/47.5/50\%\) \\
-Nested & \(128\) & 221 & 48 & 3 dens.; skip \\
+Nested & \(128\) & 221 & 48 & new queries; \(n=20\) \\
 \bottomrule
 \end{tabular}
 \end{table}
