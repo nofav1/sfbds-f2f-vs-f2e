@@ -43,7 +43,7 @@ Locked set: six papers. Lippi 2012, Barker dissertation, Siag AIJ 2025, Shubi 20
   - A **jumping policy** chooses the side to expand. One listed feature is **branching factor**: expand the state with the smaller branching factor (p. 61). Our implementation’s BF direction policy is this family, not a claim that Felner et al. specified our exact code.
   - Pairwise heuristic \(h(x,y)\) is used on the pair node; Manhattan distance is given as a symmetric example (p. 61).
   - Best-first SFBDS can have up to \(V^2\) unique pair tasks (p. 60, Case 4).
-- **Do not cite this PDF for:** our official F2E pair-bound formula (not in this paper).
+- **Do not cite this PDF for:** our official F2E pair-bound formula (not in this paper); pair/result **caching** (not in the verified claims).
 - **Note vs Markdown:** note `01` listed Moldenhauer first. Official AAAI cite and the PDF list **Felner first**. Use the official order.
 - **Original PDF verified:** **yes**
 - **Planned BibTeX key:** `felner2010sfbds`
@@ -143,7 +143,7 @@ Locked set: six papers. Lippi 2012, Barker dissertation, Siag AIJ 2025, Shubi 20
 
 | Paper | Reason |
 | --- | --- |
-| Lippi, Ernandes, Felner 2012 (eSBS) | Cache future-work, if any, uses Felner et al. 2010’s pair-task framing, not a dedicated cache paper |
+| Lippi, Ernandes, Felner 2012 (eSBS) | Skipped. Pair-cache is unimplemented future work: do **not** cite Felner 2010 for caching (not in the verified claims above) and do not collect eSBS. |
 | Barker 2015 dissertation | Redundant with `barker2015f2e` |
 | Siag and Shperberg 2025 AIJ | Two-frontier theory–practice; we do not compare against SOTA F2E BiHS |
 | Shubi et al. 2026 | Longest paths / MAX |
@@ -154,8 +154,9 @@ Locked set: six papers. Lippi 2012, Barker dissertation, Siag AIJ 2025, Shubi 20
 
 ## Writing rules for later phases
 
-1. Cite only keys in this file.
+1. Cite only keys in this file. This map is the **only** citation spec; do not follow plan §7 bullets if they ever disagree.
 2. Copy formulas from the **PDF lines above**, not from the Markdown notes.
 3. Do not mention SFBDS when citing `siag2023socs`.
-4. Do not attribute \(\varepsilon=+1\) to Chen 2017.
-5. `references.bib` is filled in the bibliography phase from these records, using `aaai2027.bst` fields.
+4. Do not attribute \(\varepsilon=+1\) to Chen 2017. Never write “NBS \(+1\)” or “Chen instantiates with \(+1\) when \(u\neq v\).” Unit-grid \(\varepsilon=1\) is Siag (`siag2023socs` Eq. 1 / `siag2023ijcai` Eq. 1).
+5. Do not cite `felner2010sfbds` for pair/result caching. Verified claims are pair nodes, jumping/BF, pairwise \(h\), and \(V^2\) tasks. If Conclusions mention a cache, say it was **not implemented**; no Felner cache sentence, no Lippi cite.
+6. `references.bib` is filled in the bibliography phase from these records, using `aaai2027.bst` fields.

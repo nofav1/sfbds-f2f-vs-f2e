@@ -53,7 +53,7 @@ Official reopen `*_opt` only. 30 queries each. Replay matched frozen `map_hash`,
 | Nested 64 @ 30% | 13 / 0 / 17 | 0 | 59.3 / 40.7 | 0.86 (n=13) |
 | Nested 64 @ 45% | 14 / 1 / 15 | 0 | 56.1 / 43.9 | 0.38 (n=15) |
 
-Spearman is **expansion-untied queries only**. All-query Spearman is dominated by the tie cluster at `(median_diff=0, expansion_diff=0)` and is not a ranking of how much F2F saves. Maze 255’s 0.13 is the honest “does bound gap rank savings?” number (almost every query already has a large positive `diff`). Spearman of F2F-stronger **fraction** vs expansion_diff among untied queries is similar (maze 127 0.23, maze 255 0.12, nested 30% 0.81, nested 45% 0.41).
+Spearman is **expansion-untied queries only**. All-query Spearman is dominated by the tie cluster at `(median_diff=0, expansion_diff=0)` and is not a ranking of how much F2F saves. **Do not cite nested 64@30%’s 0.86 (n=13) as a savings ranking either:** those 13 queries are already the F2F-fewer set, so the correlation does not rank *how much* F2F saves. Maze 255’s **0.13** (n=26) is the honest ranking number (almost every query already has a large positive `diff`). Spearman of F2F-stronger **fraction** vs expansion_diff among untied queries is similar (maze 127 0.23, maze 255 0.12, nested 30% 0.81, nested 45% 0.41).
 
 Expansion-tied maze 127 queries have **median `diff` = 0 and 0% F2F-stronger** (all eight). Queries where F2F expanded fewer have median `diff` ≈ 49 (maze 127) and ≈ 126 (maze 255). Braid winning queries only reach median `diff` ≈ 2.
 

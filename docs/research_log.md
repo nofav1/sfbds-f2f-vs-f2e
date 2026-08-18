@@ -469,13 +469,51 @@ Replay official F2F and reopen F2E on open 128, maze 127/255, maze 127 braid, ne
 
 ### 2026-08-17 — Heuristic-strength replay locks
 
-Replay also matches frozen `heuristic_evals` and `solution_cost`. Snapshot Spearman is expansion-untied only (maze 255 0.13; do not cite all-query 0.80 nested as a savings ranking). Pytest locks frozen splits, nested 64@45% q=8 `expansion_diff=-1`, a mini `RecordingHeuristic` search, and snapshot query-8 bound stats. `query_summary.csv` / `family_summary.csv` are gitignore exceptions. `--check-only` does not write.
+Replay also matches frozen `heuristic_evals` and `solution_cost`. Snapshot Spearman is expansion-untied only. **Do not cite nested 64@30% 0.86 (n=13) as a savings ranking** (those 13 are already F2F-fewer); maze 255 **0.13** is the honest ranking number. Do not cite all-query 0.80 nested. Pytest locks frozen splits, nested 64@45% q=8 `expansion_diff=-1`, a mini `RecordingHeuristic` search, and snapshot query-8 bound stats. `query_summary.csv` / `family_summary.csv` are gitignore exceptions. `--check-only` does not write.
 
 ---
 
 ### 2026-08-17 — Eval-cost invariant test and `--force`
 
 `scripts/eval_cost_sensitivity.py` refuses a non-empty freeze slug unless `--force`. `--check-only` and `tests/unit/test_eval_cost_sensitivity.py` lock 30 pairs × 3 families, `rest ≥ 0`, and **0** F2E-fewer-eval maps on the frozen `*_opt` CSVs. Snapshot numbers unchanged.
+
+---
+
+### 2026-08-18 — Final-report figure pipeline and citation spec (plan lock)
+
+**Plan:** [`.cursor/plans/final-report-construction.plan.md`](../.cursor/plans/final-report-construction.plan.md). **Citation spec:** [`docs/context/final_report_papers/PAPER_SOURCE_MAP.md`](context/final_report_papers/PAPER_SOURCE_MAP.md).
+
+Paper figures must rebuild from git `results/study/pair-bound/*_opt.csv` plus committed `family_summary.csv`, via a Phase 5 `scripts/paper_figures.py` writing into `docs/final_report/final_version/figures/`. Do not require gitignored analysis `paired.csv` (citable snapshots are README-only except heuristic-strength tables).
+
+Citation: Felner first on SFBDS; Chen 2017 has no \(\varepsilon\); unit-grid \(+1\) is Siag; SoCS ≠ SFBDS; pair-cache future work has **no Felner cache cite**. Nested 64@30% Spearman 0.86 is not a savings ranking.
+
+**Next.** Phase 0 source lock is done under `docs/final_report/final_version/`. Dummy PDF needs local PDFLaTeX. Do not start Phase 1 until approved.
+
+---
+
+### 2026-08-18 — Phase 0 template lock
+
+**Folder:** [`docs/final_report/final_version/`](final_report/final_version/)  
+Copied `aaai2027.sty` / `aaai2027.bst` from AuthorKit (do not modify the kit). Dummy `main.tex` uses camera-ready preamble, `\nocopyright`, no `[submission]`, placeholder authors and code URL, empty `references.bib`, internal `notes/source_map.md`. No report prose. `pdflatex` was not on PATH here, so the dummy PDF was not built.
+
+**Next.** Phase 1 skeleton only after approval.
+
+---
+
+### 2026-08-18 — Phase 1 section skeleton
+
+**Folder:** [`docs/final_report/final_version/`](final_report/final_version/)  
+`main.tex` now `\input`s empty section files: Introduction, Background and Related Work, Problem Definition, Algorithms and Heuristics, Experimental Setup, Results, Discussion, Limitations, Conclusions, plus an appendix stub. No report prose, no citations, no figures. Abstract remains a write-last placeholder.
+
+**Next.** Phase 2 (Problem Definition + Algorithms from official code) only after approval.
+
+---
+
+### 2026-08-18 — Phase 1 review lock
+
+Plan overview now states Phase 0–1 done; next gate is Phase 2 (do not rebuild the dummy). `main.tex` end matter is `\bibliography` then `\appendix` so a filled appendix cannot number References as Appendix B. Working copy lives in `docs/final_report/final_version/` (do not add AuthorKit).
+
+**Next.** Phase 2 only after approval.
 
 ---
 
@@ -506,6 +544,6 @@ Experimental phase is frozen for the report. Do not add map families, cache, inc
 
 **Future work (explicitly not done)**
 
-- Pair/result cache (needs instructor/scope lock).
+- Pair/result cache (not implemented; report must not cite Felner 2010 for caching).
 - Late-stop optimality proof; incumbent/lower-bound stopping rule.
 - Online re-search with a genuinely expensive heuristic (this sweep only rescales recorded evals).

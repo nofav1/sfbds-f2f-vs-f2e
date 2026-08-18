@@ -17,3 +17,4 @@ results/analysis/**/*.png
 # Exception: heuristic-strength query/family tables are cited in CI.
 !results/analysis/pair-bound/2026-08-17-heuristic-strength/query_summary.csv
 !results/analysis/pair-bound/2026-08-17-heuristic-strength/family_summary.csv
+docs/final_report/AuthorKit27

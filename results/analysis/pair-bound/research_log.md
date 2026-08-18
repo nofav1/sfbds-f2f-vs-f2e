@@ -217,13 +217,19 @@ Replay F2F + official F2E; both LBs on each `evaluate()` `(u,v,g)`. Nested 64@30
 
 ### 2026-08-17 — Heuristic-strength replay locks
 
-Replay also matches frozen `heuristic_evals` and `solution_cost`. Spearman in the snapshot README is expansion-untied only. Pytest: mini `RecordingHeuristic` search, frozen splits, nested 64@45% q=8 `expansion_diff=-1`, snapshot query-8 bound stats. `query_summary.csv` / `family_summary.csv` are gitignore exceptions for this slug. `--check-only` does not write.
+Replay also matches frozen `heuristic_evals` and `solution_cost`. Spearman in the snapshot README is expansion-untied only. **Do not cite nested 64@30% 0.86 (n=13) as a savings ranking**; maze 255 **0.13** is the honest ranking number. Pytest: mini `RecordingHeuristic` search, frozen splits, nested 64@45% q=8 `expansion_diff=-1`, snapshot query-8 bound stats. `query_summary.csv` / `family_summary.csv` are gitignore exceptions for this slug. `--check-only` does not write.
 
 ---
 
 ### 2026-08-17 — Eval-cost invariant test and `--force`
 
 Script refuses a non-empty slug unless `--force`. Pytest locks 30 pairs × 3 families, `rest ≥ 0`, 0 F2E-fewer evals. Snapshot unchanged.
+
+---
+
+### 2026-08-18 — Report figure pipeline (plan lock)
+
+Paper figures rebuild from git `*_opt.csv` + this slug’s `family_summary.csv`, not from gitignored `paired.csv`. Nested 64@30% Spearman 0.86 is not a savings ranking.
 
 ---
 
@@ -237,4 +243,4 @@ Experimental phase is frozen for the report.
 
 **Secondary:** eval-cost sweep (no crossover); maze 127 timed wall-clock; heuristic-strength replay (partial explanation).
 
-**Future work (not done):** pair/result cache after instructor lock; Late-stop proof; incumbent stop; online expensive-`h` re-search.
+**Future work (not done):** pair/result cache (unimplemented; no Felner cache cite); Late-stop proof; incumbent stop; online expensive-`h` re-search.

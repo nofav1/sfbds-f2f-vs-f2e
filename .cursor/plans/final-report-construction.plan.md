@@ -1,16 +1,16 @@
 ---
 name: final-report-construction
-overview: Plan (no writing yet) for an AAAI’27 camera-ready course report under docs/final_report/final_version. The paper presents only official *_opt pair-bound F2E with reopen. Legacy gap-F2E is internal-only and never appears in report prose. Citations come from a verified minimum paper set, not from Markdown notes.
+overview: Phase 0–1 done. Next gate is Phase 2 (Problem Definition + Algorithms from official code). AAAI’27 camera-ready course report under docs/final_report/final_version. Official *_opt pair-bound F2E with reopen only; legacy gap-F2E never appears in report prose. Citations from PAPER_SOURCE_MAP.md only.
 todos:
   - id: phase-0-template
     content: "Phase 0: copy aaai2027.sty/bst into final_version, dummy camera-ready main.tex with \\nocopyright, notes/source_map.md, build README"
-    status: pending
+    status: completed
   - id: literature-collection
-    content: "Phase L: after the minimum paper list is approved, collect PDFs into docs/context/final_report_papers/ and write PAPER_SOURCE_MAP.md; do not start until the list is approved"
+    content: "Phase L done: PAPER_SOURCE_MAP.md is the only citation spec; PDFs already in docs/context/final_report_papers/"
     status: completed
   - id: phase-1-skeleton
     content: "Phase 1: section skeleton only; wait for approval"
-    status: pending
+    status: completed
   - id: phase-2-algorithms
     content: "Phase 2: Problem Definition + Algorithms from official code only; no historical F2E narrative"
     status: pending
@@ -21,7 +21,7 @@ todos:
     content: "Phase 4: Experimental methodology from locked logs and *_opt YAML"
     status: pending
   - id: phase-5-figures
-    content: "Phase 5: regenerate minimum paper figures/tables from official paired.csv / secondary CSVs"
+    content: "Phase 5: scripts/paper_figures.py from git study *_opt.csv + heuristic-strength family_summary.csv into final_version/figures/; do not require gitignored paired.csv"
     status: pending
   - id: phase-6-13-writeup
     content: "Phases 6–13: Results through abstract, bib audit, QA, final PDF — each gated"
@@ -31,7 +31,7 @@ isProject: true
 
 # Final Report Construction Plan
 
-This is a planning/audit pass only. **Do not start Phase 0 or download papers until the user approves this revision and the minimum literature list.** After that, keep a project copy at [`.cursor/plans/final-report-construction.plan.md`](.cursor/plans/final-report-construction.plan.md). Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27).
+Phase 0–1 are **done**. Next gate is **Phase 2** (Problem Definition + Algorithms). Do not rebuild the Phase 0 dummy. Do not start Background or Results yet. [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec. Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27). Commit `docs/final_report/final_version/` (not AuthorKit) when saving.
 
 ---
 
@@ -78,7 +78,7 @@ Structure is **flexible** (§1.4) if those four functions remain clear.
 
 **How we answer it:** pair expansions are primary; runtime / eval-cost are secondary. On Manhattan grids the extra F2F cost largely did not appear. That answers §6.5 for this setting; it does not claim “F2F is faster in general.”
 
-**Secondary metrics:** `generated` and `peak_open` exist in official `paired.csv` but are not in generated analysis tables. Extract a compact table in Phase 5. Do not run new experiments.
+**Secondary metrics:** `generated` and `peak_open` exist in official `results/study/pair-bound/*_opt.csv` (in git). Extract a compact table in Phase 5 via `scripts/paper_figures.py`. Do not depend on gitignored analysis `paired.csv`. Do not run new search.
 
 ---
 
@@ -94,7 +94,7 @@ Structure is **flexible** (§1.4) if those four functions remain clear.
 
 **Build:** PDFLaTeX only; natbib + `aaai2027.bst` (no `\bibliographystyle` in the document); `pdflatex` → `bibtex` → `pdflatex` × 2. No `hyperref`. Code link in the AAAI `links` environment between abstract and body. Figures via matplotlib PDF/PNG (`pgfplots` forbidden). Optional `booktabs` and `algorithm`/`algorithmic`. `\setcounter{secnumdepth}{2}`.
 
-**Draft with `\input{sections/...}`** for gated review; flatten later only if desired. No page-count lock.
+**Draft with `\input{sections/...}`** for gated review; flatten later only if desired. No page-count lock. End matter: `\bibliography{references}` **then** `\appendix` so References stays unnumbered and the appendix does not become “Appendix B.”
 
 **Copy in Phase 0:** `aaai2027.sty`, `aaai2027.bst`, rewritten `main.tex`. Do not copy instruction PDFs or Anonymous files.
 
@@ -133,7 +133,7 @@ Present the **current official implementation only**:
 - Shared: Late goal-on-select, ordered-pair duplicates, TBh, branching-factor direction
 - A*: Late, NoReopen, Manhattan; **state** expansions, not pairs
 
-Do not name or formula-define any other F2E. Attribute the pair-bound formula to the verified NBS/Siag sources only after Phase L.
+Do not name or formula-define any other F2E. Attribute formulas **only** as in [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md): Chen 2017 path-pair \(\mathrm{lb}=\max(f_F,f_B,c(U)+c(V))\) (no \(\varepsilon\)); Siag SoCS/IJCAI 2023 \(\mathrm{lb}_E=\max(f_F,f_B,g_F+g_B+\varepsilon)\). Never write “NBS \(+1\)”.
 
 ### 5. Experimental Setup
 
@@ -141,7 +141,7 @@ Official `*_opt` matrix only. Generators, seeds, pairing, Wilcoxon/sign/Holm, co
 
 ### 6–9. Results, Discussion, Limitations, Conclusions
 
-As before: geography then factors then secondary cost; Siag trade-off on **this** cheap-\(h\) domain; limitations without historical F2E; future work may mention pair-cache / Late-stop proof / expensive \(h\) without implying those were attempted.
+Geography then factors then secondary cost. **Discussion must keep three settings distinct:** (1) two-frontier F2F that mins over the opposite OPEN, which Siag SoCS found informative but computationally heavy; (2) SFBDS pairwise eval, one \(h(u,v)\) per pair node (Felner 2010); (3) our cheap Manhattan on that SFBDS pair, plus the offline eval-cost sweep. Forbidden collapse: “Siag found F2F expensive; we found F2F cheap.” Keep “does not refute Siag.” Limitations without historical F2E. Future work may say pair-cache / Late-stop proof / expensive \(h\) were **not implemented**, with **no Felner cache cite** and no Lippi cite.
 
 ### Appendix
 
@@ -163,15 +163,15 @@ Extra nested rows, eval-cost, heuristic-strength details, secondary metrics. Sti
   - [`2026-08-17-harder-opt`](results/analysis/pair-bound/2026-08-17-harder-opt/)
   - [`2026-08-17-far-braid-by-experiment`](results/analysis/pair-bound/2026-08-17-far-braid-by-experiment/)
 - Secondary: [`2026-08-17-heuristic-strength`](results/analysis/pair-bound/2026-08-17-heuristic-strength/), [`2026-08-17-eval-cost-sensitivity`](results/analysis/pair-bound/2026-08-17-eval-cost-sensitivity/)
-- Verified papers: [`docs/context/final_report_papers/`](docs/context/final_report_papers/) after Phase L
+- Verified papers: [`docs/context/final_report_papers/PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) (only citation spec; PDFs already in that folder)
 
 ### SECONDARY (supporting, not citation authority)
 
 - Literature **Markdown notes** under [`docs/context/sfbds_literature_context_md/`](docs/context/sfbds_literature_context_md/) — **navigation only**
 - Lecture summaries under [`docs/context/presentations_summary/`](docs/context/presentations_summary/) — methodology language only; not bibliography
 - [`docs/project_definition.md`](docs/project_definition.md) — topic map; Idea B cache was **not** implemented
-- Analysis PNGs — regenerate for the paper
-- `generated` / `peak_open` in `paired.csv`
+- Analysis PNGs under `results/analysis/` — **gitignored**; do not treat snapshot folders as figure inputs
+- `generated` / `peak_open` columns in git `results/study/pair-bound/*_opt.csv` (Phase 5 extracts these; do not require analysis `paired.csv`)
 
 ### EXCLUDED FROM FINAL REPORT — never use as evidence
 
@@ -183,19 +183,22 @@ Record these only in `final_version/notes/source_map.md`:
 - Snapshots: `2026-08-17-baseline-study`, `cost-clean-tests`, `cost-clean-plots`
 - `2026-08-17-far-braid-opt` pooled README (use `far-braid-by-experiment`)
 - Non-`_opt` follow-up YAMLs / `configs/followup/retired/`
-- Pooled nested-random / pooled maze-across-experiments / all-query Spearman / “F2F is faster” as a general claim
+- Pooled nested-random / pooled maze-across-experiments / all-query Spearman / nested 64@30% Spearman **0.86 (n=13)** as a savings ranking / “F2F is faster” as a general claim
 
 ```mermaid
 flowchart LR
   subgraph paper [PaperMayCite]
     yamlOpt["configs *_opt YAML"]
     csvOpt["results/study/pair-bound *_opt.csv"]
-    snap["reopen-opt / harder-opt / far-braid-by-experiment"]
-    mech["heuristic-strength / eval-cost"]
-    pubs["verified PDFs in final_report_papers"]
+    snap["snapshot READMEs for win counts"]
+    fam["heuristic-strength family_summary.csv"]
+    figs["scripts/paper_figures.py into final_version/figures"]
+    pubs["PAPER_SOURCE_MAP.md"]
   end
-  yamlOpt --> csvOpt --> snap
-  csvOpt --> mech
+  yamlOpt --> csvOpt
+  csvOpt --> figs
+  fam --> figs
+  snap --> figs
 ```
 
 ---
@@ -216,7 +219,7 @@ flowchart LR
 
 - **Official F2E uses better-g CLOSED reopen** — implementation fact (`f2e_policies()`). Paper motivation: remaining-cost \(h_{\mathrm{gap}}\) is not consistent on `(u,v)`. Do not present this as a post-hoc bug fix.
 
-- **Heuristic-strength partially explains expansions** — heuristic-strength README; F2E never strictly stronger on recorded `evaluate()` pairs; nested 45% q=8 counterexample. Untied-only Spearman. Mechanism only.
+- **Heuristic-strength partially explains expansions** — heuristic-strength README; F2E never strictly stronger on recorded `evaluate()` pairs; nested 45% q=8 counterexample. Mechanism only. **Ban citing Spearman as a savings ranking:** all-query Spearman *and* nested 64@30% **0.86 (n=13)** (those 13 queries are already F2F-fewer). Honest ranking number: maze 255 **0.13**.
 
 - **F2F is faster** — **not a main claim.** Timed maze 127 only: 22/22 untied, median ratio **0.885**. Eval-cost: no crossover, secondary.
 
@@ -224,89 +227,50 @@ flowchart LR
 
 - **Generated / peak_open** — extract in Phase 5. Do not invent numbers.
 
-- **Cache shifts the runtime crossover** — not done. Future work only.
+- **Cache shifts the runtime crossover** — not done. Future work only: say it was **not implemented**. **No Felner 2010 cache cite** (caching is not in the verified map claims). No Lippi cite.
 
 ---
 
 ## 6. Figure and table plan
 
-Unchanged in substance: regenerate paper figures from official `*_opt` `paired.csv` and secondary official snapshots. Do not generate from excluded paths.
+**Do not look in snapshot folders for `paired.csv`.** Analysis CSVs/PNGs under `results/analysis/` are gitignored; `2026-08-17-reopen-opt/` is README-only. A clean clone cannot build Figure 3 or a `generated`/`peak_open` table from those folders.
 
-Main minimum: instance matrix; headline expansions; maze scatter; maze-factor table; heuristic-strength share figure.
+**Phase 5 deliverable:** [`scripts/paper_figures.py`](scripts/paper_figures.py) (course §7 graph-prep code). Write paper figures into [`docs/final_report/final_version/figures/`](docs/final_report/final_version/figures/).
 
-Optional/appendix: eval-cost curve; generated/peak_open table; nested-density rows with \(n_{\mathrm{untied}}\ge 10\) faceted by experiment.
+**Inputs in git**
+
+- `results/study/pair-bound/*_opt.csv` — expansions, `generated`, `peak_open`, runtime, costs
+- Committed [`family_summary.csv`](results/analysis/pair-bound/2026-08-17-heuristic-strength/family_summary.csv) (gitignore exception)
+- Snapshot READMEs for headline win counts only (not as plot data)
+
+**Rebuild if needed.** `paper_figures.py` may call `python -m sfbds_compare.analysis` with `--input-dir results/study/pair-bound` and `--out-dir` **under** `docs/final_report/final_version/` (not `results/analysis/`). Use `--experiment` / `--allow-opt-subset` the same way the citable snapshots did. Optional eval-cost curve: re-run `scripts/eval_cost_sensitivity.py` into `final_version/figures/`, not the gitignored snapshot folder.
+
+**Sanity after rebuild:** maze 127 still **22/30**, maze 255 still **26/30**.
+
+Main minimum: instance matrix; headline expansions; maze scatter; maze-factor table; heuristic-strength share figure from `family_summary.csv`.
+
+Optional/appendix: eval-cost curve; generated/peak_open table from study CSVs; nested-density rows with \(n_{\mathrm{untied}}\ge 10\) faceted by experiment.
 
 ---
 
-## 7. Literature plan and proposed minimum paper set
+## 7. Literature — [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec
 
-Markdown notes under [`docs/context/sfbds_literature_context_md/`](docs/context/sfbds_literature_context_md/) and lecture summaries **identify** papers. They are **not** citation authority. Every cite in the report must be traced in [`docs/context/final_report_papers/PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) after Phase L.
+Phase L is **done**. PDFs are already under [`docs/context/final_report_papers/papers/`](docs/context/final_report_papers/). Markdown notes and lecture summaries **identify** papers; they are **not** citation authority. Delete any older “Moldenhauer first / Chen \(+1\) / SoCS SFBDS / don’t download until approved” checklist. If this plan and the map ever disagree, **follow the map**.
 
-**Do not download until this list is approved.**
+**Allowed `\cite` keys (every key in the compiled report must be one of these):**
 
-### Cite (minimum)
+| Key | Use for | Do not write |
+| --- | --- | --- |
+| `hart1968astar` | A* \(f=g+h\) (bib-only; no theorem quotes without PDF) | Numbered Hart theorems |
+| `felner2010sfbds` | Pair nodes, jumping/BF, pairwise \(h\), \(V^2\) tasks. Authors: **Felner**, Moldenhauer, Sturtevant, Schaeffer | Caching; F2E pair-bound formula |
+| `barker2015f2e` | F2E vs F2F definition; overlapping-savings thesis | Copying their tables onto our grids |
+| `chen2017nbs` | \(\mathrm{lb}(U,V)=\max\{f_F,f_B,c(U)+c(V)\}\) — **no \(\varepsilon\)** | “NBS \(+1\)”; Chen instantiates with \(+1\) when \(u\neq v\) |
+| `siag2023socs` | Two-frontier F2F = \(\min\) over opposite OPEN; \(\mathrm{lb}_E\) with \(\varepsilon\); F2F overhead | SFBDS (SoCS PDF never mentions it) |
+| `siag2023ijcai` | Unit-grid \(\varepsilon=1\) form of the pair bound; why the F2E bound must be named | That we implement \(\mathrm{lb}_C\) |
 
-**1. Hart, Nilsson, and Raphael (1968) — A\***
-- Why: unidirectional baseline, admissibility, \(f=g+h\).
-- Identified by: lecture [`02_SAI-3-4_Best-First-AStar_context.md`](docs/context/presentations_summary/02_SAI-3-4_Best-First-AStar_context.md) (not in the 10-note pack).
-- Sections: Background; Algorithms (A* sidecar).
-- Need: **bibliographic verification**; full PDF only if we cite a specific theorem beyond the standard definition.
+**Skipped (do not collect, do not cite):** Lippi 2012, Barker dissertation, Siag AIJ 2025, Shubi 2026, Zou 2026 F2A, Pohl 1969. Pair-cache future work: **not implemented**; **no Felner cache sentence**, no Lippi.
 
-**2. Moldenhauer, Felner, Sturtevant, and Schaeffer (2010) — SFBDS**
-- Why: pair-frontier algorithm we implement; natural F2F; direction choice; expansions-vs-runtime warning.
-- Identified by: [`01_single_frontier_bidirectional_search_2010.md`](docs/context/sfbds_literature_context_md/01_single_frontier_bidirectional_search_2010.md). Note URL: https://ojs.aaai.org/index.php/AAAI/article/view/7555
-- Sections: Background; Algorithms.
-- Need: **full PDF** (pair-node definition, direction policy, F2F evaluation).
-
-**3. Barker and Korf (2015) — Limitations of F2E BiHS**
-- Why: why F2E often fails to add bidirectional + heuristic savings; F2E definition \(h_F,h_B\).
-- Identified by: [`03_limitations_front_to_end_2015.md`](docs/context/sfbds_literature_context_md/03_limitations_front_to_end_2015.md). Note URL: https://ojs.aaai.org/index.php/AAAI/article/download/9374/9233
-- Sections: Background.
-- Need: **full PDF** for the overlapping-savings claim (do not copy numbers from the note).
-
-**4. Chen, Holte, Zilles, and Sturtevant (2017) — NBS**
-- Why: pair lower bound \(\max(f_F,f_B,g_F+g_B)\) that our unit-grid F2E instantiates (with \(+1\) when \(u\neq v\)).
-- Identified by: [`05_near_optimal_bidirectional_search_nbs_2017.md`](docs/context/sfbds_literature_context_md/05_near_optimal_bidirectional_search_nbs_2017.md). Note URL: https://www.ijcai.org/proceedings/2017/0069.pdf
-- Sections: Background; Algorithms (attribute the bound after PDF check).
-- Need: **full PDF** before writing “NBS-style” or the \(+1\) meeting term.
-
-**5. Siag, Shperberg, Felner, and Sturtevant (2023, SoCS) — Comparing F2F and F2E**
-- Why: most direct prior work; F2F more informed; pairwise cost; SFBDS as one-eval-per-pair; expansions ≠ runtime.
-- Identified by: [`06_comparing_f2f_and_f2e_2023.md`](docs/context/sfbds_literature_context_md/06_comparing_f2f_and_f2e_2023.md). Note URL: https://ojs.aaai.org/index.php/SOCS/article/view/27296
-- Sections: Introduction; Background; Discussion.
-- Need: **full PDF** (including the SFBDS remark). Do not copy experimental numbers from the note onto our grids.
-
-**6. Siag, Shperberg, Felner, and Sturtevant (2023, IJCAI) — Enumerating F2E algorithms and bounds**
-- Why: unspecified F2E formula confounds heuristic comparisons; pair-bound family. Justifies fixing one SFBDS-F2E bound rather than a two-frontier bake-off.
-- Identified by: [`07_enumerating_algorithms_and_bounds_2023.md`](docs/context/sfbds_literature_context_md/07_enumerating_algorithms_and_bounds_2023.md). Note URL: https://www.ijcai.org/proceedings/2023/0625.pdf
-- Sections: Background; Algorithms.
-- Need: **full PDF** for the pair-bound expressions we analogize.
-
-**Locked 2026-08-18:** collect **only papers 1–6**. Do not collect Lippi 2012. If Conclusions mention pair-cache as future work, cite Moldenhauer 2010’s pairwise-caching remark after that PDF is verified — not a separate eSBS paper.
-
-### Do not collect (not needed for this report)
-
-- Lippi et al. 2012 (`02`) — skipped; cache future-work (if any) uses Moldenhauer 2010
-- Barker 2015 dissertation (`04`) — redundant with Barker and Korf 2015
-- Siag and Shperberg 2025 AIJ (`08`) — two-frontier theory–practice gap; we do not compare against SOTA F2E BiHS
-- Shubi et al. 2026 (`09`) — longest paths / MAX
-- Zou et al. 2026 F2A (`10`) — two-frontier attractors, not SFBDS
-- Pohl 1969 (lecture Master-Class) — optional classic BiHS origin; skip unless Background feels too thin without it
-
-Lecture slides are not bibliography entries.
-
-### Collection layout (Phase L, after list approval)
-
-```text
-docs/context/final_report_papers/
-  papers/
-    <key>.pdf
-  PAPER_SOURCE_MAP.md
-```
-
-Each map row: canonical title, authors, year, venue, DOI/URL, local filename, report section, exact claim/formula, verified yes/no, planned BibTeX key.
-
-If paywalled: bibliographic verification from the publisher page; missing PDF is a blocker **only** if we need a formula/claim we cannot otherwise verify. Do not invent contents.
+`references.bib` is filled in the bibliography phase from these records (`aaai2027.bst` fields).
 
 ---
 
@@ -314,9 +278,7 @@ If paywalled: bibliographic verification from the publisher page; missing PDF is
 
 **Do not auto-start the next phase.**
 
-**Phase L — Literature collection** (separate gate; **not** started until the paper list above is approved)
-- Create `docs/context/final_report_papers/`, download only approved PDFs from publisher/proceedings URLs, write `PAPER_SOURCE_MAP.md`, verify title/authors/venue/year and the specific claims we will cite.
-- Can overlap Phases 0–2. **Must finish before Phase 3.** Phase 2 may state formulas from **code**; it may not attribute them to NBS/Siag until Phase L verification.
+**Phase L — Literature collection** — **done.** Map + PDFs in repo. Phase 2–3 cite only map keys and map formulas.
 
 **Phase 0 — Lock template + source map**
 - Copy sty/bst; dummy `main.tex` with `\nocopyright`; `notes/source_map.md` using **EXCLUDED FROM FINAL REPORT — never use as evidence** for banned paths; empty `references.bib`; build README.
@@ -324,21 +286,21 @@ If paywalled: bibliographic verification from the publisher page; missing PDF is
 
 **Phase 1 — Skeleton only**
 
-**Phase 2 — Problem + algorithms** from official code. No historical F2E. No gap formula. No class name of excluded heuristics.
+**Phase 2 — Problem + algorithms** from official code. No historical F2E. No gap formula. No class name of excluded heuristics. Attribute Chen/Siag formulas **only** as in the source map. Never write “NBS \(+1\)”.
 
-**Phase 3 — Background** from verified `PAPER_SOURCE_MAP.md` only.
+**Phase 3 — Background** from [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) only. Do not cite `siag2023socs` next to SFBDS.
 
 **Phase 4 — Experimental methodology** (`*_opt` only). Cost-mismatch exclusion as protocol, not as a story.
 
-**Phase 5 — Freeze figures** from official `paired.csv` / secondary official CSVs.
+**Phase 5 — Freeze figures** via `scripts/paper_figures.py` from git study `*_opt.csv` + `family_summary.csv` into `final_version/figures/`. Do **not** require gitignored analysis `paired.csv`. Confirm maze 127/255 still 22/30 and 26/30.
 
-**Phases 6–13** — Results through abstract; bib audit against Phase L keys; QA that **no compiled file mentions legacy/gap/two eras**; course checklist; code link.
+**Phases 6–13** — Results through abstract; Discussion keeps two-frontier F2F (Siag SoCS) vs SFBDS pairwise eval (Felner 2010) vs our cheap Manhattan distinct; cache future work with no Felner cache cite; bib audit against map keys; QA greps below; course checklist; code link.
 
 ---
 
 ## 9. Proposed `final_version` layout
 
-Unchanged, except `notes/source_map.md` is the only place excluded-era paths may be named. Paper PDFs live under `docs/context/final_report_papers/`, **not** under `final_version/`.
+Unchanged, except `notes/source_map.md` is the only place excluded-era paths may be named. Paper PDFs live under `docs/context/final_report_papers/`, **not** under `final_version/`. Figures live under `final_version/figures/` and are produced by `scripts/paper_figures.py`.
 
 ---
 
@@ -346,10 +308,12 @@ Unchanged, except `notes/source_map.md` is the only place excluded-era paths may
 
 - Author names, emails, BGU affiliation
 - Public code URL
-- **Approval of the minimum paper list before any download**
 - Hardware/OS/Python for methodology
 - Original `instructions.pdf` not in repo
-- Generated/peak_open not yet tabulated
+- Phase 0 source lock is in `docs/final_report/final_version/`; dummy PDF still needs local PDFLaTeX (`pdflatex` was not on PATH in the Phase 0 environment)
+- `scripts/paper_figures.py` not written; figures not rebuilt from a clean clone
+- `references.bib` not yet filled from the source-map records
+- Generated/peak_open not yet tabulated in `final_version/`
 - Page length unlocked
 
 ---
@@ -357,21 +321,37 @@ Unchanged, except `notes/source_map.md` is the only place excluded-era paths may
 ## 11. Risks
 
 - Any compiled mention of legacy/gap/two F2E eras (highest)
+- Looking in gitignored snapshot folders for `paired.csv`
 - Citing Markdown notes as if they were papers
-- Attributing the F2E bound to NBS before the Chen/Siag PDFs are checked
+- Writing “NBS \(+1\)” or attributing \(\varepsilon\) to Chen 2017
+- Citing `siag2023socs` for SFBDS
+- Citing Felner 2010 for pair-cache
+- Collapsing Siag’s two-frontier F2F cost into our SFBDS Manhattan eval-cost
+- Citing nested 64@30% Spearman 0.86 as a savings ranking
 - Citing `far-braid-opt` pooled README
 - Pooling nested seeds
 - Promoting runtime or eval-cost
 - Claiming general optimality
-- Over-reading heuristic-strength Spearman
 - `hyperref` / `pgfplots`; wrong AuthorKit tree; Anonymous `[submission]`
 
 ---
 
 ## 12. First steps after this revision is approved
 
-1. **Do not start Phase 0 until you also approve Phase 0.**
-2. **Approve or trim the minimum paper list** (section 7). Then Phase L may collect PDFs.
-3. After that, Phase 0 can proceed in parallel with remaining Phase L work.
+1. Phase 0–1 are done under `docs/final_report/final_version/` (template + section skeleton).
+2. **Do not start Phase 2 until approved.**
+3. Phase L is already done. Do not re-download papers.
 
 Then stop for review after each phase.
+
+---
+
+## 13. Writing QA (when `.tex` exists)
+
+Grep compiled `.tex` (not `notes/source_map.md`) for: `Legacy`, `gap`, `two era`, `12 mismatch`, `study_maze_127.csv` without `_opt`.
+
+Grep for `NBS` and `+1` in the same sentence; for `siag2023socs` near `SFBDS`.
+
+Phase 5: figures rebuild from study CSVs; maze 127/255 still 22/30 and 26/30.
+
+Every `\cite` key ∈ [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md).
