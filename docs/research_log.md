@@ -637,6 +637,22 @@ Moved the ``not faster in general'' clause onto the eval-cost sentence. Cost agr
 
 ---
 
+### 2026-08-18 — Authors, code URL, bib audit
+
+Authors: Nofar Avraham, Barak Tubul (BGU; `nofarav@post.bgu.ac.il`, `baraktu@post.bgu.ac.il`). Code link: [https://github.com/nofav1/sfbds-f2f-vs-f2e](https://github.com/nofav1/sfbds-f2f-vs-f2e). Every `\cite` key is in [`PAPER_SOURCE_MAP.md`](context/final_report_papers/PAPER_SOURCE_MAP.md) (`hart1968astar`, `felner2010sfbds`, `barker2015f2e`, `chen2017nbs`, `siag2023socs`, `siag2023ijcai`). DOIs from the map are in `references.bib` (`aaai2027.bst` has no `doi` field, so they do not print). `siag2023socs` is never in the same sentence as SFBDS. QA grep on compiled `.tex`: no Legacy / Spearman / NBS / unconnected / gap.
+
+**Next.** Commit this chunk; then a local `main.pdf` if the IDE lock allows.
+
+---
+
+### 2026-08-18 — Report wrap-up
+
+Filled authors (Nofar Avraham, Barak Tubul) and the GitHub code link. Bib keys match the source map; DOIs recorded in `references.bib`. Tightened Eq.~\eqref{eq:f2e-lb} / remaining-cost display to clear the Methodology overfull box. Deleted disposable `phaseNcheck` / `draftcheck` PDFs. Compiled `main.pdf` (8 pages). Did not flatten `\input{sections/...}`.
+
+**Next.** Course submission of `docs/final_report/final_version/main.pdf`.
+
+---
+
 ## Experiment freeze (2026-08-17)
 
 Experimental phase is frozen for the report. Do not add map families, cache, incumbent stop, or a Late-stop proof unless a later scope lock says so.

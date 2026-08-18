@@ -58,19 +58,21 @@ h_{\mathrm{F2F}}(u,v)=\mathrm{MD}(u,v),
 so the pair evaluation is \(f=g_F+g_B+\mathrm{MD}(u,v)\) \cite{felner2010sfbds}. One heuristic call is made per pair that is inserted or improved on OPEN.
 
 F2E uses endpoint Manhattan, \(h_F(u)=\mathrm{MD}(u,G)\) and \(h_B(v)=\mathrm{MD}(S,v)\). Chen et al.\ define a path-pair lower bound \(\mathrm{lb}(U,V)=\max\{f_F(U),f_B(V),c(U)+c(V)\}\) with no cheapest-edge term \cite{chen2017nbs}. Siag et al.\ write the meeting form \(\mathrm{lb}(u,v)=\max\{f_F(u),f_B(v),g_F(u)+g_B(v)+\varepsilon\}\), where \(\varepsilon\) is the cheapest edge cost \cite{siag2023ijcai}. On our unit grids \(\varepsilon=1\) when \(u\neq v\). Writing \(f_F(u)=g_F+\mathrm{MD}(u,G)\) and \(f_B(v)=g_B+\mathrm{MD}(S,v)\), the implemented bound is
+{\small
 \begin{equation}
 \label{eq:f2e-lb}
 \mathrm{lb}(u,v)=
 \begin{cases}
-g_F+g_B & \text{if }u=v,\\
-\max\bigl(f_F(u),\, f_B(v),\, g_F+g_B+1\bigr) & \text{otherwise.}
+g_F+g_B & u=v,\\
+\max(f_F(u), f_B(v), g_F+g_B+1) & \text{otherwise.}
 \end{cases}
 \end{equation}
+}
 The \(u=v\) case is a feasible meeting at cost \(g_F+g_B\) (no extra edge); it is our implementation, not a separate equation of Siag et al. We do not implement their tighter consistency-case bound \(\mathrm{lb}_C\).
 
 SFBDS stores remaining cost so that \(f=g+h\) with \(g=g_F+g_B\):
 \[
-h(u,v)=\max\bigl(0,\;\mathrm{lb}(u,v)-g_F-g_B\bigr).
+h(u,v)=\max\bigl(0,\mathrm{lb}(u,v)-g_F-g_B\bigr).
 \]
 Official F2E search is this bound together with better-\(g\) CLOSED reopen. F2F keeps no-reopen.
 

@@ -1,6 +1,6 @@
 ---
 name: final-report-construction
-overview: Abstract written. Remaining: bib audit, author names, code URL, QA, final PDF. Official *_opt pair-bound F2E with reopen only.
+overview: Final-report writing wrap-up done (authors, code URL, bib audit, compiled main.pdf).
 todos:
   - id: phase-0-template
     content: "Phase 0: copy aaai2027.sty/bst into final_version, dummy camera-ready main.tex with \\nocopyright, notes/source_map.md, build README"
@@ -24,14 +24,15 @@ todos:
     content: "Phase 5: scripts/paper_figures.py from git study *_opt.csv + heuristic-strength family_summary.csv into final_version/figures/; do not require gitignored paired.csv"
     status: completed
   - id: phase-6-13-writeup
-    content: "Abstract done. Remaining gated: bib audit, author names, code URL, QA, final PDF"
+    content: "Report wrap-up done: authors, code URL, bib audit, main.pdf compile"
+    status: completed
     status: in_progress
 isProject: true
 ---
 
 # Final Report Construction Plan
 
-Body prose through the abstract is **done**. Remaining: bib audit, author names, real code URL, QA, final PDF. Do not invent names or a URL. [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec. Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27).
+Final-report writing wrap-up is **done**. Submit `docs/final_report/final_version/main.pdf`. Do not invent further papers. [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec. Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27).
 
 ---
 
@@ -304,8 +305,8 @@ Unchanged, except `notes/source_map.md` is the only place excluded-era paths may
 
 ## 10. Missing information / blockers
 
-- Author names, emails, BGU affiliation
-- Public code URL
+- Author names, emails, BGU affiliation — Nofar Avraham, Barak Tubul; `nofarav@post.bgu.ac.il`, `baraktu@post.bgu.ac.il`
+- Public code URL — https://github.com/nofav1/sfbds-f2f-vs-f2e
 - Original `instructions.pdf` not in repo
 - Phase 0 source lock is in `docs/final_report/final_version/`
 - Generated/peak_open tabulated in `final_version/figures/table_generated_peak_open.csv` and the appendix
@@ -333,8 +334,8 @@ Unchanged, except `notes/source_map.md` is the only place excluded-era paths may
 
 ## 12. First steps after this revision is approved
 
-1. Abstract is written (maze 22/30 and 26/30; F2E reopen named; empirical cost agreement; no general speed claim).
-2. **Do not invent author names or a code URL.** Next: bib audit against PAPER_SOURCE_MAP.md, then QA.
+1. Writing wrap-up is done. Submit `docs/final_report/final_version/main.pdf`.
+2. Do not invent further papers. Do not flatten unless a later instruction requires a single `.tex` file.
 3. Phase L is already done. Do not re-download papers.
 
 Then stop for review after each phase.
