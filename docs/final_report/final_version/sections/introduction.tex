@@ -28,4 +28,6 @@ Pair-frontier search, jumping by branching factor, and pairwise \(h\) are due to
 
 \subsection{Contribution}
 
-\textit{Skeleton. Content in a later phase.}
+This report compares F2F Manhattan with official SFBDS-F2E \emph{inside} one SFBDS on 4-connected unit grids. Official F2E is the path-pair lower bound of Eq.~\eqref{eq:f2e-lb} together with better-\(g\) CLOSED reopen; F2F uses pairwise Manhattan and does not reopen. Pair expansions are the primary metric. Runtime and an offline eval-cost sweep are secondary. The study is not a two-frontier min-over-OPEN comparison, and it does not refute that overhead result.
+
+On perfect mazes F2F expands fewer pairs (\(22/30\) on maze 127, \(26/30\) on maze 255), median expansion saving \(3.8\%\). Open and corridor maps at the tested sizes do not separate the two bounds. Nested random is weaker and seed-specific. On this cheap-\(h\) domain the extra pairwise Manhattan cost largely did not appear. Those claims are developed in the experimental sections. They are not a general ranking of F2F against F2E, and they are not a Late-stop optimality theorem.

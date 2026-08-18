@@ -613,6 +613,30 @@ Future work now treats cache, Late-stop proof, and incumbent stop as out of scop
 
 ---
 
+### 2026-08-18 — Introduction Contribution
+
+Filled the Contribution subsection in [`sections/introduction.tex`](final_report/final_version/sections/introduction.tex): F2F vs official SFBDS-F2E (pair bound + better-\(g\) reopen) inside one SFBDS; pair expansions primary; maze \(22/30\) and \(26/30\), median saving \(3.8\%\); open/corridor do not separate; nested weaker; cheap-\(h\) extra cost largely did not appear. Not a general ranking and not a Late-stop theorem. Does not refute two-frontier OPEN-min overhead (no SoCS cite in the same sentence as SFBDS).
+
+**Next.** Abstract only after approval (write last).
+
+---
+
+### 2026-08-18 — Abstract
+
+Wrote the AAAI abstract in [`main.tex`](final_report/final_version/main.tex): F2F vs official F2E inside SFBDS (pair bound + better-\(g\) reopen; F2F does not reopen); pair expansions primary; maze \(22/30\) and \(26/30\), median saving \(3.8\%\); open/corridor do not separate; nested weaker; no extra evals on the three eval-cost families; cost agreement with A* is empirical. No general ``F2F is faster.'' No citations in the abstract. Author names and code URL remain placeholders.
+
+**Next.** Bib audit, author names, and real code URL. Do not invent those.
+
+---
+
+### 2026-08-18 — Abstract review (speed disclaimer)
+
+Moved the ``not faster in general'' clause onto the eval-cost sentence. Cost agreement now ends at ``not an optimality theorem.''
+
+**Next.** Bib audit, author names, and real code URL. Do not invent those.
+
+---
+
 ## Experiment freeze (2026-08-17)
 
 Experimental phase is frozen for the report. Do not add map families, cache, incumbent stop, or a Late-stop proof unless a later scope lock says so.

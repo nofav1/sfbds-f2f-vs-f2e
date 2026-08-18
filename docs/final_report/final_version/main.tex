@@ -41,7 +41,7 @@
 \maketitle
 
 \begin{abstract}
-Skeleton. The abstract will be written last.
+We compare Front-to-Front (F2F) and Front-to-End (F2E) heuristics inside Single-Frontier Bidirectional Search on 4-connected unit grids. Official F2E uses a path-pair lower bound and reopens CLOSED nodes on a strictly better \(g\); F2F uses pairwise Manhattan and does not reopen. Pair expansions are the primary metric; runtime and an offline eval-cost sweep are secondary. On perfect mazes F2F expands fewer pairs on \(22/30\) maps (maze 127) and \(26/30\) maps (maze 255), with median expansion saving \(3.8\%\). Open \(128\times128\) and corridor \(1\times512\) maps do not separate the bounds. Nested random is weaker and seed-specific. On this cheap Manhattan domain, F2F never issued more heuristic evaluations than F2E on the three eval-cost families; that is not a claim that F2F is faster in general. On the tested official instances, F2F, F2E, and successful A* agreed on solution cost. That coverage is empirical, not an optimality theorem.
 \end{abstract}
 
 \begin{links}
