@@ -19,7 +19,7 @@ pdflatex main
 - `\usepackage{aaai2027}` has no `[submission]` option (that option hides authors).
 - End matter: `\bibliography{references}` then `\appendix` (keeps References unnumbered).
 
-Draft uses `\input{sections/...}` for gated review (flatten later if required). `figures/` is empty until Phase 5 (`scripts/paper_figures.py`).
+Draft uses `\input{sections/...}` for gated review (flatten later if required). Chapters follow the course four parts (§2): Introduction and Literature Review; Methodology; Experimental Results; Experimental Conclusions and Summary. `figures/` is empty until Phase 5 (`scripts/paper_figures.py`).
 
 Build artifacts (`*.aux`, `*.log`, `main.pdf`, …) are gitignored. Compile locally with the commands above.
 

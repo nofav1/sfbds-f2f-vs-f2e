@@ -517,6 +517,14 @@ Plan overview now states Phase 0–1 done; next gate is Phase 2 (do not rebuild 
 
 ---
 
+### 2026-08-18 — Skeleton matches course four parts
+
+Chapters are now the course §2–§6 parts: Introduction and Literature Review; Methodology; Experimental Results; Experimental Conclusions and Summary. AAAI Abstract, code `links`, References, optional appendix kept. Dropped separate Background / Problem / Algorithms / Setup / Discussion / Limitations files. Phase 2 fills Methodology (Search Algorithm + Heuristics) from official code.
+
+**Next.** Phase 2 only after approval.
+
+---
+
 ## Experiment freeze (2026-08-17)
 
 Experimental phase is frozen for the report. Do not add map families, cache, incumbent stop, or a Late-stop proof unless a later scope lock says so.

@@ -1,6 +1,6 @@
 ---
 name: final-report-construction
-overview: Phase 0–1 done. Next gate is Phase 2 (Problem Definition + Algorithms from official code). AAAI’27 camera-ready course report under docs/final_report/final_version. Official *_opt pair-bound F2E with reopen only; legacy gap-F2E never appears in report prose. Citations from PAPER_SOURCE_MAP.md only.
+overview: Phase 0–1 done. Skeleton follows the course four-part structure. Next gate is Phase 2 (Methodology: algorithms/heuristics from official code). AAAI’27 camera-ready under docs/final_report/final_version. Official *_opt pair-bound F2E with reopen only; citations from PAPER_SOURCE_MAP.md only.
 todos:
   - id: phase-0-template
     content: "Phase 0: copy aaai2027.sty/bst into final_version, dummy camera-ready main.tex with \\nocopyright, notes/source_map.md, build README"
@@ -12,13 +12,13 @@ todos:
     content: "Phase 1: section skeleton only; wait for approval"
     status: completed
   - id: phase-2-algorithms
-    content: "Phase 2: Problem Definition + Algorithms from official code only; no historical F2E narrative"
+    content: "Phase 2: Methodology subsections Search Algorithm + Heuristics from official code only; no historical F2E narrative"
     status: pending
   - id: phase-3-background
-    content: "Phase 3: Background/related work only after Phase L verification"
+    content: "Phase 3: Introduction related work from PAPER_SOURCE_MAP.md only"
     status: pending
   - id: phase-4-setup
-    content: "Phase 4: Experimental methodology from locked logs and *_opt YAML"
+    content: "Phase 4: Methodology Domain, Mechanics, Metrics, Protocol from locked logs and *_opt YAML"
     status: pending
   - id: phase-5-figures
     content: "Phase 5: scripts/paper_figures.py from git study *_opt.csv + heuristic-strength family_summary.csv into final_version/figures/; do not require gitignored paired.csv"
@@ -31,7 +31,7 @@ isProject: true
 
 # Final Report Construction Plan
 
-Phase 0–1 are **done**. Next gate is **Phase 2** (Problem Definition + Algorithms). Do not rebuild the Phase 0 dummy. Do not start Background or Results yet. [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec. Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27). Commit `docs/final_report/final_version/` (not AuthorKit) when saving.
+Phase 0–1 are **done**. The skeleton uses the course’s four parts (§2). Next gate is **Phase 2** (Methodology: Search Algorithm + Heuristics). Do not rebuild the Phase 0 dummy. Do not start Related Work or Results yet. [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) is the only citation spec. Do not modify [`docs/final_report/AuthorKit27`](docs/final_report/AuthorKit27).
 
 ---
 
@@ -39,7 +39,7 @@ Phase 0–1 are **done**. Next gate is **Phase 2** (Problem Definition + Algorit
 
 The final report presents **one** SFBDS-F2E: the official pair lower bound plus the official better-g CLOSED reopen policy, as used in the `*_opt` experiments.
 
-**Forbidden in every compiled report file** (Abstract, Introduction, Background, Problem Definition, Methodology, Algorithms, Results, Discussion, Limitations, Conclusions, Appendix, captions, footnotes):
+**Forbidden in every compiled report file** (Abstract, Introduction and Literature Review, Methodology, Experimental Results, Experimental Conclusions and Summary, Appendix, captions, footnotes):
 
 - mentioning legacy gap-F2E, “two F2E eras,” or that a different F2E was implemented first
 - legacy formulas, class names (`LegacyFixedEndpointGapHeuristic` or any gap-heuristic name), numbers, figures, or experiment history
@@ -102,6 +102,8 @@ Structure is **flexible** (§1.4) if those four functions remain clear.
 
 ## 3. Final proposed report outline
 
+Course four parts ([`Project_Instructions_context.md`](docs/context/Project_Instructions_context.md) §2–§6). AAAI supplies Abstract + `links` (code URL) + unnumbered References. Optional appendix after References.
+
 **Title (working, Title Case):** *Comparing Front-to-Front and Front-to-End Heuristics inside Single-Frontier Bidirectional Search on Grids*
 
 **Authors:** placeholders until names/emails/affiliation are supplied.
@@ -110,24 +112,18 @@ Structure is **flexible** (§1.4) if those four functions remain clear.
 
 F2F vs **official SFBDS-F2E** (pair lower bound + reopen) inside one SFBDS; pair expansions primary; maze 22/30 and 26/30; median saving ~3.8%; open/corridor ties; costs agree with A* on tested instances (empirical, not a proof). No legacy, no “two eras,” no “F2F is faster.”
 
-### 1. Introduction (write late)
+### 1. Introduction and Literature Review (course §3)
 
-Motivation, RQ, contribution, paper map. Compared objects: F2F Manhattan pair heuristic vs official F2E pair bound, same SFBDS except the bound and the F2E reopen policy. Not claimed: new BiHS paradigm; implemented pair-cache; general optimality theorem.
+Subsections: Background; Motivation; Problem and Research Objective; Related Work; Contribution. Analyze, do not list. Cite **verified primary papers only**. Do not mention any project-internal F2E history. RQ: *On which grid families does F2F expand fewer pairs than SFBDS-F2E, and does that reduction justify extra heuristic cost on this cheap-\(h\) domain?*
 
-### 2. Background and Related Work
+### 2. Methodology (course §4)
 
-A*, BiHS, F2E vs F2F, SFBDS, pair lower bounds, Siag et al. expansions-vs-cost. Analyze, do not list. Cite **verified primary papers only** (Phase L). Lecture Markdown is not a citation. Do not mention any project-internal F2E history.
+Subsections: Search Algorithm; Heuristics; Domain and Instances; Search Mechanics; Metrics; Experimental Protocol.
 
-### 3. Problem Definition
-
-4-connected unit grids; shortest path; paired F2F vs official F2E inside SFBDS; A* as cost/success sidecar. RQ: *On which grid families does F2F expand fewer pairs than SFBDS-F2E, and does that reduction justify extra heuristic cost on this cheap-\(h\) domain?*
-
-### 4. Algorithms and Heuristics
-
-Present the **current official implementation only**:
+Present the **current official implementation only** (Phase 2 fills Algorithm + Heuristics from code):
 
 - F2F: \(h(u,v)=\mathrm{MD}(u,v)\) — [`src/sfbds_compare/heuristics/f2f.py`](src/sfbds_compare/heuristics/f2f.py)
-- F2E LB: \(u=v \Rightarrow g_F+g_B\); else \(\max(g_F+\mathrm{MD}(u,G), g_B+\mathrm{MD}(S,v), g_F+g_B+1)\); OPEN uses \(h_{\mathrm{gap}}=\max(0,\mathrm{lb}-g_F-g_B)\) — [`src/sfbds_compare/heuristics/f2e.py`](src/sfbds_compare/heuristics/f2e.py)
+- F2E LB: \(u=v \Rightarrow g_F+g_B\); else \(\max(g_F+\mathrm{MD}(u,G), g_B+\mathrm{MD}(S,v), g_F+g_B+1)\); OPEN remaining cost \(\max(0,\mathrm{lb}-g_F-g_B)\) — [`src/sfbds_compare/heuristics/f2e.py`](src/sfbds_compare/heuristics/f2e.py)
 - Official F2E search: `official_f2e_searcher()` = that bound + `f2e_policies()` (`BetterGReopenPolicy`) — [`src/sfbds_compare/search/sfbds.py`](src/sfbds_compare/search/sfbds.py)
 - F2F: `default_policies()` / `NoReopenPolicy` (state this as the F2F policy set, not as “F2E used to be NoReopen”)
 - Shared: Late goal-on-select, ordered-pair duplicates, TBh, branching-factor direction
@@ -135,13 +131,15 @@ Present the **current official implementation only**:
 
 Do not name or formula-define any other F2E. Attribute formulas **only** as in [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md): Chen 2017 path-pair \(\mathrm{lb}=\max(f_F,f_B,c(U)+c(V))\) (no \(\varepsilon\)); Siag SoCS/IJCAI 2023 \(\mathrm{lb}_E=\max(f_F,f_B,g_F+g_B+\varepsilon)\). Never write “NBS \(+1\)”.
 
-### 5. Experimental Setup
+Official `*_opt` matrix only. Generators, seeds, pairing, Wilcoxon/sign/Holm, cost-mismatch exclusion as a **protocol**, hardware.
 
-Official `*_opt` matrix only. Generators, seeds, pairing, Wilcoxon/sign/Holm, cost-mismatch exclusion (as a **protocol**, without a mismatch-history story), hardware, citable snapshots listed below.
+### 3. Experimental Results (course §5)
 
-### 6–9. Results, Discussion, Limitations, Conclusions
+Geography then factors then secondary cost. Analysis of the figures lives here (course §5.3), not a separate Discussion chapter. Keep three settings distinct: (1) two-frontier F2F that mins over the opposite OPEN (Siag SoCS); (2) SFBDS pairwise eval (Felner 2010); (3) our cheap Manhattan plus the offline eval-cost sweep. Forbidden collapse: “Siag found F2F expensive; we found F2F cheap.” Keep “does not refute Siag.”
 
-Geography then factors then secondary cost. **Discussion must keep three settings distinct:** (1) two-frontier F2F that mins over the opposite OPEN, which Siag SoCS found informative but computationally heavy; (2) SFBDS pairwise eval, one \(h(u,v)\) per pair node (Felner 2010); (3) our cheap Manhattan on that SFBDS pair, plus the offline eval-cost sweep. Forbidden collapse: “Siag found F2F expensive; we found F2F cheap.” Keep “does not refute Siag.” Limitations without historical F2E. Future work may say pair-cache / Late-stop proof / expensive \(h\) were **not implemented**, with **no Felner cache cite** and no Lippi cite.
+### 4. Experimental Conclusions and Summary (course §6; shorter)
+
+Answer the §6.5 question by condition. Limitations without historical F2E. Future work may say pair-cache / Late-stop proof / expensive \(h\) were **not implemented**, with **no Felner cache cite** and no Lippi cite.
 
 ### Appendix
 
@@ -284,17 +282,17 @@ Phase L is **done**. PDFs are already under [`docs/context/final_report_papers/p
 - Copy sty/bst; dummy `main.tex` with `\nocopyright`; `notes/source_map.md` using **EXCLUDED FROM FINAL REPORT — never use as evidence** for banned paths; empty `references.bib`; build README.
 - No report prose.
 
-**Phase 1 — Skeleton only**
+**Phase 1 — Skeleton only** (revised to course §2 four parts)
 
-**Phase 2 — Problem + algorithms** from official code. No historical F2E. No gap formula. No class name of excluded heuristics. Attribute Chen/Siag formulas **only** as in the source map. Never write “NBS \(+1\)”.
+**Phase 2 — Methodology: Search Algorithm + Heuristics** from official code. No historical F2E. No excluded-heuristic class names. Attribute Chen/Siag formulas **only** as in the source map. Never write “NBS \(+1\)”. Still no result numbers.
 
-**Phase 3 — Background** from [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) only. Do not cite `siag2023socs` next to SFBDS.
+**Phase 3 — Introduction related work** from [`PAPER_SOURCE_MAP.md`](docs/context/final_report_papers/PAPER_SOURCE_MAP.md) only. Do not cite `siag2023socs` next to SFBDS.
 
-**Phase 4 — Experimental methodology** (`*_opt` only). Cost-mismatch exclusion as protocol, not as a story.
+**Phase 4 — Methodology: Domain, Mechanics, Metrics, Protocol** (`*_opt` only). Cost-mismatch exclusion as protocol, not as a story.
 
 **Phase 5 — Freeze figures** via `scripts/paper_figures.py` from git study `*_opt.csv` + `family_summary.csv` into `final_version/figures/`. Do **not** require gitignored analysis `paired.csv`. Confirm maze 127/255 still 22/30 and 26/30.
 
-**Phases 6–13** — Results through abstract; Discussion keeps two-frontier F2F (Siag SoCS) vs SFBDS pairwise eval (Felner 2010) vs our cheap Manhattan distinct; cache future work with no Felner cache cite; bib audit against map keys; QA greps below; course checklist; code link.
+**Phases 6–13** — Experimental Results through abstract; analysis stays in Results (course §5.3); Conclusions shorter (course §6); cache future work with no Felner cache cite; bib audit against map keys; QA greps below; course checklist; code link.
 
 ---
 
@@ -338,7 +336,7 @@ Unchanged, except `notes/source_map.md` is the only place excluded-era paths may
 
 ## 12. First steps after this revision is approved
 
-1. Phase 0–1 are done under `docs/final_report/final_version/` (template + section skeleton).
+1. Phase 0–1 are done. Skeleton chapters match course §2–§6.
 2. **Do not start Phase 2 until approved.**
 3. Phase L is already done. Do not re-download papers.
 
